@@ -61,3 +61,38 @@ class CourseGraph:
             raise ValueError("Cycle detected in prerequisites")
 
         return result
+
+
+def main():
+    graph = CourseGraph()
+
+    calc1 = Subject("Calculus 1", "math")
+    calc2 = Subject("Calculus 2", "math")
+    calc3 = Subject("Calculus 3", "math")
+
+    prog_c = Subject("Basics of Language C", "programming")
+
+    english1 = Subject("English Language 1", "language")
+    english2 = Subject("English Language 2", "language")
+
+    graph.add_subject(calc1)
+    graph.add_subject(calc2)
+    graph.add_subject(calc3)
+    graph.add_subject(prog_c)
+    graph.add_subject(english1)
+    graph.add_subject(english2)
+
+    graph.add_dependent(calc1.name, calc2.name)
+    graph.add_dependent(calc2.name, calc3.name)
+    graph.add_dependent(calc1.name, calc3.name)
+
+    graph.add_dependent(english1.name, english2.name)
+
+    study_plan = graph.get_study_plan()
+
+    for s_name in study_plan:
+        print(s_name)
+
+
+if __name__ == "__main__":
+    main()
