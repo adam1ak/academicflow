@@ -1,10 +1,11 @@
 from collections import deque
 
 class Subject:
-    def __init__(self, name, field, level = None):
+    def __init__(self, name, field, duration, level = None):
         self.name = name
         self.field = field
         self.level = level
+        self.duration = duration
         self.in_degree = 0
         self.dependent_subjects = set()
 
@@ -66,14 +67,14 @@ class CourseGraph:
 def main():
     graph = CourseGraph()
 
-    calc1 = Subject("Calculus 1", "math")
-    calc2 = Subject("Calculus 2", "math")
-    calc3 = Subject("Calculus 3", "math")
+    calc1 = Subject("Calculus 1", "math", 2)
+    calc2 = Subject("Calculus 2", "math", 3)
+    calc3 = Subject("Calculus 3", "math", 5)
 
-    prog_c = Subject("Basics of Language C", "programming")
+    prog_c = Subject("Basics of Language C", "programming", 2)
 
-    english1 = Subject("English Language 1", "language")
-    english2 = Subject("English Language 2", "language")
+    english1 = Subject("English Language 1", "language", 3)
+    english2 = Subject("English Language 2", "language", 5)
 
     graph.add_subject(calc1)
     graph.add_subject(calc2)
