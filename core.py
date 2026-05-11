@@ -1,3 +1,5 @@
+from collections import deque
+
 class Subject:
     def __init__(self, name, field, level = None):
         self.name = name
@@ -30,3 +32,32 @@ class CourseGraph:
         target = self.subjects[target_name]
 
         prereq.add_dependent(target)
+
+    def get_study_plan(self):
+        in_degree_map = {}
+        queue = deque()
+        result = []
+
+        for subject in self.subjects.values():
+            in_degree_map[subject.name] = subject.in_degree
+
+        for name, deg in in_degree_map.items():
+            if deg == 0:
+                queue.append(name)
+
+        while queue:
+            current_name = queue.popleft()
+            result.append(current_name)
+
+            current_sbj = self.subjects[current_name]
+
+            for dependent in current_sbj.dependent_subjects:
+                in_degree_map[dependent.name] -= 1
+
+                if in_degree_map[dependent.name] == 0:
+                    queue.append(dependent.name)
+
+        if len(result) != len(self.subjects):
+            raise ValueError("Cycle detected in prerequisites")
+
+        return result
