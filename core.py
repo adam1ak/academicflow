@@ -38,9 +38,11 @@ class CourseGraph:
         in_degree_map = {}
         queue = deque()
         result = []
+        earliest_starts = {}
 
         for subject in self.subjects.values():
             in_degree_map[subject.name] = subject.in_degree
+            earliest_starts[subject.name] = 0
 
         for name, deg in in_degree_map.items():
             if deg == 0:
@@ -48,15 +50,25 @@ class CourseGraph:
 
         while queue:
             current_name = queue.popleft()
-            result.append(current_name)
 
             current_sbj = self.subjects[current_name]
+            current_endtime = earliest_starts[current_name] + current_sbj.duration
 
             for dependent in current_sbj.dependent_subjects:
                 in_degree_map[dependent.name] -= 1
+                earliest_starts[dependent.name] = max(
+                    earliest_starts[dependent.name],
+                    current_endtime
+                )
 
                 if in_degree_map[dependent.name] == 0:
                     queue.append(dependent.name)
+
+            result.append({
+                "name": current_name,
+                "start_time": earliest_starts[current_name],
+                "end_time": current_endtime
+            })
 
         if len(result) != len(self.subjects):
             raise ValueError("Cycle detected in prerequisites")
