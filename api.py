@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from database import engine
+from database import engine, SessionLocal
 import models
 
 from core import build_sample_graph, Subject, CourseGraph
@@ -28,6 +28,12 @@ app.add_middleware(
 )
 models.Base.metadata.create_all(bind=engine)
 
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 @app.get("/")
 def health_check():
