@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from database import engine, SessionLocal
@@ -95,3 +95,27 @@ def generate_plan(payload: GraphInput, db: Session = Depends(get_db)):
 
     result = graph.get_constrained_study_plan(payload.max_concurrent)
     return result
+
+@app.get("/api/v1/plans/{plan_id}")
+def get_plan(plan_id: int, db: Session = Depends(get_db)):
+    db_plan = db.query(models.Plan).filter(models.Plan.id == plan_id).first()
+
+    if not db_plan:
+        raise HTTPException(status_code=404, detail="Plan not found")
+    else:
+        graph = CourseGraph()
+
+        for db_subject in db_plan.subjects:
+            graph.add_subject(Subject(
+                db_subject.name,
+                db_subject.field,
+                db_subject.duration
+            ))
+
+        for db_subject in db_plan.subjects:
+            for dependent in db_subject.dependent_subjects:
+                graph.add_dependent(db_subject.name, dependent.name)
+
+        result = graph.get_constrained_study_plan(db_plan.max_concurrent)
+
+        return result
