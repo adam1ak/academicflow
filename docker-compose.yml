@@ -12,6 +12,7 @@ services:
   api:
     build: .
     container_name: examflow-api
+    restart: on-failure
     ports:
       - "8000:8000"
     depends_on:
