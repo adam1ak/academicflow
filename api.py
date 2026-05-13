@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from core import build_sample_graph, Subject, CourseGraph
 from pydantic import BaseModel
@@ -15,6 +16,13 @@ class GraphInput(BaseModel):
     subjects: List[SubjectInput]
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # dev # todo: replace with env-based
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
 @app.get("/")
 def health_check():
