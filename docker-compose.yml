@@ -1,0 +1,20 @@
+services:
+  db:
+    image: postgres:15
+    container_name: examflow-db-compose
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: examflow
+    ports:
+      - "5432:5432"
+
+  api:
+    build: .
+    container_name: examflow-api
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://admin:secret@db:5432/examflow
