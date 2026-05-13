@@ -1,12 +1,14 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 
 from database import engine, SessionLocal
 import models
 
+from sqlalchemy.orm import Session
+
 from core import build_sample_graph, Subject, CourseGraph
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List
 
 class SubjectInput(BaseModel):
     name: str
@@ -49,7 +51,36 @@ def study_plan():
     return result
 
 @app.post("/api/v1/generate-plan")
-def generate_plan(payload: GraphInput):
+def generate_plan(payload: GraphInput, db: Session = Depends(get_db)):
+    db_plan = models.Plan(name="Generated Plan", max_concurrent=payload.max_concurrent)
+    db.add(db_plan)
+    db.commit()
+    db.refresh(db_plan)
+
+    db_subjects_map = {}
+
+    for subject in payload.subjects:
+        db_subject = models.Subject(
+            name=subject.name,
+            field=subject.field,
+            duration=subject.duration,
+            plan_id=db_plan.id
+        )
+
+        db.add(db_subject)
+        db_subjects_map[subject.name] = db_subject
+
+    db.commit()
+
+    for subject in payload.subjects:
+        db_subject = db_subjects_map[subject.name]
+
+        for dependent_name in subject.dependents:
+            dependent_db_subject = db_subjects_map[dependent_name]
+            db_subject.dependent_subjects.append(dependent_db_subject)
+
+    db.commit()
+
     graph = CourseGraph()
 
     # nodes
