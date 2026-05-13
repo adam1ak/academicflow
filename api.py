@@ -1,6 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from database import engine
+import models
+
 from core import build_sample_graph, Subject, CourseGraph
 from pydantic import BaseModel
 from typing import List, Optional
@@ -23,6 +26,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
+models.Base.metadata.create_all(bind=engine)
+
 
 @app.get("/")
 def health_check():
