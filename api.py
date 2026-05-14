@@ -10,6 +10,17 @@ from core import build_sample_graph, Subject, CourseGraph
 from pydantic import BaseModel
 from typing import List
 
+from security import get_password_hash
+
+class UserCreate(BaseModel):
+    email: str
+    password: str
+
+class UserResponse(BaseModel):
+    id: int
+    email: str
+    is_active: bool
+
 class SubjectInput(BaseModel):
     name: str
     field: str
@@ -119,3 +130,18 @@ def get_plan(plan_id: int, db: Session = Depends(get_db)):
         result = graph.get_constrained_study_plan(db_plan.max_concurrent)
 
         return result
+
+@app.post("/api/v1/register", response_model=UserResponse)
+def register_user(user: UserCreate, db: Session = Depends(get_db)):
+    db_user = db.query(models.User).filter(models.User.email == user.email).first()
+    if db_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    hashed_password = get_password_hash(user.password)
+    new_user = models.User(email=user.email, hashed_password=hashed_password)
+
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return new_user
