@@ -1,5 +1,6 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 from database import engine, SessionLocal
 import models
@@ -10,7 +11,9 @@ from core import build_sample_graph, Subject, CourseGraph
 from pydantic import BaseModel
 from typing import List
 
-from security import get_password_hash
+from security import get_password_hash, verify_password, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
+
+from datetime import timedelta
 
 class UserCreate(BaseModel):
     email: str
@@ -20,6 +23,12 @@ class UserResponse(BaseModel):
     id: int
     email: str
     is_active: bool
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/token")
 
 class SubjectInput(BaseModel):
     name: str
@@ -145,3 +154,27 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
     db.refresh(new_user)
 
     return new_user
+
+
+@app.post("/api/v1/token", response_model=Token)
+def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == form_data.username).first()
+
+    if not user or not verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(
+            status_code=401,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+
+    access_token = create_access_token(
+        data={"sub": user.email}, expires_delta=access_token_expires
+    )
+
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@app.get("/api/v1/users/me")
+def read_users_me(token: str = Depends(oauth2_scheme)):
+    return {"message": "Access gained", "your_token": token}
