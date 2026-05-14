@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Table
+from sqlalchemy import Column, Integer, String, ForeignKey, Table, Boolean
 from sqlalchemy.orm import relationship
+
 from database import Base
 
 subject_dependencies = Table(
@@ -12,9 +13,12 @@ subject_dependencies = Table(
 class Plan(Base):
     __tablename__ = "plans"
     id = Column(Integer, primary_key=True, index=True)
+    owner_id = Column(Integer, ForeignKey("users.id"))
+
     name = Column(String)
     max_concurrent = Column(Integer)
 
+    owner = relationship("User", back_populates="plans")
     subjects = relationship("Subject", back_populates="plan")
 
 class Subject(Base):
@@ -35,3 +39,11 @@ class Subject(Base):
         backref="prerequisites"
     )
 
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, unique=True, index=True)
+    hashed_password = Column(String)
+    is_active = Column(Boolean, default=True)
+
+    plans = relationship("Plan", back_populates="owner")
