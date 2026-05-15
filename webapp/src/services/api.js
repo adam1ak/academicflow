@@ -35,4 +35,10 @@ export const getMyPlans = async () => {
     return response.data
 }
 
+export const generatePlan = async (payload) => {
+    const response = await api.post('/api/v1/generate-plan', payload)
+
+    return response.data
+}
+
 export default api;
