@@ -35,7 +35,7 @@ function LoginPage({ setIsLogged }) {
                 />
                 <input
                     type="password"
-                    placeholder="Hasło"
+                    placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                 />

@@ -29,4 +29,10 @@ export const logout = () => {
     localStorage.removeItem('token');
 };
 
+export const getMyPlans = async () => {
+    const response = await api.get('/api/v1/my_plans')
+
+    return response.data
+}
+
 export default api;
