@@ -1,3 +1,5 @@
+import GeneratePlanForm from "../components/GeneratePlanForm"
+
 import { getMyPlans, generatePlan } from "../services/plans"
 import { logout } from "../services/auth"
 
@@ -84,6 +86,8 @@ function DashboardPage({ setIsLogged }) {
             )}
 
             <button onClick={handleGenerateTestPlan}>Generate Test plan</button>
+        
+            <GeneratePlanForm onPlanGenerated={fetchPlans} />
         </div>
     )
 }
