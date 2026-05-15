@@ -4,9 +4,15 @@ os.environ["DATABASE_URL"] = "sqlite:///./test_database.db"
 
 from fastapi.testclient import TestClient
 
-from api import app
+from api import app, get_current_user
+import models
 
 client = TestClient(app)
+
+def override_get_current_user():
+    return models.User(id=1, email="test@pytest.com", is_active=True)
+
+app.dependency_overrides[get_current_user] = override_get_current_user
 
 def test_health_check():
     response = client.get("/")
