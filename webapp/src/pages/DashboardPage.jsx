@@ -1,8 +1,10 @@
-import { generatePlan, logout } from '../services/api'
+import GeneratePlanForm from "../components/GeneratePlanForm"
+
+import { getMyPlans, generatePlan } from "../services/plans"
+import { logout } from "../services/auth"
 
 import { useState, useEffect } from 'react'
 
-import { getMyPlans } from '../services/api'
 
 function DashboardPage({ setIsLogged }) {
     const [myPlans, setMyPlans] = useState([])
@@ -84,6 +86,8 @@ function DashboardPage({ setIsLogged }) {
             )}
 
             <button onClick={handleGenerateTestPlan}>Generate Test plan</button>
+        
+            <GeneratePlanForm onPlanGenerated={fetchPlans} />
         </div>
     )
 }
