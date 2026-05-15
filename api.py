@@ -1,3 +1,10 @@
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+from jose import jwt, JWTError
+
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -57,6 +64,23 @@ def get_db():
     finally:
         db.close()
 
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    try:
+        jwt_decode = jwt.decode(token, os.getenv("SECRET_KEY"), [os.getenv("ALGORITHM")])
+        jwt_email = jwt_decode.get("sub")
+
+        if not jwt_email:
+            raise HTTPException(status_code=401, detail="Could not validate credentials")
+
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Token is invalid or expired")
+    current_user = db.query(models.User).filter(models.User.email == jwt_email).first()
+
+    if not current_user :
+        raise HTTPException(status_code=401, detail="User does not exists")
+    else:
+        return current_user
+
 @app.get("/")
 def health_check():
     return {
@@ -68,11 +92,15 @@ def health_check():
 def study_plan():
     graph = build_sample_graph()
     result = graph.get_constrained_study_plan(max_concurrent=2)
+
     return result
 
 @app.post("/api/v1/generate-plan")
-def generate_plan(payload: GraphInput, db: Session = Depends(get_db)):
-    db_plan = models.Plan(name="Generated Plan", max_concurrent=payload.max_concurrent)
+def generate_plan(payload: GraphInput,
+                  db: Session = Depends(get_db),
+                  current_user: models.User = Depends(get_current_user)):
+
+    db_plan = models.Plan(name="Generated Plan", max_concurrent=payload.max_concurrent, owner_id=current_user.id)
     db.add(db_plan)
     db.commit()
     db.refresh(db_plan)
@@ -116,29 +144,55 @@ def generate_plan(payload: GraphInput, db: Session = Depends(get_db)):
     result = graph.get_constrained_study_plan(payload.max_concurrent)
     return result
 
+
+def reconstruct_and_calculate_plan(db_plan: models.Plan):
+    graph = CourseGraph()
+
+    for db_subject in db_plan.subjects:
+        graph.add_subject(Subject(
+            db_subject.name,
+            db_subject.field,
+            db_subject.duration
+        ))
+
+    for db_subject in db_plan.subjects:
+        for dependent in db_subject.dependent_subjects:
+            graph.add_dependent(db_subject.name, dependent.name)
+
+    result = graph.get_constrained_study_plan(db_plan.max_concurrent)
+
+    return result
+
 @app.get("/api/v1/plans/{plan_id}")
 def get_plan(plan_id: int, db: Session = Depends(get_db)):
     db_plan = db.query(models.Plan).filter(models.Plan.id == plan_id).first()
 
     if not db_plan:
         raise HTTPException(status_code=404, detail="Plan not found")
-    else:
-        graph = CourseGraph()
 
-        for db_subject in db_plan.subjects:
-            graph.add_subject(Subject(
-                db_subject.name,
-                db_subject.field,
-                db_subject.duration
-            ))
+    return reconstruct_and_calculate_plan(db_plan)
 
-        for db_subject in db_plan.subjects:
-            for dependent in db_subject.dependent_subjects:
-                graph.add_dependent(db_subject.name, dependent.name)
+@app.get("/api/v1/my_plans")
+def get_my_plan(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    user_plans = db.query(models.Plan).filter(models.Plan.owner_id == current_user.id).all()
 
-        result = graph.get_constrained_study_plan(db_plan.max_concurrent)
+    if not user_plans:
+        raise HTTPException(status_code=404, detail="Plan not found")
 
-        return result
+    all_plans = []
+
+    for single_plan in user_plans:
+        calculated_schedule = reconstruct_and_calculate_plan(single_plan)
+
+        single_plan_data = {
+            "id": single_plan.id,
+            "name": single_plan.name,
+            "schedule": calculated_schedule
+        }
+
+        all_plans.append(single_plan_data)
+
+    return all_plans
 
 @app.post("/api/v1/register", response_model=UserResponse)
 def register_user(user: UserCreate, db: Session = Depends(get_db)):
