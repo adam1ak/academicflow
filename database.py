@@ -1,11 +1,15 @@
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 # database URL postgresql://user:password@host:port/database_name
 SQLALCHEMY_DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql://admin:secret@localhost:5432/examflow"
+    os.getenv("DATABASE_URL", "postgresql://admin:secret@localhost:5432/examflow")
 )
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
