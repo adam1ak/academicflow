@@ -47,7 +47,7 @@ def test_generate_plan():
 
     response = client.post("/api/v1/generate-plan", json=payload)
 
-    assert response.status_code == 200
+    assert response.status_code == 201
     data = response.json()
 
     assert len(data) == 2
