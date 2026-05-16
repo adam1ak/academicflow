@@ -12,6 +12,14 @@ export const login = async (username, password) => {
     return response.data
 }
 
+export const register = async (email, password) => {
+    const response = await api.post('/api/v1/register', 
+        { email, password }
+    )
+
+    return response.data
+}
+
 export const logout = () => {
     localStorage.removeItem('token');
 };

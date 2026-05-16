@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
+import RegisterPage from './pages/RegisterPage'
 
 function App() {
 
@@ -14,6 +15,7 @@ function App() {
         <Route path="/login" element={<LoginPage setIsLogged={setIsLogged} />} />
         <Route path="/dashboard" element={isLogged ? <DashboardPage setIsLogged={setIsLogged} /> : <Navigate to="/login" />} />
         <Route path="/*" element={<Navigate to ={isLogged ? "/dashboard" : "/login"} />} />
+        <Route path="register" element={isLogged ? <Navigate to="/dashboard" /> : <RegisterPage setIsLogged={setIsLogged} />} />
       </Routes>
     </BrowserRouter>
   )

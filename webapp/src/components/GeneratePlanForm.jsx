@@ -102,7 +102,7 @@ function GeneratePlanForm({ onPlanGenerated }) {
                             value={subject.dependents}
                             onChange={(e) => handleSubjectChange(index, "dependents", e.target.value)}
                         />
-                        {subject.length > 1 && (
+                        {subjects.length > 1 && (
                             <button type="button" onClick={() => handleRemoveIndex(index)} style={{ color: 'red' }}>
                                 Delete
                             </button>
