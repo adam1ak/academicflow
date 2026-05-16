@@ -11,3 +11,9 @@ export const generatePlan = async (payload) => {
 
     return response.data
 }
+
+export const deletePlan = async (planId) => {
+    const response = await api.delete(`/api/v1/plans/${planId}`)
+
+    return response.data
+}

@@ -1,6 +1,6 @@
 import GeneratePlanForm from "../components/GeneratePlanForm"
 
-import { getMyPlans, generatePlan } from "../services/plans"
+import { getMyPlans, generatePlan, deletePlan } from "../services/plans"
 import { logout } from "../services/auth"
 
 import { useState, useEffect } from 'react'
@@ -60,6 +60,16 @@ function DashboardPage({ setIsLogged }) {
         }
     }
 
+    const handleDeletePlan = async (planId) => {
+        if (!window.confirm("Are you sure you want to delete this plan?")) return
+
+        try {
+            await deletePlan(planId)
+            await fetchPlans()
+        } catch (e) {
+            console.error("Error while deleting plan: ", e)
+        }
+    }
 
     return (
         <div>
@@ -68,12 +78,19 @@ function DashboardPage({ setIsLogged }) {
 
             <h2>Your Study Plans</h2>
 
+            <button onClick={handleGenerateTestPlan}>Generate Test plan</button>
+
+            <GeneratePlanForm onPlanGenerated={fetchPlans} />
+
             {myPlans.length === 0 ? (
                 <p>No plans generated yet.</p>
             ) : (
                 myPlans.map((plan) => (
                     <div key={plan.id} style={{ border: '1px solid black', margin: '10px', padding: '10px' }}>
                         <h3>{plan.name}</h3>
+                        <button onClick={() => handleDeletePlan(plan.id)} style={{ backgroundColor: 'red', color: 'white', border: 'none', padding: '5px 10px', cursor: 'pointer' }}>
+                            Delete
+                        </button>
                         <ul>
                             {plan.schedule.map((subject) => (
                                 <li key={subject.name}>
@@ -84,10 +101,6 @@ function DashboardPage({ setIsLogged }) {
                     </div>
                 ))
             )}
-
-            <button onClick={handleGenerateTestPlan}>Generate Test plan</button>
-        
-            <GeneratePlanForm onPlanGenerated={fetchPlans} />
         </div>
     )
 }
