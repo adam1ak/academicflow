@@ -18,7 +18,7 @@ def test_health_check():
     response = client.get("/")
 
     # OK
-    assert response.status_code == 200
+    assert response.status_code == 201
 
     assert response.json() == {
         "status": "ok",
