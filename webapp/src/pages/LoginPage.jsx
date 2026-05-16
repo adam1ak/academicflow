@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { login } from '../services/auth'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 function LoginPage({ setIsLogged }) {
     const navigate = useNavigate()
@@ -41,6 +41,9 @@ function LoginPage({ setIsLogged }) {
                 />
                 <button type="submit">Login</button>
             </form>
+            <div style={{ marginTop: '20px' }}>
+                <Link to="/register">Don't have an account? Sign up</Link>
+            </div>
         </div>
     )
 }
