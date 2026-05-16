@@ -18,7 +18,7 @@ def test_health_check():
     response = client.get("/")
 
     # OK
-    assert response.status_code == 201
+    assert response.status_code == 200
 
     assert response.json() == {
         "status": "ok",
@@ -47,7 +47,7 @@ def test_generate_plan():
 
     response = client.post("/api/v1/generate-plan", json=payload)
 
-    assert response.status_code == 201
+    assert response.status_code == 200
     data = response.json()
 
     assert len(data) == 2
