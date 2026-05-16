@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+from starlette.status import HTTP_201_CREATED
 
 load_dotenv()
 
@@ -95,7 +96,7 @@ def study_plan():
 
     return result
 
-@app.post("/api/v1/generate-plan")
+@app.post("/api/v1/generate-plan", status_code=HTTP_201_CREATED)
 def generate_plan(payload: GraphInput,
                   db: Session = Depends(get_db),
                   current_user: models.User = Depends(get_current_user)):
@@ -176,9 +177,6 @@ def get_plan(plan_id: int, db: Session = Depends(get_db)):
 def get_my_plan(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     user_plans = db.query(models.Plan).filter(models.Plan.owner_id == current_user.id).all()
 
-    if not user_plans:
-        raise HTTPException(status_code=404, detail="Plan not found")
-
     all_plans = []
 
     for single_plan in user_plans:
@@ -194,7 +192,7 @@ def get_my_plan(db: Session = Depends(get_db), current_user: models.User = Depen
 
     return all_plans
 
-@app.post("/api/v1/register", response_model=UserResponse)
+@app.post("/api/v1/register", response_model=UserResponse, status_code=HTTP_201_CREATED)
 def register_user(user: UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.email == user.email).first()
     if db_user:
@@ -210,7 +208,7 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
     return new_user
 
 
-@app.post("/api/v1/token", response_model=Token)
+@app.post("/api/v1/token", response_model=Token, status_code=HTTP_201_CREATED)
 def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == form_data.username).first()
 
@@ -232,3 +230,17 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
 @app.get("/api/v1/users/me")
 def read_users_me(token: str = Depends(oauth2_scheme)):
     return {"message": "Access gained", "your_token": token}
+
+@app.delete("/api/v1/plans/{plan_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_plan(plan_id: int, db: Session = Depends(get_db),
+                current_user: models.User = Depends(get_current_user)):
+    plan = db.query(models.Plan).filter(
+        models.Plan.id == plan_id,
+        models.Plan.owner_id == current_user.id
+    ).first()
+
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plan not found")
+
+    db.delete(plan)
+    db.commit()
