@@ -4,10 +4,11 @@ import { getMyPlans, generatePlan, deletePlan } from "../services/plans"
 import { logout } from "../services/auth"
 
 import { useState, useEffect } from 'react'
+import { useAuth } from "../context/AuthContext"
 
-
-function DashboardPage({ setIsLogged }) {
+function DashboardPage() {
     const [myPlans, setMyPlans] = useState([])
+    const { setIsLogged } = useAuth()
 
     const fetchPlans = async () => {
         try {
