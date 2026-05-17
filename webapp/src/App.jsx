@@ -1,40 +1,14 @@
-import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import RegisterPage from './pages/RegisterPage'
 
-import { verifySession } from './services/auth'
+import { useAuth } from './context/AuthContext'
 
 function App() {
 
-  const [isLogged, setIsLogged] = useState(false)
-  const [isChecking, setIsChecking] = useState(true)
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const token = localStorage.getItem('token')
-
-      if (!token) {
-        setIsChecking(false)
-        return
-      }
-
-      try {
-        await verifySession()
-        setIsLogged(true)
-      } catch (error) {
-        console.error("Token invalid or expired: ", error)
-
-        setIsLogged(false)
-      } finally {
-        setIsChecking(false)
-      }
-    }
-
-    checkAuth()
-  }, [])
+  const { isLogged, isChecking } = useAuth()
 
   if (isChecking) {
     return (
@@ -47,10 +21,10 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<LoginPage setIsLogged={setIsLogged} />} />
-        <Route path="/dashboard" element={isLogged ? <DashboardPage setIsLogged={setIsLogged} /> : <Navigate to="/login" />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/dashboard" element={isLogged ? <DashboardPage /> : <Navigate to="/login" />} />
         <Route path="/*" element={<Navigate to ={isLogged ? "/dashboard" : "/login"} />} />
-        <Route path="register" element={isLogged ? <Navigate to="/dashboard" /> : <RegisterPage setIsLogged={setIsLogged} />} />
+        <Route path="register" element={isLogged ? <Navigate to="/dashboard" /> : <RegisterPage />} />
       </Routes>
     </BrowserRouter>
   )

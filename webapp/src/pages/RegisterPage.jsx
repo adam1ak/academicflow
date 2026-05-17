@@ -2,8 +2,11 @@ import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { register, login } from "../services/auth"
 
-function RegisterPage({ setIsLogged }) {
+import { useAuth } from "../context/AuthContext"
+
+function RegisterPage() {
     const navigate = useNavigate()
+    const { setIsLogged } = useAuth()
 
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
