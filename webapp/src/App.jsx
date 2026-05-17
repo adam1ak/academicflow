@@ -5,6 +5,7 @@ import DashboardPage from './pages/DashboardPage'
 import RegisterPage from './pages/RegisterPage'
 
 import { useAuth } from './context/AuthContext'
+import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
 
@@ -21,10 +22,14 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/dashboard" element={isLogged ? <DashboardPage /> : <Navigate to="/login" />} />
-        <Route path="/*" element={<Navigate to ={isLogged ? "/dashboard" : "/login"} />} />
-        <Route path="register" element={isLogged ? <Navigate to="/dashboard" /> : <RegisterPage />} />
+        <Route path="/login" element={isLogged ? <Navigate to="/dashboard" /> : <LoginPage />} />
+        <Route path="/register" element={isLogged ? <Navigate to="/dashboard" /> : <RegisterPage />} />
+
+        <Route element={<ProtectedRoute />}>
+          <Route path="/dashboard" element={<DashboardPage />} />
+        </Route>
+
+        <Route path="*" element={<Navigate to={isLogged ? "/dashboard" : "/login"} />} />
       </Routes>
     </BrowserRouter>
   )
