@@ -10,7 +10,7 @@ import { verifySession } from './services/auth'
 function App() {
 
   const [isLogged, setIsLogged] = useState(false)
-  const [isChecking, setIsChecking] = useState(false)
+  const [isChecking, setIsChecking] = useState(true)
 
   useEffect(() => {
     const checkAuth = async () => {
