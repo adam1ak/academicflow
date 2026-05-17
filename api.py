@@ -19,7 +19,7 @@ from core import build_sample_graph, Subject, CourseGraph
 from pydantic import BaseModel
 from typing import List
 
-from security import get_password_hash, verify_password, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
+from security import get_password_hash, verify_password, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, SECRET_KEY, ALGORITHM
 
 from datetime import timedelta
 
@@ -67,7 +67,7 @@ def get_db():
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     try:
-        jwt_decode = jwt.decode(token, os.getenv("SECRET_KEY"), [os.getenv("ALGORITHM")])
+        jwt_decode = jwt.decode(token, SECRET_KEY, [ALGORITHM])
         jwt_email = jwt_decode.get("sub")
 
         if not jwt_email:
@@ -228,8 +228,8 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
     return {"access_token": access_token, "token_type": "bearer"}
 
 @app.get("/api/v1/users/me")
-def read_users_me(token: str = Depends(oauth2_scheme)):
-    return {"message": "Access gained", "your_token": token}
+def read_users_me(current_user: models.User = Depends(get_current_user)):
+    return {"message": "Session verified", "user": current_user.email}
 
 @app.delete("/api/v1/plans/{plan_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_plan(plan_id: int, db: Session = Depends(get_db),
