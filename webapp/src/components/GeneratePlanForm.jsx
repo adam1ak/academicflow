@@ -36,12 +36,24 @@ function GeneratePlanForm({ onPlanGenerated }) {
     const handleSubmit = async (e) => {
         e.preventDefault()
 
+        const allSubjectsNames = subjects.map(s => s.name.trim())
+
         const formattedSubjects = subjects.map(subject => ({
             ...subject,
             dependents: subject.dependents.split(',')
                 .map(s => s.trim())
                 .filter(s => s !== "")
         }))
+
+        for (let sbj of formattedSubjects){
+            for (let dep of sbj.dependents) {
+                if(!allSubjectsNames.includes(dep)) {
+                    console.error(`Validaton error: subject "${dep}" is missing`)
+
+                    return;
+                }
+            }
+        }
 
         const payload = {
             max_concurrent: maxConcurrent,
