@@ -19,7 +19,8 @@ from core import build_sample_graph, Subject, CourseGraph
 from pydantic import BaseModel
 from typing import List
 
-from security import get_password_hash, verify_password, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, SECRET_KEY, ALGORITHM
+from security import get_password_hash, verify_password, create_access_token, create_refresh_token, ACCESS_TOKEN_EXPIRE_MINUTES, SECRET_KEY, \
+    ALGORITHM, REFRESH_TOKEN_EXPIRE_DAYS
 
 from datetime import timedelta
 
@@ -35,6 +36,9 @@ class UserResponse(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/token")
 
@@ -220,12 +224,21 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
         )
 
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    refresh_token_expires = timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
 
     access_token = create_access_token(
         data={"sub": user.email}, expires_delta=access_token_expires
     )
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    refresh_token = create_refresh_token(
+        data={"sub": user.email}, expires_delta=refresh_token_expires
+    )
+
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer"
+    }
 
 @app.get("/api/v1/users/me")
 def read_users_me(current_user: models.User = Depends(get_current_user)):
@@ -244,3 +257,27 @@ def delete_plan(plan_id: int, db: Session = Depends(get_db),
 
     db.delete(plan)
     db.commit()
+
+@app.post("/api/v1/refresh")
+def refresh_acces_token(request: RefreshTokenRequest, db: Session = Depends(get_db)):
+    try:
+        jwt_decode = jwt.decode(request.refresh_token, SECRET_KEY, [ALGORITHM])
+        jwt_email = jwt_decode.get("sub")
+
+        if not jwt_email:
+            raise HTTPException(status_code=401, detail="Could not validate credentials")
+
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Token is invalid or expired")
+    current_user = db.query(models.User).filter(models.User.email == jwt_email).first()
+
+    if not current_user :
+        raise HTTPException(status_code=401, detail="User does not exists")
+    else:
+        new_access_token = create_access_token(
+            data={"sub": current_user.email}
+        )
+        return {
+            "access_token": new_access_token,
+            "token_type": "bearer"
+        }
