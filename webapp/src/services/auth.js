@@ -6,14 +6,15 @@ export const login = async (username, password) => {
     formData.append("password", password)
 
     const response = await api.post('/api/v1/token', formData)
-    
+
     localStorage.setItem('token', response.data.access_token)
-    
+    localStorage.setItem('refreshToken', response.data.refresh_token)
+
     return response.data
 }
 
 export const register = async (email, password) => {
-    const response = await api.post('/api/v1/register', 
+    const response = await api.post('/api/v1/register',
         { email, password }
     )
 
@@ -22,6 +23,7 @@ export const register = async (email, password) => {
 
 export const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
 };
 
 export const verifySession = async () => {

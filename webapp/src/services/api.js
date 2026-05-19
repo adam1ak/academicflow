@@ -15,14 +15,42 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use((response) => {
     return response
-}, (error) => {
-    if (error.response && error.response.status === 401) {
-        console.warn("Token expired or invalid")
+}, async (error) => {
+    const originalRequest = error.config
 
-        localStorage.removeItem('token')
+    if (error.response && error.response.status == 401 && !originalRequest._retry) {
+        originalRequest._retry = true
 
-        window.location.href = '/login'
+        const refreshToken = localStorage.getItem('refreshToken')
+
+        if (refreshToken) {
+            try {
+                const response = await axios.post('http://localhost:8000/api/v1/refresh', {
+                    refresh_token: refreshToken
+                })
+
+                const newAccessToken = response.data.access_token
+
+                localStorage.setItem('token', newAccessToken)
+                originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
+
+                return axios(originalRequest)
+
+            } catch (refreshError) {
+                console.warn("Refresh token expired.", refreshError)
+
+                localStorage.removeItem('token')
+                localStorage.removeItem('refreshToken')
+                window.location.href = '/login'
+                return Promise.reject(error)
+            }
+        } else {
+            localStorage.removeItem('token')
+            window.location.href = '/login'
+        }
+
     }
+
 
     return Promise.reject(error)
 })
