@@ -1,15 +1,40 @@
+import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import api from './services/api'
 
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import RegisterPage from './pages/RegisterPage'
 
 import { useAuth } from './context/AuthContext'
+import { useError } from './context/ErrorContext'
+
 import ProtectedRoute from './components/ProtectedRoute'
+import ErrorPopup from './components/ErrorPopup'
 
 function App() {
 
   const { isLogged, isChecking } = useAuth()
+  const { showError } = useError()
+
+  useEffect(() => {
+    const interceptor = api.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response && error.response.status !== 401) {
+          const errorMessage = error.response.data?.detail || "Error from server"
+          showError(errorMessage)
+        } else if (!error.response) {
+          showError("No connection wtih backend")
+        }
+        return Promise.reject(error)
+      }
+    )
+
+    return () => {
+      api.interceptors.response.eject(interceptor)
+    }
+  }, [showError])
 
   if (isChecking) {
     return (
@@ -21,6 +46,8 @@ function App() {
 
   return (
     <BrowserRouter>
+      <ErrorPopup />
+
       <Routes>
         <Route path="/login" element={isLogged ? <Navigate to="/dashboard" /> : <LoginPage />} />
         <Route path="/register" element={isLogged ? <Navigate to="/dashboard" /> : <RegisterPage />} />
