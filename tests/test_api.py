@@ -6,6 +6,9 @@ from fastapi.testclient import TestClient
 
 from api import app, get_current_user
 import models
+from database import engine
+
+models.Base.metadata.create_all(bind=engine)
 
 client = TestClient(app)
 
