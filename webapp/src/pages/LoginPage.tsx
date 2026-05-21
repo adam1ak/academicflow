@@ -1,36 +1,35 @@
-import { useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
-import { register, login } from "../services/auth"
+import { useState } from 'react'
+import { login } from '../services/auth'
+import { Link, useNavigate } from 'react-router-dom'
 
-import { useAuth } from "../context/AuthContext"
+import { useAuth } from '../context/AuthContext'
 import Header from "../components/ui/Header"
 import InputField from "../components/ui/InputField"
 import Button from "../components/ui/Button"
 import OAuthButton from "../components/ui/OAuthButton"
 
-function RegisterPage() {
+function LoginPage() {
     const navigate = useNavigate()
+
     const { setIsLogged } = useAuth()
 
-    const [email, setEmail] = useState("")
-    const [password, setPassword] = useState("")
+    const [email, setEmail] = useState<string>("")
+    const [password, setPassword] = useState<string>("")
 
-    const handleRegister = async (e) => {
+    const handleLogin = async (e: React.SubmitEvent) => {
         e.preventDefault()
 
         try {
-            await register(email, password)
             await login(email, password)
-
             setIsLogged(true)
 
-            console.log("Account created successfully.")
             navigate('/dashboard')
-
-        } catch (error) {
-            console.log("Registration error: ", error)
+        } catch (e) {
+            console.log("Login error: ", e)
         }
+
     }
+
 
     return (
         <div
@@ -62,7 +61,7 @@ function RegisterPage() {
                                 text-xl md:text-2xl font-semibold tracking-tight text-text-primary mb-1
                             "
                         >
-                            Create your account
+                            Sign in To your account
                         </h1>
                         <p className="text-text-secondary text-sm leading-relaxed">
                             Precision learning systems for modern engineering
@@ -72,11 +71,11 @@ function RegisterPage() {
                     <div className="flex flex-col gap-4 mb-6">
                         <OAuthButton
                             provider="github"
-                            login={false}
+                            login={true}
                             onClick={() => console.log('github')} />
                         <OAuthButton
                             provider="google"
-                            login={false}
+                            login={true}
                             onClick={() => console.log('google')} />
                     </div>
 
@@ -86,7 +85,7 @@ function RegisterPage() {
                         <div className="flex-1 h-px bg-card-border"></div>
                     </div>
 
-                    <form onSubmit={handleRegister} className="flex flex-col">
+                    <form onSubmit={handleLogin} className="flex flex-col">
                         <InputField
                             id="register-email"
                             label="Email Address"
@@ -107,11 +106,22 @@ function RegisterPage() {
                             required
                         />
 
-                        <div className="mt-2">
-                            <Button type="submit">
-                                Create Account
-                            </Button>
+                        <div className="flex justify-end mb-6 -mt-2">
+                            <a
+                                href="#"
+                                className="
+                                    font-mono text-xs text-link 
+                                    hover:text-white transition-colors tracking-wide
+                                "
+                                aria-label="Recover forgotten password"
+                            >
+                                Forgot password?
+                            </a>
                         </div>
+
+                        <Button type="submit">
+                            Sign In
+                        </Button>
                     </form>
 
                     <div
@@ -119,12 +129,12 @@ function RegisterPage() {
                             mt-8 text-center text-sm text-text-secondary
                         "
                     >
-                        Already have an account?{' '}
-                        <Link 
-                            to="/login" 
+                        Don't have an account?{' '}
+                        <Link
+                            to="/register"
                             className="ml-1 text-text-primary font-semibold hover:text-link transition-colors"
-                            aria-label="Log in to existing account">
-                                Log in
+                            aria-label="Sign up to existing account">
+                            Sign up
                         </Link>
                     </div>
                 </div>
@@ -143,4 +153,4 @@ function RegisterPage() {
     )
 }
 
-export default RegisterPage
+export default LoginPage
