@@ -72,9 +72,11 @@ function RegisterPage() {
                     <div className="flex flex-col gap-4 mb-6">
                         <OAuthButton
                             provider="github"
+                            login={false}
                             onClick={() => console.log('github')} />
                         <OAuthButton
                             provider="google"
+                            login={false}
                             onClick={() => console.log('google')} />
                     </div>
 
