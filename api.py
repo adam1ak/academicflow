@@ -241,7 +241,11 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
 
 @app.get("/api/v1/users/me")
 def read_users_me(current_user: models.User = Depends(get_current_user)):
-    return {"message": "Session verified", "user": current_user.email}
+    return {
+        "message": "Session verified",
+        "user": current_user.email,
+        "github_id": current_user.github_id
+    }
 
 @app.delete("/api/v1/plans/{plan_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_plan(plan_id: int, db: Session = Depends(get_db),
