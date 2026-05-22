@@ -1,11 +1,17 @@
-import axios from "axios";
+import axios, { InternalAxiosRequestConfig, AxiosResponse } from "axios";
+import { tokenStorage } from "../services/tokenStorage";
+import { TokenResponse } from "../types/auth";
+
+interface CustomRequestConfig extends InternalAxiosRequestConfig {
+    _retry?: boolean
+}
 
 const api = axios.create({
     baseURL: 'http://localhost:8000'
 })
 
-api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('token')
+api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+    const token = tokenStorage.getAccessToken
     if (token) {
         config.headers.Authorization = `Bearer ${token}`
     }
@@ -13,39 +19,39 @@ api.interceptors.request.use((config) => {
     return config
 })
 
-api.interceptors.response.use((response) => {
+api.interceptors.response.use((response: AxiosResponse) => {
     return response
 }, async (error) => {
-    const originalRequest = error.config
+    const originalRequest = error.config as CustomRequestConfig
 
     if (error.response && error.response.status == 401 && !originalRequest._retry) {
         originalRequest._retry = true
 
-        const refreshToken = localStorage.getItem('refreshToken')
+        const refreshToken = tokenStorage.getRefreshToken()
 
         if (refreshToken) {
             try {
-                const response = await axios.post('http://localhost:8000/api/v1/refresh', {
+                const response = await axios.post<TokenResponse>('http://localhost:8000/api/v1/refresh', {
                     refresh_token: refreshToken
                 })
 
                 const newAccessToken = response.data.access_token
 
-                localStorage.setItem('token', newAccessToken)
+                tokenStorage.setAccessToken(newAccessToken)
                 originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
 
-                return axios(originalRequest)
+                return api(originalRequest)
 
             } catch (refreshError) {
                 console.warn("Refresh token expired.", refreshError)
 
-                localStorage.removeItem('token')
-                localStorage.removeItem('refreshToken')
+                tokenStorage.clear()
+
                 window.location.href = '/login'
                 return Promise.reject(error)
             }
         } else {
-            localStorage.removeItem('token')
+            tokenStorage.clear()
             window.location.href = '/login'
         }
 

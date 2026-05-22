@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react"
-import { verifySession } from "../services/auth"
+import { verifySession } from "../api/auth";
+import { tokenStorage } from "../services/tokenStorage";
 
 export interface AuthContextType {
     isLogged: boolean;
@@ -15,7 +16,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
       useEffect(() => {
         const checkAuth = async () => {
-          const token = localStorage.getItem('token')
+          const token = tokenStorage.getAccessToken()
     
           if (!token) {
             setIsChecking(false)

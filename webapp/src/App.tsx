@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import api from './services/api'
+import { AxiosError } from 'axios'
+import api from './api/client'
 
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
@@ -12,6 +13,10 @@ import { useError } from './context/ErrorContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import ErrorPopup from './components/ErrorPopup'
 
+interface ErrorResponseData {
+  detail: string
+}
+
 function App() {
 
   const { isLogged, isChecking } = useAuth()
@@ -20,7 +25,7 @@ function App() {
   useEffect(() => {
     const interceptor = api.interceptors.response.use(
       (response) => response,
-      (error) => {
+      (error: AxiosError<ErrorResponseData>) => {
         if (error.response && error.response.status !== 401) {
           const errorMessage = error.response.data?.detail || "Error from server"
           showError(errorMessage)

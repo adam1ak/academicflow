@@ -1,12 +1,12 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import App from './App.jsx'
+import App from './App.tsx'
 import './index.css'
 
 import { AuthProvider } from './context/AuthContext.tsx'
-import { ErrorContextProvider } from './context/ErrorContext.jsx'
+import { ErrorContextProvider } from './context/ErrorContext.js'
 
-createRoot(document.getElementById('root')).render(
+createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorContextProvider>
       <AuthProvider>

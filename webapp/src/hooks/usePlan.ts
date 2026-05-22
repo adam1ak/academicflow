@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { getMyPlans, generatePlan, deletePlan } from "../services/plans"
+import { getMyPlans, generatePlan, deletePlan } from "../api/plans"
+import { PlanData, GeneratePlanPayLoad } from "../types/plan";
 
 
 export const usePlans = () => {
-    const [myPlans, setMyPlans] = useState([])
+    const [myPlans, setMyPlans] = useState<PlanData[]>([])
 
     const fetchPlans = async () => {
         try {
@@ -22,7 +23,7 @@ export const usePlans = () => {
         fetchPlans()
     }, [])
 
-    const removePlan = async (planId) => {
+    const removePlan = async (planId: number) => {
         if (!window.confirm("Are you sure you want to delete this plan?")) return
 
         try {
@@ -34,7 +35,7 @@ export const usePlans = () => {
     }
 
     const generateTestPlan = async () => {
-        const testPayload = {
+        const testPayload: GeneratePlanPayLoad = {
             max_concurrent: 2,
             subjects: [
                 {
