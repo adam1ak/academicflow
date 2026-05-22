@@ -1,5 +1,6 @@
 import React, { useState } from "react"
 import { generatePlan } from "../api/plans"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 interface SubjectPayload {
     name: string,
@@ -8,15 +9,30 @@ interface SubjectPayload {
     dependents: string
 }
 
-interface GeneratePlanFormProps {
-    onPlanGenerated: () => void
-}
-
-function GeneratePlanForm({ onPlanGenerated } : GeneratePlanFormProps) {
+function GeneratePlanForm() {
+    const queryClient = useQueryClient()
     const [maxConcurrent, setMaxConcurrent] = useState<number>(2)
     const [subjects, setSubjects] = useState<SubjectPayload[]>([
         { name: "", field: "", duration: 1, dependents: "" }
     ])
+
+    const generateMutation = useMutation({
+        mutationFn: generatePlan,
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: ["plans"]
+            })
+            setSubjects([{
+                name: "",
+                field: "",
+                duration: 1,
+                dependents: ""
+            }])
+        },
+        onError: (error) => {
+            console.error("Error while generating schedule: ", error)
+        }
+    })
 
     const handleAddSubject = () => {
         setSubjects([...subjects, {
@@ -66,19 +82,10 @@ function GeneratePlanForm({ onPlanGenerated } : GeneratePlanFormProps) {
             }
         }
 
-        const payload = {
+        generateMutation.mutate({
             max_concurrent: maxConcurrent,
             subjects: formattedSubjects
-        }
-
-        try {
-            await generatePlan(payload)
-            onPlanGenerated()
-
-            setSubjects([{ name: "", field: "", duration: 1, dependents: "" }])
-        } catch (error) {
-            console.log("Erorr while generating schedule: ", error)
-        }
+        })
     }
 
     return (

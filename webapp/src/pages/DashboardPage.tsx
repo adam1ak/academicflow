@@ -6,11 +6,15 @@ import { usePlans } from "../hooks/usePlan"
 function DashboardPage() {
     const { setIsLogged } = useAuth()
 
-    const { plans, fetchPlans, removePlan, generateTestPlan } = usePlans()
+    const { plans, isLoading, removePlan, generateTestPlan } = usePlans()
 
     const handleLogout = () => {
         logout()
         setIsLogged(false)
+    }
+
+    if (isLoading) {
+        return <div style={{ padding: '50px', textAlign: 'center' }}>Loading study plans...</div>
     }
 
     return (
@@ -22,7 +26,7 @@ function DashboardPage() {
 
             <button onClick={generateTestPlan}>Generate Test plan</button>
 
-            <GeneratePlanForm onPlanGenerated={fetchPlans} />
+            <GeneratePlanForm />
 
             {plans.length === 0 ? (
                 <p>No plans generated yet.</p>
