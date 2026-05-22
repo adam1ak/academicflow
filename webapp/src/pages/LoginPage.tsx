@@ -16,7 +16,7 @@ function LoginPage() {
     const [email, setEmail] = useState<string>("")
     const [password, setPassword] = useState<string>("")
 
-    const handleLogin = async (e: React.SubmitEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
 
         try {
