@@ -1,4 +1,5 @@
 import os
+import pytest
 
 os.environ["DATABASE_URL"] = "sqlite:///./test_database.db"
 
@@ -62,3 +63,63 @@ def test_generate_plan():
     assert data[1]["name"] == "Calculus2"
     assert data[1]["start_time"] == 5
     assert data[1]["end_time"] == 7
+
+def test_generate_plan_with_cycle_error():
+    payload = {
+        "max_concurrent": 2,
+        "subjects": [
+            {
+                "name": "Math 1",
+                "field": "Math",
+                "duration": 4,
+                "dependents": ["Math 2"]
+            },
+            {
+                "name": "Math 2",
+                "field": "Math",
+                "duration": 4,
+                "dependents": ["Math 1"]
+            }
+        ]
+    }
+
+    with pytest.raises(ValueError, match="Cycle detected in prerequisites"):
+        client.post("/api/v1/generate-plan", json=payload)
+
+def test_generate_plan_strict_sequential():
+    payload = {
+        "max_concurrent": 1,
+        "subjects": [
+            {
+                "name": "Programming 1",
+                "field": "IT",
+                "duration": 3,
+                "dependents": []
+            },
+            {
+                "name": "Physics 1",
+                "field": "Science",
+                "duration": 4,
+                "dependents": []
+            }
+        ]
+    }
+
+    response = client.post("/api/v1/generate-plan", json=payload)
+    assert response.status_code == 201
+    data = response.json()
+
+    first_subject = data[0]
+    second_subject = data[1]
+
+    assert second_subject["start_time"] == first_subject["end_time"]
+
+def test_generate_plan_empty_payload():
+    payload = {
+        "max_concurrent": 2,
+        "subjects": []
+    }
+
+    response = client.post("/api/v1/generate-plan", json=payload)
+    assert response.status_code == 201
+    assert response.json() == []
