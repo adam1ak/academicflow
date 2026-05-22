@@ -1,7 +1,6 @@
 import GeneratePlanForm from "../components/GeneratePlanForm"
-import { logout } from "../services/auth"
+import { logout } from "../api/auth"
 import { useAuth } from "../context/AuthContext"
-
 import { usePlans } from "../hooks/usePlan"
 
 function DashboardPage() {

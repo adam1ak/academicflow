@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
-import { register, login } from "../services/auth"
+import { register, login } from "../api/auth"
 
 import { useAuth } from "../context/AuthContext"
 import Header from "../components/ui/Header"
@@ -12,10 +12,10 @@ function RegisterPage() {
     const navigate = useNavigate()
     const { setIsLogged } = useAuth()
 
-    const [email, setEmail] = useState("")
-    const [password, setPassword] = useState("")
+    const [email, setEmail] = useState<string>("")
+    const [password, setPassword] = useState<string>("")
 
-    const handleRegister = async (e) => {
+    const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
 
         try {

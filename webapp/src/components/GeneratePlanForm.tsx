@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { generatePlan } from "../services/plans"
+import { generatePlan } from "../api/plans"
 
 interface SubjectPayload {
     name: string,
