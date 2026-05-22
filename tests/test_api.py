@@ -1,16 +1,14 @@
-import os
 import pytest
+from config import settings
 
-os.environ["DATABASE_URL"] = "sqlite:///./test_database.db"
+settings.database_url = "sqlite:///./test_database.db"
 
 from fastapi.testclient import TestClient
-
 from api import app, get_current_user
 import models
 from database import engine
 
 models.Base.metadata.create_all(bind=engine)
-
 client = TestClient(app)
 
 def override_get_current_user():
