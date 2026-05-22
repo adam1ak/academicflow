@@ -1,71 +1,64 @@
-import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getMyPlans, generatePlan, deletePlan } from "../api/plans"
 import { PlanData, GeneratePlanPayLoad } from "../types/plan";
 
 
 export const usePlans = () => {
-    const [myPlans, setMyPlans] = useState<PlanData[]>([])
+    const queryClient = useQueryClient();
 
-    const fetchPlans = async () => {
-        try {
-            const plans = await getMyPlans()
-            console.log(plans)
+    const {
+        data: plans = [],
+        isLoading,
+        isError
+    } = useQuery<PlanData[]>({
+        queryKey: ["plans"],
+        queryFn: getMyPlans
+    })
 
-            if (Array.isArray(plans)) {
-                setMyPlans(plans)
-            }
-        } catch (e) {
-            console.log("Error while fetching plans: ", e);
+    const deletePlanMutation = useMutation({
+        mutationFn: (planId: number) => deletePlan(planId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ 
+                queryKey: ["plans"] 
+            })
+            console.log("Plan deleted")
+        },
+        onError: (error) => {
+            console.error("Errow while deleting plan: ", error)
         }
-    }
+    })
 
-    useEffect(() => {
-        fetchPlans()
-    }, [])
+    const generatePlanMutation = useMutation({
+        mutationFn: (payload: GeneratePlanPayLoad) => generatePlan(payload),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["plans"] })
+            console.log("Plan generated successfully")
+        },
+        onError: (error) => {
+            console.error("Error while generating plan: ", error)
+        }
+    })
 
     const removePlan = async (planId: number) => {
-        if (!window.confirm("Are you sure you want to delete this plan?")) return
-
-        try {
-            await deletePlan(planId)
-            await fetchPlans()
-        } catch (e) {
-            console.error("Error while deleting plan: ", e)
-        }
+        if (!window.confirm("Are you sure you want to delete this plan?")) return;
+        deletePlanMutation.mutate(planId);
     }
 
     const generateTestPlan = async () => {
         const testPayload: GeneratePlanPayLoad = {
             max_concurrent: 2,
             subjects: [
-                {
-                    name: "Calculus1",
-                    field: "Math",
-                    duration: 5,
-                    dependents: ["Calculus2"]
-                },
-                {
-                    name: "Calculus2",
-                    field: "Math",
-                    duration: 2,
-                    dependents: []
-                }
+                { name: "Calculus1", field: "Math", duration: 5, dependents: ["Calculus2"] },
+                { name: "Calculus2", field: "Math", duration: 2, dependents: [] }
             ]
-        }
-
-        try {
-            await generatePlan(testPayload)
-            await fetchPlans()
-
-            console.log("Plan generated successfully")
-        } catch (e) {
-            console.log("Error while generating plan: ", e)
-        }
-    }
+        };
+        generatePlanMutation.mutate(testPayload);
+    };
 
     return {
-        plans: myPlans,
-        fetchPlans,
+        plans,
+        isLoading,
+        isError,
         removePlan,
         generateTestPlan
     }
