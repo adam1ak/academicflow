@@ -53,6 +53,9 @@ class GraphInput(BaseModel):
     subjects: List[SubjectInput]
 
 app = FastAPI()
+
+models.Base.metadata.create_all(bind=engine)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], # dev # todo: replace with env-based
