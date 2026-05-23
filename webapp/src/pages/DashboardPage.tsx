@@ -6,7 +6,7 @@ import { usePlans } from "../hooks/usePlan"
 function DashboardPage() {
     const { setIsLogged } = useAuth()
 
-    const { plans, isLoading, removePlan, generateTestPlan } = usePlans()
+    const { plans, isLoading, isError, removePlan, generateTestPlan } = usePlans()
 
     const handleLogout = () => {
         logout()
@@ -15,6 +15,11 @@ function DashboardPage() {
 
     if (isLoading) {
         return <div style={{ padding: '50px', textAlign: 'center' }}>Loading study plans...</div>
+    }
+
+    if (isError) {
+        console.error("Dashboard Error: Failed to fetch study plans from backend API. Check your database connection.");
+        return <div style={{ color: "red", padding: "20px" }}>Failed to load plans. Connection refused.</div>
     }
 
     return (
