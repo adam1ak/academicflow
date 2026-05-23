@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Table, Boolean
+from sqlalchemy import Column, Integer, String, ForeignKey, Table, Boolean, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from database import Base
@@ -23,19 +23,24 @@ class Plan(Base):
 
 class Subject(Base):
     __tablename__ = "subjects"
+
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
     field = Column(String)
     duration = Column(Integer)
-    plan_id = Column(Integer, ForeignKey('plans.id'))
+    plan_id = Column(Integer, ForeignKey('plans.id', ondelete="CASCADE"))
+
+    __table_args__ = (
+        UniqueConstraint('plan_id', 'name', name='uq_subject_plan_name'),
+    )
 
     plan = relationship("Plan", back_populates="subjects")
 
     dependent_subjects = relationship(
         "Subject",
         secondary=subject_dependencies,
-        primaryjoin=id == subject_dependencies.c.prerequisite_id,
-        secondaryjoin=id == subject_dependencies.c.target_id,
+        primaryjoin="Subject.id == subject_dependencies.c.prerequisite_id",
+        secondaryjoin="Subject.id == subject_dependencies.c.target_id",
         backref="prerequisites"
     )
 

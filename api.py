@@ -1,3 +1,5 @@
+import re
+
 from dotenv import load_dotenv
 from starlette.status import HTTP_201_CREATED
 
@@ -13,9 +15,10 @@ from database import engine, SessionLocal
 import models
 
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
 from core import build_sample_graph, Subject, CourseGraph
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import List
 
 from security import get_password_hash, verify_password, create_access_token, create_refresh_token, ACCESS_TOKEN_EXPIRE_MINUTES, SECRET_KEY, \
@@ -25,7 +28,18 @@ from datetime import timedelta
 
 class UserCreate(BaseModel):
     email: EmailStr
-    password: str = Field(min_length=8)
+    password: str = Field(min_length=8, description="Password must be at least 8 characters long")
+
+    @field_validator("password")
+    @classmethod
+    def check_password_strength(cls, value: str) -> str:
+        if not re.search(r"\d", value):
+            raise ValueError("Password must contain at least one digit (0-9).")
+
+        if not re.search(r"[!@#$%^&*(),.?\":{}|<>_+-]", value):
+            raise ValueError("Password must contain at least one special character.")
+
+        return value
 
 class UserResponse(BaseModel):
     id: int
@@ -106,25 +120,40 @@ def generate_plan(payload: GraphInput,
                   db: Session = Depends(get_db),
                   current_user: models.User = Depends(get_current_user)):
 
-    db_plan = models.Plan(name="Generated Plan", max_concurrent=payload.max_concurrent, owner_id=current_user.id)
-    db.add(db_plan)
-    db.commit()
-    db.refresh(db_plan)
+    subject_names = [s.name.strip() for s in payload.subjects]
 
-    db_subjects_map = {}
-
-    for subject in payload.subjects:
-        db_subject = models.Subject(
-            name=subject.name,
-            field=subject.field,
-            duration=subject.duration,
-            plan_id=db_plan.id
+    if len(set(subject_names)) != len(subject_names):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Subject names must be unique within a single study plan."
         )
 
-        db.add(db_subject)
-        db_subjects_map[subject.name] = db_subject
+    try:
+        db_plan = models.Plan(name="Generated Plan", max_concurrent=payload.max_concurrent, owner_id=current_user.id)
+        db.add(db_plan)
+        db.commit()
+        db.refresh(db_plan)
 
-    db.commit()
+        db_subjects_map = {}
+
+        for subject in payload.subjects:
+            db_subject = models.Subject(
+                name=subject.name,
+                field=subject.field,
+                duration=subject.duration,
+                plan_id=db_plan.id
+            )
+
+            db.add(db_subject)
+            db_subjects_map[subject.name] = db_subject
+
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Subject names must be unique within a single study plan."
+        )
 
     for subject in payload.subjects:
         db_subject = db_subjects_map[subject.name]
