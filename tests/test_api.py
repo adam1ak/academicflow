@@ -161,7 +161,7 @@ def test_generate_plan_invalid_duration_validation():
         ]
     }
 
-    
+
     response = client.post("/api/v1/generate-plan", json=payload)
 
     assert response.status_code == 422
