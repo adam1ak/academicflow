@@ -1,4 +1,3 @@
-import os
 from dotenv import load_dotenv
 from starlette.status import HTTP_201_CREATED
 
@@ -16,7 +15,7 @@ import models
 from sqlalchemy.orm import Session
 
 from core import build_sample_graph, Subject, CourseGraph
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, Field
 from typing import List
 
 from security import get_password_hash, verify_password, create_access_token, create_refresh_token, ACCESS_TOKEN_EXPIRE_MINUTES, SECRET_KEY, \
@@ -25,8 +24,8 @@ from security import get_password_hash, verify_password, create_access_token, cr
 from datetime import timedelta
 
 class UserCreate(BaseModel):
-    email: str
-    password: str
+    email: EmailStr
+    password: str = Field(min_length=8)
 
 class UserResponse(BaseModel):
     id: int
@@ -43,13 +42,13 @@ class RefreshTokenRequest(BaseModel):
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/token")
 
 class SubjectInput(BaseModel):
-    name: str
+    name: str = Field(min_length=1, max_length=100)
     field: str
-    duration: int
+    duration: int = Field(gt=0, description="Duration must be greater than 0 weeks")
     dependents: List[str]
 
 class GraphInput(BaseModel):
-    max_concurrent: int
+    max_concurrent: int = Field(gt=0, le=10)
     subjects: List[SubjectInput]
 
 app = FastAPI()
