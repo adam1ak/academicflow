@@ -1,4 +1,3 @@
-import pytest
 from config import settings
 
 settings.database_url = "sqlite:///./test_database.db"
@@ -82,8 +81,10 @@ def test_generate_plan_with_cycle_error():
         ]
     }
 
-    with pytest.raises(ValueError, match="Cycle detected in prerequisites"):
-        client.post("/api/v1/generate-plan", json=payload)
+    response = client.post("api/v1/generate-plan", json=payload)
+
+    assert response.status_code == 400
+    assert "Cycle detected" in response.json()["detail"]
 
 def test_generate_plan_strict_sequential():
     payload = {
@@ -126,16 +127,22 @@ def test_generate_plan_empty_payload():
 def test_get_plan_idor_protection():
     db_gen = get_db()
     db = next(db_gen)
+    foreign_plan = None
 
     try :
-        foreign_plan = models.Plan(id=999, name="Secret Physics Plan", max_concurrent=2, owner_id=999)
+        foreign_plan = models.Plan(name="Secret Physics Plan", max_concurrent=2, owner_id=999)
         db.add(foreign_plan)
         db.commit()
+        db.refresh(foreign_plan)
 
-        response = client.get("/api/v1/plans/999")
+        response = client.get(f"/api/v1/plans/{foreign_plan.id}")
 
         assert response.status_code == 404
     finally:
+        if foreign_plan and foreign_plan.id:
+            db.delete(foreign_plan)
+            db.commit()
+
         try:
             next(db_gen)
         except StopIteration:

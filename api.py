@@ -148,8 +148,17 @@ def generate_plan(payload: GraphInput,
         for dependent in subject.dependents:
             graph.add_dependent(subject.name, dependent)
 
-    result = graph.get_constrained_study_plan(payload.max_concurrent)
-    return result
+    try:
+        result = graph.get_constrained_study_plan(payload.max_concurrent)
+        return result
+    except ValueError as exception:
+        if "Cycle detected" in str(exception):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cycle detected in prerequisites. Cannot generate an infinite study plan."
+            )
+
+        raise exception
 
 
 def reconstruct_and_calculate_plan(db_plan: models.Plan):
