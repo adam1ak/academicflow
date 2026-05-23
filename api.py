@@ -1,3 +1,5 @@
+import re
+
 from dotenv import load_dotenv
 from starlette.status import HTTP_201_CREATED
 
@@ -15,7 +17,7 @@ import models
 from sqlalchemy.orm import Session
 
 from core import build_sample_graph, Subject, CourseGraph
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import List
 
 from security import get_password_hash, verify_password, create_access_token, create_refresh_token, ACCESS_TOKEN_EXPIRE_MINUTES, SECRET_KEY, \
@@ -25,7 +27,18 @@ from datetime import timedelta
 
 class UserCreate(BaseModel):
     email: EmailStr
-    password: str = Field(min_length=8)
+    password: str = Field(min_length=8, description="Password must be at least 8 characters long")
+
+    @field_validator("password")
+    @classmethod
+    def check_password_strength(cls, value: str) -> str:
+        if not re.search(r"\d", value):
+            raise ValueError("Password must contain at least one digit (0-9).")
+
+        if not re.search(r"[!@#$%^&*(),.?\":{}|<>_+-]", value):
+            raise ValueError("Password must contain at least one special character.")
+
+        return value
 
 class UserResponse(BaseModel):
     id: int

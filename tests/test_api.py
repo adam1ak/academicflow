@@ -165,3 +165,13 @@ def test_generate_plan_invalid_duration_validation():
     response = client.post("/api/v1/generate-plan", json=payload)
 
     assert response.status_code == 422
+
+def test_register_weak_password_validation():
+    payload = {
+        "email": "password_test@flow.edu",
+        "password": "onlyletters"
+    }
+    response = client.post("/api/v1/register", json=payload)
+
+    assert response.status_code == 422
+    assert "one digit" in response.json()["detail"][0]["msg"]
