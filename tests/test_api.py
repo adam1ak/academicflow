@@ -147,3 +147,21 @@ def test_get_plan_idor_protection():
             next(db_gen)
         except StopIteration:
             pass
+
+def test_generate_plan_invalid_duration_validation():
+    payload = {
+        "max_concurrent": 2,
+        "subjects": [
+            {
+                "name": "Błędny Przedmiot",
+                "field": "IT",
+                "duration": -5,
+                "dependents": []
+            }
+        ]
+    }
+
+
+    response = client.post("/api/v1/generate-plan", json=payload)
+
+    assert response.status_code == 422
