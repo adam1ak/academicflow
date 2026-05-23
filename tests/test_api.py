@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 from api import app, get_current_user
 import models
 from database import engine
+from api import get_db
 
 models.Base.metadata.create_all(bind=engine)
 client = TestClient(app)
@@ -121,3 +122,21 @@ def test_generate_plan_empty_payload():
     response = client.post("/api/v1/generate-plan", json=payload)
     assert response.status_code == 201
     assert response.json() == []
+
+def test_get_plan_idor_protection():
+    db_gen = get_db()
+    db = next(db_gen)
+
+    try :
+        foreign_plan = models.Plan(id=999, name="Secret Physics Plan", max_concurrent=2, owner_id=999)
+        db.add(foreign_plan)
+        db.commit()
+
+        response = client.get("/api/v1/plans/999")
+
+        assert response.status_code == 404
+    finally:
+        try:
+            next(db_gen)
+        except StopIteration:
+            pass

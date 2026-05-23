@@ -171,8 +171,15 @@ def reconstruct_and_calculate_plan(db_plan: models.Plan):
     return result
 
 @app.get("/api/v1/plans/{plan_id}")
-def get_plan(plan_id: int, db: Session = Depends(get_db)):
-    db_plan = db.query(models.Plan).filter(models.Plan.id == plan_id).first()
+def get_plan(
+        plan_id: int,
+        db: Session = Depends(get_db),
+        current_user: models.User = Depends(get_current_user)
+):
+    db_plan = db.query(models.Plan).filter(
+        models.Plan.id == plan_id,
+        models.Plan.owner_id == current_user.id
+    ).first()
 
     if not db_plan:
         raise HTTPException(status_code=404, detail="Plan not found")
