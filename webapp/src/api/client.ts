@@ -57,6 +57,33 @@ api.interceptors.response.use((response: AxiosResponse) => {
 
     }
 
+    if (error.response) {
+        const status = error.response.status
+        const detail = error.response.data?.detail
+
+        if (status != 401) {
+            let errorMessage= "An unexpected error occured"
+
+            if (detail) {
+                if (Array.isArray(detail)) {
+                    errorMessage = detail[0]?.msg || errorMessage
+                } else if (typeof detail === "string") {
+                    errorMessage = detail
+                }
+            }
+
+            if (status === 422) {
+                console.error(`Validation Field Error: ${errorMessage}`);
+            } else if (status === 400) {
+                console.error(`Operation Rejected: ${errorMessage}`);
+            } else if (status >= 500) {
+                console.error("Critical Server Error: Please try again later.");
+            }
+        }
+    } else if (error.request) {
+        console.error("Network Error: Connection to the server could not be established.");
+    }
+
 
     return Promise.reject(error)
 })

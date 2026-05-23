@@ -17,14 +17,29 @@ export const usePlans = () => {
 
     const deletePlanMutation = useMutation({
         mutationFn: (planId: number) => deletePlan(planId),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ 
-                queryKey: ["plans"] 
-            })
-            console.log("Plan deleted")
+        onMutate: async (deletedPlanId: number) => {
+            await queryClient.cancelQueries({ queryKey: ["plans"] });
+            const previousPlans = queryClient.getQueryData<PlanData[]>(["plans"]);
+
+            if (previousPlans) {
+                queryClient.setQueryData<PlanData[]>(
+                    ["plans"],
+                    previousPlans.filter(plan => plan.id !== deletedPlanId)
+                );
+            }
+
+            return { previousPlans };
         },
-        onError: (error) => {
-            console.error("Errow while deleting plan: ", error)
+        onError: (error, deletedPlanId, context) => {
+            if (context?.previousPlans) {
+                queryClient.setQueryData(["plans"], context.previousPlans);
+            }
+
+            console.error("Error while deleting plan (Rollback executed): ", error);
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ["plans"] });
+            console.log("Plan deletion settled");
         }
     })
 
