@@ -175,3 +175,17 @@ def test_register_weak_password_validation():
 
     assert response.status_code == 422
     assert "one digit" in response.json()["detail"][0]["msg"]
+
+
+def test_generate_plan_duplicate_subject_names_validation():
+    payload = {
+        "max_concurrent": 2,
+        "subjects": [
+            {"name": "Math 1", "field": "Math", "duration": 3, "dependents": []},
+            {"name": "Math 1", "field": "Math", "duration": 5, "dependents": []}
+        ]
+    }
+    response = client.post("/api/v1/generate-plan", json=payload)
+
+    assert response.status_code == 400
+    assert "unique" in response.json()["detail"]
