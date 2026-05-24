@@ -225,7 +225,7 @@ def get_plan(
 
     return reconstruct_and_calculate_plan(db_plan)
 
-@app.get("/api/v1/my_plans")
+@app.get("/api/v1/my-plans")
 def get_my_plan(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     user_plans = db.query(models.Plan).filter(models.Plan.owner_id == current_user.id).all()
 
