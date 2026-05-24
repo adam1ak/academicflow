@@ -111,13 +111,6 @@ def health_check():
         "message": "AcademicFlow API is running"
     }
 
-@app.get("/api/v1/study-plan")
-def study_plan():
-    graph = build_sample_graph()
-    result = graph.get_constrained_study_plan(max_concurrent=2)
-
-    return result
-
 @app.post("/api/v1/generate-plan", status_code=HTTP_201_CREATED)
 def generate_plan(payload: GraphInput,
                   db: Session = Depends(get_db),
