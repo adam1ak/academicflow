@@ -1,3 +1,4 @@
+import logging
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
@@ -15,3 +16,16 @@ class Settings(BaseSettings):
     )
 
 settings = Settings()
+
+LOG_FORMAT = "%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s"
+
+logging.basicConfig(
+    level=logging.INFO,
+    format=LOG_FORMAT,
+    handlers=[
+        logging.StreamHandler()
+    ]
+)
+
+logger = logging.getLogger("academicflow")
+logger.info("Logging framework initialized successfully in INFO mode")

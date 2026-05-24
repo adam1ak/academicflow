@@ -26,6 +26,9 @@ from security import get_password_hash, verify_password, create_access_token, cr
 
 from datetime import timedelta
 
+import logging
+logger = logging.getLogger("academicflow.api")
+
 class UserCreate(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8, description="Password must be at least 8 characters long")
@@ -120,9 +123,12 @@ def generate_plan(payload: GraphInput,
                   db: Session = Depends(get_db),
                   current_user: models.User = Depends(get_current_user)):
 
+    logger.info(f"User ID {current_user.id} requested plan generation with max_concurrent={payload.max_concurrent}")
+
     subject_names = [s.name.strip() for s in payload.subjects]
 
     if len(set(subject_names)) != len(subject_names):
+        logger.warning(f"Plan generation rejected for User ID {current_user.id}: Duplicate subject names detected.")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Subject names must be unique within a single study plan."
@@ -178,9 +184,12 @@ def generate_plan(payload: GraphInput,
 
     try:
         result = graph.get_constrained_study_plan(payload.max_concurrent)
+        logger.info(
+            f"Successfully generated constrained study plan for User ID {current_user.id}. Total stages: {len(result)}")
         return result
     except ValueError as exception:
         if "Cycle detected" in str(exception):
+            logger.error(f"Graph execution failed for User ID {current_user.id}: Cyclic dependency detected.")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Cycle detected in prerequisites. Cannot generate an infinite study plan."
@@ -246,6 +255,7 @@ def get_my_plan(db: Session = Depends(get_db), current_user: models.User = Depen
 def register_user(user: UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.email == user.email).first()
     if db_user:
+        logger.warning(f"Registration failed: Email {user.email} is already taken.")
         raise HTTPException(status_code=400, detail="Email already registered")
 
     hashed_password = get_password_hash(user.password)
@@ -255,6 +265,7 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_user)
 
+    logger.info(f"New user successfully registered with email: {new_user.email}")
     return new_user
 
 
@@ -263,6 +274,7 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
     user = db.query(models.User).filter(models.User.email == form_data.username).first()
 
     if not user or not verify_password(form_data.password, user.hashed_password):
+        logger.warning(f"Failed login attempt for username: {form_data.username}")
         raise HTTPException(
             status_code=401,
             detail="Incorrect username or password",
@@ -280,6 +292,7 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
         data={"sub": user.email}, expires_delta=refresh_token_expires
     )
 
+    logger.info(f"User {user.email} logged in successfully. JWT Access Token issued.")
     return {
         "access_token": access_token,
         "refresh_token": refresh_token,
