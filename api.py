@@ -111,13 +111,6 @@ def health_check():
         "message": "AcademicFlow API is running"
     }
 
-@app.get("/api/v1/study-plan")
-def study_plan():
-    graph = build_sample_graph()
-    result = graph.get_constrained_study_plan(max_concurrent=2)
-
-    return result
-
 @app.post("/api/v1/generate-plan", status_code=HTTP_201_CREATED)
 def generate_plan(payload: GraphInput,
                   db: Session = Depends(get_db),
@@ -230,24 +223,43 @@ def get_plan(
     if not db_plan:
         raise HTTPException(status_code=404, detail="Plan not found")
 
-    return reconstruct_and_calculate_plan(db_plan)
+    try:
+        return reconstruct_and_calculate_plan(db_plan)
 
-@app.get("/api/v1/my_plans")
+    except ValueError as exception:
+        logger.error(f"Failed to reconstruct graph for plan ID {plan_id} (User ID {current_user.id}): {str(exception)}")
+
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Plan computation failed: {str(exception)}"
+        )
+
+@app.get("/api/v1/my-plans")
 def get_my_plan(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     user_plans = db.query(models.Plan).filter(models.Plan.owner_id == current_user.id).all()
 
     all_plans = []
 
     for single_plan in user_plans:
-        calculated_schedule = reconstruct_and_calculate_plan(single_plan)
+        try:
+            calculated_schedule = reconstruct_and_calculate_plan(single_plan)
 
-        single_plan_data = {
-            "id": single_plan.id,
-            "name": single_plan.name,
-            "schedule": calculated_schedule
-        }
+            single_plan_data = {
+                "id": single_plan.id,
+                "name": single_plan.name,
+                "schedule": calculated_schedule
+            }
 
-        all_plans.append(single_plan_data)
+            all_plans.append(single_plan_data)
+        except ValueError as exception:
+            logger.error(f"Skipping corrupted plan ID {single_plan.id} for User ID {current_user.id}: {str(exception)}")
+
+            all_plans.append({
+                "id": single_plan.id,
+                "name": f"{single_plan.name} (Computation Error)",
+                "schedule": [],
+                "error": "Corrupted prerequisite structure"
+            })
 
     return all_plans
 

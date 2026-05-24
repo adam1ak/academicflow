@@ -2,7 +2,7 @@ import api from "./client";
 import { PlanData, GeneratePlanPayLoad, SubjectScheduleItem } from "../types/plan";
 
 export const getMyPlans = async (): Promise<PlanData[]> => {
-    const response = await api.get<PlanData[]>('/api/v1/my_plans')
+    const response = await api.get<PlanData[]>('/api/v1/my-plans')
 
     return response.data
 }
