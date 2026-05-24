@@ -1,21 +1,17 @@
 @import "tailwindcss";
 
 @theme {
-  /* bg */
   --color-bg: #0a0a0a;
   --color-card-bg: #141414;
   --color-card-border: rgba(255, 255, 255, 0.08);
   
-  /* input */
   --color-input-bg: #1c1c1c;
   --color-input-border: rgba(255, 255, 255, 0.10);
   --color-input-focus: rgba(255, 255, 255, 0.28);
   
-  /* buttons */
   --color-btn-blue: #1044c4;
   --color-btn-blue-hover: #0e3ba8;
 
-  /* typo */
   --color-text-primary: #f0f0f0;
   --color-text-secondary: #888888;
   --color-text-muted: #555555;
@@ -23,6 +19,13 @@
 
   --font-sans: "Geist", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
+
+  --color-accent-blue: #4a7eff;
+  --color-accent-green: #22c55e;
+  --color-accent-amber: #f59e0b;
+  --color-accent-red: #ef4444;
+  --color-accent-purple: #a78bfa;
+  --color-surface-hi: #111116;
 }
 
 @layer base {
