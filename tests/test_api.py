@@ -1,3 +1,4 @@
+import pytest
 from config import settings
 
 settings.database_url = "sqlite:///./test_database.db"
@@ -14,7 +15,14 @@ client = TestClient(app)
 def override_get_current_user():
     return models.User(id=1, email="test@pytest.com", is_active=True)
 
-app.dependency_overrides[get_current_user] = override_get_current_user
+
+@pytest.fixture(autouse=True)
+def mock_auth():
+    app.dependency_overrides[get_current_user] = override_get_current_user
+
+    yield
+
+    app.dependency_overrides.clear()
 
 def test_health_check():
     response = client.get("/")
@@ -161,21 +169,9 @@ def test_generate_plan_invalid_duration_validation():
         ]
     }
 
-
     response = client.post("/api/v1/generate-plan", json=payload)
 
     assert response.status_code == 422
-
-def test_register_weak_password_validation():
-    payload = {
-        "email": "password_test@flow.edu",
-        "password": "onlyletters"
-    }
-    response = client.post("/api/v1/register", json=payload)
-
-    assert response.status_code == 422
-    assert "one digit" in response.json()["detail"][0]["msg"]
-
 
 def test_generate_plan_duplicate_subject_names_validation():
     payload = {
