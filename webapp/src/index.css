@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg: #0a0a0a;
+  --color-bg: #070709;
   --color-card-bg: #141414;
   --color-card-border: rgba(255, 255, 255, 0.08);
   
@@ -26,6 +26,18 @@
   --color-accent-red: #ef4444;
   --color-accent-purple: #a78bfa;
   --color-surface-hi: #111116;
+
+  /* Kolory z mapowania AcademicFlowDashboard.html */
+  --color-surface: #0d0d10;
+  --color-text-pri: #e2e8f0;
+  --color-text-sec: #64748b;
+  --color-text-mut: #334155;
+  --color-border-dim: rgba(255, 255, 255, 0.07);
+  --color-border-hi: rgba(255, 255, 255, 0.14);
+  --color-blue-glow: rgba(74, 126, 255, 0.18);
+  --color-blue-soft: #93c5fd;
+  --color-surface-progress: #1a1a22;
+  --shadow-avatar: 0 0 0 2px rgba(74, 126, 255, 0.3);
 }
 
 @layer base {

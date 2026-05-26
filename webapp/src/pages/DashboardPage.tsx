@@ -1,17 +1,9 @@
 import GeneratePlanForm from "../components/GeneratePlanForm"
-import { logout } from "../api/auth"
-import { useAuth } from "../context/AuthContext"
 import { usePlans } from "../hooks/usePlan"
+import DashboardNavbar from "../components/ui/DashboardNavbar"
 
 function DashboardPage() {
-    const { setIsLogged } = useAuth()
-
     const { plans, isLoading, isError, removePlan, generateTestPlan } = usePlans()
-
-    const handleLogout = () => {
-        logout()
-        setIsLogged(false)
-    }
 
     if (isLoading) {
         return <div className="h-screen bg-bg flex items-center justify-center font-mono text-3xl text-text-secondary font-extrabold">Lodaing workspace..</div>
@@ -25,11 +17,7 @@ function DashboardPage() {
 
     return (
         <div className="h-screen w-full flex flex-col bg-bg text-text-primary antialiased font-sans overflow-hidden">
-            <div className="h-14 bg-card-bg/95 border-b border-card-bg flex items-center justify-between px-4 shirnk-0 backdropblur-xl">
-                <button onClick={handleLogout}>
-                    Temp navbar click to logout
-                </button>
-            </div>
+            <DashboardNavbar />
 
             <main className="flex-1 overflow-y-auto p-2.5 flex flex-col gap-3">
                 <button
