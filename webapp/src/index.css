@@ -1,32 +1,52 @@
 @import "tailwindcss";
 
 @theme {
-  /* bg */
-  --color-bg: #0a0a0a;
+  --color-bg: #070709;
   --color-card-bg: #141414;
   --color-card-border: rgba(255, 255, 255, 0.08);
-  
-  /* input */
+
   --color-input-bg: #1c1c1c;
   --color-input-border: rgba(255, 255, 255, 0.10);
   --color-input-focus: rgba(255, 255, 255, 0.28);
-  
-  /* buttons */
+
   --color-btn-blue: #1044c4;
   --color-btn-blue-hover: #0e3ba8;
 
-  /* typo */
   --color-text-primary: #f0f0f0;
   --color-text-secondary: #888888;
   --color-text-muted: #555555;
   --color-link: #4a9eff;
 
+  --font-sf: 'SF Pro Display', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-sans: "Geist", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
+
+  --color-accent-blue: #4a7eff;
+  --color-accent-green: #22c55e;
+  --color-accent-amber: #f59e0b;
+  --color-accent-red: #ef4444;
+  --color-accent-purple: #a78bfa;
+  --color-surface-hi: #111116;
+
+  --color-surface: #0d0d10;
+  --color-text-pri: #e2e8f0;
+  --color-text-sec: #64748b;
+  --color-text-mut: #334155;
+  --color-border-dim: rgba(255, 255, 255, 0.07);
+  --color-border-hi: rgba(255, 255, 255, 0.14);
+  --color-blue-glow: rgba(74, 126, 255, 0.18);
+  --color-blue-soft: #93c5fd;
+  --color-surface-progress: #1a1a22;
+  --shadow-avatar: 0 0 0 2px rgba(74, 126, 255, 0.3);
 }
 
 @layer base {
   body {
     @apply bg-bg text-text-primary font-sans antialiased;
   }
+}
+
+.nav-active {
+  background-color: #4a7eff2e;
+  color: var(--color-blue-soft);
 }
