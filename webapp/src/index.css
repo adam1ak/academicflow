@@ -4,11 +4,11 @@
   --color-bg: #070709;
   --color-card-bg: #141414;
   --color-card-border: rgba(255, 255, 255, 0.08);
-  
+
   --color-input-bg: #1c1c1c;
   --color-input-border: rgba(255, 255, 255, 0.10);
   --color-input-focus: rgba(255, 255, 255, 0.28);
-  
+
   --color-btn-blue: #1044c4;
   --color-btn-blue-hover: #0e3ba8;
 
@@ -17,6 +17,7 @@
   --color-text-muted: #555555;
   --color-link: #4a9eff;
 
+  --font-sf: 'SF Pro Display', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-sans: "Geist", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
 
@@ -27,7 +28,6 @@
   --color-accent-purple: #a78bfa;
   --color-surface-hi: #111116;
 
-  /* Kolory z mapowania AcademicFlowDashboard.html */
   --color-surface: #0d0d10;
   --color-text-pri: #e2e8f0;
   --color-text-sec: #64748b;
@@ -44,4 +44,9 @@
   body {
     @apply bg-bg text-text-primary font-sans antialiased;
   }
+}
+
+.nav-active {
+  background-color: #4a7eff2e;
+  color: var(--color-blue-soft);
 }
