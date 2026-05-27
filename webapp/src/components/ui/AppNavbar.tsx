@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 
-function DashboardNavbar() {
+function AppNavbar() {
 
   const [openMenu, setOpenMenu] = useState(false)
   const location = useLocation()
@@ -19,36 +19,40 @@ function DashboardNavbar() {
   }, [location.pathname]);
 
   return (
-    <nav aria-label="Main navigation" className=" bg-surface/95 border-b border-border-dim backdrop-blur-xl shrink-0">
+    <header className="bg-surface/95 border-b border-border-dim backdrop-blur-xl shrink-0">
       <div className="px-6 py-3 flex justify-between items-center ">
         <div className="md:flex gap-3 font-sf items-center">
-          <span className="text-base tracking-tight font-semibold text-slate-100 cursor-pointer">AcademicFlow</span>
+          <h1 className="text-base tracking-tight font-semibold text-slate-100 cursor-pointer">
+            AcademicFlow
+            </h1>
 
           <div aria-hidden="true" className="hidden md:block w-px h-4 bg-white/10 rounded-sm" />
 
-          <ul className="hidden md:flex gap-4">
-            {navItems.map((item) => {
-              const isActive = location.pathname === item.path;
+          <nav aria-label="Desktop navigation">
+            <ul className="hidden md:flex gap-4">
+              {navItems.map((item) => {
+                const isActive = location.pathname === item.path;
 
-              return (
-                <li key={item.label}>
-                  <button
-                    type="button"
-                    aria-current={isActive ? "page" : undefined}
-                    className={`text-xs lg:text-sm text-text-sec px-2.5 py-1 rounded-sm cursor-pointer ${isActive ? "nav-active font-medium" : ""
-                      } hover:bg-white/5`}
-                  >
-                    {item.label}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+                return (
+                  <li key={item.label}>
+                    <button
+                      type="button"
+                      aria-current={isActive ? "page" : undefined}
+                      className={`text-xs lg:text-sm text-text-sec px-2.5 py-1 rounded-sm cursor-pointer ${isActive ? "nav-active font-medium" : ""
+                        } hover:bg-white/5`}
+                    >
+                      {item.label}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
         </div>
 
         <div className="flex items-center gap-4">
           <div>
-            <div className="lg:hidden bg-surface-hi font-mono text-xs text-text-sec border border-border-dim px-3 py-1 mr-3 rounded-md">Fall 2024 · W3</div>
+            <span className="lg:hidden bg-surface-hi font-mono text-xs text-text-sec border border-border-dim px-3 py-1 mr-3 rounded-md">Fall 2024 · W3</span>
             <span className="hidden lg:block bg-surface-hi font-mono text-xs text-text-sec border border-border-dim px-3 py-1 mr-3 rounded-md">Fall 2024 · Week 3/12</span>
           </div>
 
@@ -57,7 +61,6 @@ function DashboardNavbar() {
             aria-label="User profile"
             className="flex items-center gap-2 lg:cursor-pointer lg:hover:bg-white/5 lg:px-1.5 lg:py-1 lg:rounded-lg"
           >
-
             <div className="hidden lg:flex flex-col items-end font-sf">
               <span className="text-xs text-medium text-slate-200">Dr. Alan Turing</span>
               <span className="text-[9px] font-mono text-text-mut">a.turing@flow.edu</span>
@@ -89,8 +92,9 @@ function DashboardNavbar() {
         </div>
       </div>
 
-      <div
+      <nav
         id="mobile-nav-menu"
+        aria-label="Mobile navigation"
         className={`px-3 border-t border-border-dim ${openMenu ? "block" : "hidden"}`}>
         <ul>
           {navItems.map((item) => {
@@ -111,9 +115,9 @@ function DashboardNavbar() {
             );
           })}
         </ul>
-      </div>
-    </nav>
+      </nav>
+    </header>
   );
 }
 
-export default DashboardNavbar;
+export default AppNavbar;
