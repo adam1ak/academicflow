@@ -46,7 +46,29 @@
   }
 }
 
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
 .nav-active {
   background-color: #4a7eff2e;
   color: var(--color-blue-soft);
+}
+
+.stat-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
 }
