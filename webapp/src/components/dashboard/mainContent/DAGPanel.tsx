@@ -5,11 +5,6 @@ export function DAGPanel() {
         <h2>Topic Dependency Graph</h2>
         <p>Tap a node to explore</p>
       </header>
-      <p>test</p>
-      <p>test</p>
-      <p>test</p>
-      <p>test</p>
-      <p>test</p>
     </section>
   );
 }

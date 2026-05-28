@@ -3,7 +3,7 @@ import StatisticCard from "./StatisticCard";
 export function StatsCards() {
   return (
     <section
-      aria-label="Dashboard statiscitcs"
+      aria-label="Dashboard statistics"
       className="grid grid-cols-2 md:grid-cols-4 gap-3.5"
     >
       <StatisticCard

@@ -17,18 +17,3 @@ export function Sidebar() {
     </aside>
   );
 }
-
-
-
-/* 
-
-
-md
-wl - weekly load
-
-WLWLWLWLWLWLWL
-WLWLWLWLWLWLWL
-SHSH ALAL DLDL
-SHSH ALAL DLDL
-SHSH ALAL DLDL
-*/
