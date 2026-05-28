@@ -27,6 +27,9 @@
   --color-accent-red: #ef4444;
   --color-accent-purple: #a78bfa;
   --color-surface-hi: #111116;
+  --color-hint-bg: #4A7EFF14;
+  --color-hint-border: #4A7EFF38;
+  --color-hint-description: #93c5fd;
 
   --color-surface: #0d0d10;
   --color-text-pri: #e2e8f0;
