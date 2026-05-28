@@ -1,0 +1,539 @@
+Oto uporządkowana lista zadań, dokładnie według wskazanej przez Ciebie kolejności identyfikatorów. Wszystkie tytuły, opisy oraz etykiety zostały w pełni zachowane.
+
+
+---
+
+**I2. [Documentation] Comprehensive README and configuration**
+
+**Description:**
+
+```
+Połączenie zadań #14, #15.
+
+README.md:
+- 2-3 sentence description of what it does
+- Tech stack
+- `docker-compose up` instructions
+- Screenshot of UI
+- Link to Swagger docs at /docs
+
+.env.example:
+- Create file with placeholder values + comments explaining each variable (DATABASE_URL, etc.)
+
+```
+
+**Labels:** `infra` `documentation` `priority: high`
+
+
+---
+
+**F2. [Frontend] Form optimization and validation**
+
+**Description:**
+
+```
+Połączenie zadań #26, #30, #31.
+
+Client-side validation:
+- Add email/password validation before sending to API
+
+React Hook Form:
+- Replace native array state in GeneratePlanForm to optimize rendering and eliminate excessive re-renders
+
+Zod integration:
+- Use Zod schemas synced with Pydantic backend schemas
+- Block form submission if Duration field is empty before network request
+
+```
+
+**Labels:** `frontend` `priority: medium`
+
+---
+
+**I5. [Infra] Code quality and formatting**
+
+**Description:**
+
+```
+Implement unified code formatting rules across project (both Python and TypeScript), running automatically as linter step in GitHub Actions workflow.
+
+Setup: ESLint + Prettier for TypeScript, Flake8 for Python.
+
+```
+
+**Labels:** `infra` `priority: low`
+
+---
+
+**B2. [Infra] Secure secrets management in GitHub Actions**
+
+**Description:**
+
+```
+CI/CD pipeline needs test database credentials and environment variables.
+
+Fix: Configure workflow to inject sensitive data dynamically via secrets.GITHUB_TOKEN, eliminating any keys stored in repository.
+
+```
+
+**Labels:** `backend` `infra` `priority: high`
+
+---
+
+**F10. [Frontend] Error handling**
+
+**Description:**
+
+```
+Create top-level Error Boundary component catching unexpected JS rendering errors. Instead of white screen of death, user sees elegant panel with "Refresh app" button.
+
+```
+
+**Labels:** `frontend` `priority: low`
+
+---
+
+**I1. [Infra] Full Docker Compose setup (app + DB + frontend)**
+
+**Description:**
+
+```
+docker-compose.yml only defines PostgreSQL. Frontend and backend must be run manually.
+
+Fix: Add service definitions for FastAPI backend and Vite frontend. Enable running entire stack with `docker-compose up --build`.
+
+```
+
+**Labels:** `infra` `priority: high`
+
+---
+
+**I4. [Infra] OpenAPI documentation enhancement**
+
+**Description:**
+
+```
+Clean up docstrings and field descriptions in Pydantic models in api.py so auto-generated docs at /docs become fully professional reference for frontend.
+
+```
+
+**Labels:** `infra` `priority: medium`
+
+---
+
+**F5. [Frontend] Project structure improvements**
+
+**Description:**
+
+```
+Połączenie zadań #32, #33.
+
+Absolute imports:
+- Set up aliases in tsconfig.json and Vite config to use import Button from '@/components/ui/Button'
+- Replace error-prone ../../components/ui/Button paths
+
+TanStack Query:
+- Move all mutations to dedicated hooks ensuring automatic invalidation for ['plans'] query key
+- Fix loose operations in DashboardPage.tsx without cache invalidation
+
+```
+
+**Labels:** `frontend` `priority: medium`
+
+---
+
+**B4. [Backend] CRUD operations enhancement**
+
+**Description:**
+
+```
+Połączenie zadań #19, #20.
+
+- Add pagination to GET /my-plans: skip: int = 0, limit: int = 10 query params with .offset(skip).limit(limit)
+- Add PATCH /api/v1/plans/{id} endpoint for updating plan name and max_concurrent
+
+```
+
+**Labels:** `backend` `priority: medium`
+
+---
+
+**F1. [Frontend] Authentication and session management**
+
+**Description:**
+
+```
+Połączenie zadań #25, #28.
+
+Token refresh:
+- Implement axios interceptor that catches 401, calls /api/v1/refresh, saves new access token, and retries failed request
+
+Persistence:
+- Save token in localStorage and auto-login on page refresh (eliminate logout on F5)
+
+```
+
+**Labels:** `frontend` `priority: medium`
+
+---
+
+**I3. [Infra] CI/CD pipeline and database automation**
+
+**Description:**
+
+```
+Połączenie zadań #38, #39, #41.
+
+CI pipeline:
+- Create .github/workflows/test.yml: install deps → run pytest → fail if coverage <70%
+
+Database automation:
+- Add startup script to backend container that runs migrations automatically before uvicorn starts
+- Verify `alembic upgrade head` works on fresh DB and creates all tables+constraints
+
+```
+
+**Labels:** `infra` `priority: medium`
+
+---
+
+**B1. [Tests] Comprehensive test suite for authentication and core algorithm**
+
+**Description:**
+
+```
+Połączenie zadań #9 i #10.
+
+Authentication tests:
+- Clean DB, register new account
+- Get JWT tokens
+- Attempt authorization to protected endpoint /users/me
+- Login with wrong password should return 401
+
+Core algorithm tests (CourseGraph.get_constrained_study_plan):
+- Graph without cycles
+- Graph with cycle (should raise ValueError)
+- max_concurrent=1 vs max_concurrent=3 timing differences
+- Isolated subjects (no dependencies)
+
+```
+
+**Labels:** `backend` `tests` `priority: high`
+
+---
+
+**B6. [Backend] Database optimization**
+
+**Description:**
+
+```
+Połączenie zadań #23, #42.
+
+- Add index=True to User.email, Plan.owner_id, Subject.plan_id + Alembic migration
+- Cache calculated schedules in database after generation or implement proper eager loading with joinedload
+- Fix N+1 problem in reconstruct_and_calculate_plan function
+
+```
+
+**Labels:** `backend` `priority: medium`
+
+---
+
+**F3. [Frontend] Responsive design and mobile support**
+
+**Description:**
+
+```
+Unknown if app works on <768px width. 60% of web traffic is mobile — if it breaks on phone, recruiter will see it on first README screenshot.
+
+Fix: Test and fix layout for mobile devices.
+
+```
+
+**Labels:** `frontend` `priority: medium`
+
+---
+
+**I7. [Infra] Type safety automation**
+
+**Description:**
+
+```
+Use tool like openapi-typescript. Scans running FastAPI backend, pulls JSON structure and auto-generates src/types/auth.ts and plan.ts files, eliminating need to manually write interfaces on frontend.
+
+```
+
+**Labels:** `infra` `priority: low`
+
+---
+
+**F6. [Tests] Unit tests for UI components (Vitest)**
+
+**Description:**
+
+```
+Set up Vitest + React Testing Library to test isolated components (e.g., InputField correctly toggles password visibility on eye icon click).
+
+```
+
+**Labels:** `frontend` `tests` `priority: medium`
+
+---
+
+**B8. [Tests] Backend integration and edge case tests**
+
+**Description:**
+
+```
+Połączenie zadań #34, #35, #36.
+
+Integration tests with TestClient:
+- Register user
+- Login
+- Create plan
+- Get my plans
+- Delete plan
+
+Edge cases:
+- Token refresh race condition with 3 simultaneous requests
+- Isolated graph vertices (subjects without dependencies) - verify packing into empty slots
+
+```
+
+**Labels:** `backend` `tests` `priority: medium`
+
+---
+
+**B10. [Backend] Project dependency management**
+
+**Description:**
+
+```
+requirements.txt has pytest mixed with production dependencies. In production you install tests — wastes space and risks vulnerabilities in dev tools.
+
+Fix: Migrate to pyproject.toml with [project.optional-dependencies] for dev tools.
+
+```
+
+**Labels:** `backend` `priority: low`
+
+---
+
+**I6. [Infra] Docker optimization**
+
+**Description:**
+
+```
+Dockerfile currently installs everything in one stage. Create builder stage (compilation) + runner stage (runtime only). Image will be 3x smaller.
+
+```
+
+**Labels:** `infra` `priority: low`
+
+---
+
+**B5. [Backend] Advanced academic planning features**
+
+**Description:**
+
+```
+Połączenie zadań #21, #22.
+
+- Add ects and semester_target fields to Subject model
+- Modify algorithm to optimize by ECTS constraints and credit limits per semester
+- Add deadline field support in core.py to prioritize subjects with hard deadlines (e.g., end of academic year)
+
+```
+
+**Labels:** `backend` `priority: medium`
+
+---
+
+**B13. [Backend] Soft delete implementation**
+
+**Description:**
+
+```
+Replace hard delete (deletePlan) with is_deleted: bool column. Protects users from permanent loss of generated schedules due to accidental click.
+
+```
+
+**Labels:** `backend` `priority: low`
+
+---
+
+**F8. [Frontend] Accessibility (a11y)**
+
+**Description:**
+
+```
+Add aria-label to buttons, verify Tab navigation works. Larger companies have a11y audits — lack is red flag.
+
+```
+
+**Labels:** `frontend` `priority: low`
+
+---
+
+**F9. [Frontend] Theme system**
+
+**Description:**
+
+```
+Use Tailwind v4 native @theme system and CSS variables from index.css to create theme switcher, saving user preference in localStorage.
+
+```
+
+**Labels:** `frontend` `priority: low`
+
+---
+
+**I9. [Tests] E2E tests with Playwright**
+
+**Description:**
+
+```
+Test complete user journeys: register → login → create plan → view dashboard → logout.
+
+Fix: Set up Playwright and write 3-5 critical path scenarios.
+
+```
+
+**Labels:** `infra` `tests` `priority: low`
+
+---
+
+**B15. [Tests] Performance and stress testing**
+
+**Description:**
+
+```
+Write test generating giant synthetic study graph (1000 subjects with complex dependencies) and measure execution time of get_constrained_study_plan to detect bottlenecks.
+
+```
+
+**Labels:** `backend` `tests` `priority: low`
+
+---
+
+**B11. [Backend] Performance optimization with Redis**
+
+**Description:**
+
+```
+Cache layer before PostgreSQL for fetching completed plans reduces expensive SQL queries for rarely-changing data.
+
+Fix: Implement Redis cache with TTL for plan data on /my-plans endpoint.
+
+```
+
+**Labels:** `backend` `priority: low`
+
+---
+
+**B9. [Backend] Token security and session management**
+
+**Description:**
+
+```
+Połączenie zadań #43, #48.
+
+Refresh token management:
+- Create RefreshToken table with user_id, token_hash, expires_at, revoked
+- Check against it on /refresh endpoint for token revocation
+
+Rate limiting:
+- Add limiter 100 req/min per IP on /api/v1/register and /api/v1/token using slowapi
+
+```
+
+**Labels:** `backend` `priority: low`
+
+---
+
+**I8. [Infra] Staging and monitoring**
+
+**Description:**
+
+```
+Połączenie zadań #64, #65.
+
+Staging environment:
+- Deploy staging instance on Render/Railway with separate database
+- Test changes in production-like environment before deploying to main
+
+Monitoring:
+- Integrate Sentry for both backend (Python) and frontend (React) error tracking
+- Track runtime errors in production automatically with alerting
+
+```
+
+**Labels:** `infra` `priority: low`
+
+---
+
+**B12. [Backend] Export and import features**
+
+**Description:**
+
+```
+Create module generating .ics files (Google/Apple calendar) and clean PDF summary from algorithm output, enabling students to import plans to phones easily.
+
+```
+
+**Labels:** `backend` `priority: low`
+
+---
+
+**F11. [Frontend] User experience enhancements**
+
+**Description:**
+
+```
+Połączenie zadań #61, #62.
+
+Tooltips:
+- Implement tooltip library (e.g., Radix UI Tooltip) with helpful descriptions
+- Add explanations for "max_concurrent" and "dependencies" fields
+
+Undo/Redo:
+- Implement command pattern with undo stack
+- User accidentally deletes subject from plan, can restore without recreating
+
+```
+
+**Labels:** `frontend` `priority: low`
+
+---
+
+**F12. [Tests] Frontend integration tests**
+
+**Description:**
+
+```
+Write integration test verifying frontend behavior when server returns 401 Unauthorized on /refresh request — system must immediately clear tokenStorage, reset isLogged state, and redirect to /login.
+
+```
+
+**Labels:** `frontend` `tests` `priority: low`
+
+---
+
+**B14. [Backend] Collaboration features foundation**
+
+**Description:**
+
+```
+Połączenie zadań #59, #60.
+
+Permissions:
+- Create Permission model with role-based access control (view, edit, admin)
+- Replace binary owner_id check with granular permissions
+
+Audit log:
+- Create AuditLog table logging all CRUD operations on plans
+- Track who changed what and when for debugging and potential "undo" feature
+
+```
+
+**Labels:** `backend` `priority: low`

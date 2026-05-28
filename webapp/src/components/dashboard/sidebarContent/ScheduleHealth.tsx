@@ -1,6 +1,6 @@
 function ScheduleHealth() {
     return (
-        <section className="bg-blue-500 h-[500px]">
+        <section className="">
             <h2>Schedule Health</h2>
             <dl>
                 <dt>Overall Standing</dt>
