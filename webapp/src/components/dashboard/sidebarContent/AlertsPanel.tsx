@@ -1,6 +1,6 @@
 function AlertsPanel() {
     return (
-        <section className="bg-green-500 h-[500px]">
+        <section className="">
             <h2>Alerts</h2>
             <article>
                 <h3>Week 5–6 Collision</h3>
