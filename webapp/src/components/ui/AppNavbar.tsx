@@ -19,7 +19,7 @@ function AppNavbar() {
   }, [location.pathname]);
 
   return (
-    <header className="bg-surface/95 border-b border-border-dim backdrop-blur-xl shrink-0">
+    <header className="bg-surface/95 border-b border-dim backdrop-blur-xl shrink-0">
       <div className="px-6 py-3 flex justify-between items-center ">
         <div className="md:flex gap-3 font-sf items-center">
           <h1 className="text-base tracking-tight font-semibold text-slate-100 cursor-pointer">
@@ -38,7 +38,7 @@ function AppNavbar() {
                     <button
                       type="button"
                       aria-current={isActive ? "page" : undefined}
-                      className={`text-xs lg:text-sm text-text-sec px-2.5 py-1 rounded-sm ${isActive ? "nav-active font-medium" : ""
+                      className={`text-xs lg:text-sm text-sec px-2.5 py-1 rounded-sm ${isActive ? "nav-active font-medium" : ""
                         } hover:bg-white/5`}
                     >
                       {item.label}
@@ -52,8 +52,8 @@ function AppNavbar() {
 
         <div className="flex items-center gap-4">
           <div>
-            <span className="lg:hidden bg-surface-hi font-mono text-xs text-text-sec border border-border-dim px-3 py-1 mr-3 rounded-md">Fall 2024 · W3</span>
-            <span className="hidden lg:block bg-surface-hi font-mono text-xs text-text-sec border border-border-dim px-3 py-1 mr-3 rounded-md">Fall 2024 · Week 3/12</span>
+            <span className="lg:hidden bg-surface-hi font-mono text-xs text-sec border border-dim px-3 py-1 mr-3 rounded-md">Fall 2024 · W3</span>
+            <span className="hidden lg:block bg-surface-hi font-mono text-xs text-sec border border-dim px-3 py-1 mr-3 rounded-md">Fall 2024 · Week 3/12</span>
           </div>
 
           <button
@@ -63,7 +63,7 @@ function AppNavbar() {
           >
             <div className="hidden lg:flex flex-col items-end font-sf">
               <span className="text-xs text-medium text-slate-200">Dr. Alan Turing</span>
-              <span className="text-[9px] font-mono text-text-mut">a.turing@flow.edu</span>
+              <span className="text-[9px] font-mono text-mut">a.turing@flow.edu</span>
             </div>
 
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-avatar cursor-pointer">
@@ -81,9 +81,9 @@ function AppNavbar() {
           >
             {!openMenu ? (
               <>
-                <span className="block w-5 h-[1.5px] bg-text-sec rounded-sm" />
-                <span className="block w-5 h-[1.5px] bg-text-sec rounded-sm" />
-                <span className="block w-5 h-[1.5px] bg-text-sec rounded-sm" />
+                <span className="block w-5 h-[1.5px] bg-sec rounded-sm" />
+                <span className="block w-5 h-[1.5px] bg-sec rounded-sm" />
+                <span className="block w-5 h-[1.5px] bg-sec rounded-sm" />
               </>
             ) : (
               <span className="text-text-primary text-lg font-bold">✕</span>
@@ -95,7 +95,7 @@ function AppNavbar() {
       <nav
         id="mobile-nav-menu"
         aria-label="Mobile navigation"
-        className={`px-3 border-t border-border-dim ${openMenu ? "block" : "hidden"}`}>
+        className={`px-3 border-t border-dim ${openMenu ? "block" : "hidden"}`}>
         <ul>
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
@@ -106,7 +106,7 @@ function AppNavbar() {
                   type="button"
                   onClick={() => setOpenMenu(false)}
                   aria-current={isActive ? "page" : undefined}
-                  className={`w-full text-left text-sm text-text-sec px-3 py-2.5 rounded-sm ${isActive ? "nav-active font-medium" : ""
+                  className={`w-full text-left text-sm text-sec px-3 py-2.5 rounded-sm ${isActive ? "nav-active font-medium" : ""
                     } hover:bg-white/5`}
                 >
                   {item.label}

@@ -2,15 +2,15 @@ import HealthRing from "../../ui/HealthRing"
 
 function ScheduleHealth() {
     return (
-        <section className="bg-surface border border-border-dim rounded-xl p-3.5">
-            <p className="font-mono text-[10px] uppercase tracking-widest text-text-sec mb-3">Schedule health</p>
+        <section className="bg-surface border border-dim rounded-xl p-3.5">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-sec mb-3">Schedule health</p>
 
             <div className="flex items-center gap-3.5 mb-4">
                 <HealthRing value={82}/>
 
                 <div className="flex flex-col">
                     <span className="font-bold text-[#d8b4fe] tracking-tight">Good Standing</span>
-                    <span className="text-xs text-text-sec mt-0.5">1 conflict detected</span>
+                    <span className="text-xs text-sec mt-0.5">1 conflict detected</span>
                 </div>
             </div>
 

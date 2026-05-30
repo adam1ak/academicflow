@@ -39,11 +39,11 @@ function StatisticCard({ accentColor, title, value, description }: StatisticCard
     const styles = accentVariants[accentColor]
 
     return (
-        <div className={`relative bg-surface border border-border-dim p-3.5 rounded-xl overflow-hidden`}>
+        <div className={`relative bg-surface border border-dim p-3.5 rounded-xl overflow-hidden`}>
             <div className={`stat-bar ${styles.statBar}`} />
-            <dt className="font-mono text-[10px] tracking-widest text-text-sec uppercase mb-2">{title}</dt>
+            <dt className="font-mono text-[10px] tracking-widest text-sec uppercase mb-2">{title}</dt>
             <dd className={`text-2xl font-bold leading-none mb-1 ${styles.value}`}>{value}</dd>
-            <p className="font-mono text-[10px] text-text-mut">{description}</p>
+            <p className="font-mono text-[10px] text-mut">{description}</p>
         </div>
     )
 }
