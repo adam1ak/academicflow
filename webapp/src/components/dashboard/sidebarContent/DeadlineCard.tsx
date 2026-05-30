@@ -41,7 +41,7 @@ const accentVariants = {
 function DeadlineCard({ type, title, date, classroom, isFirst }: DeadlineCardProps) {
 
     const styles = accentVariants[type];
-    const separatorClasses = !isFirst ? "border-t mt-2 pt-2 border-border border-[rgba(255,255,255,0.04)]" : ""
+    const separatorClasses = !isFirst ? "border-t mt-2 pt-2 border-[rgba(255,255,255,0.04)]" : "" 
 
     return (
         <div className={`flex items-center gap-2.5 ${separatorClasses}`}>

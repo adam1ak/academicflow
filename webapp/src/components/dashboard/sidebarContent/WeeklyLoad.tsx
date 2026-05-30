@@ -14,6 +14,7 @@ function WeeklyLoad() {
             key={index}
             week={index + 1}
             load={load}
+            type={load % 2 == 0 ? "light" : "busy"}
           />
         ))}
       </div>
