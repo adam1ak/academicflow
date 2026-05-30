@@ -51,14 +51,14 @@ function DeadlineCard({ type, title, date, classroom, isFirst }: DeadlineCardPro
             </div>
 
             <div className="flex flex-col">
-                <span className="text-xs font-medium text-text-pri mb-0.5 whitespace-nowrap text-ellipsis">{title}</span>
+                <span className="text-xs font-medium text-pri mb-0.5 whitespace-nowrap text-ellipsis">{title}</span>
 
                 <div className="flex gap-2 items-center">
-                    <span className="font-mono text-text-mut text-[9px]">{classroom}</span>
+                    <span className="font-mono text-mut text-[9px]">{classroom}</span>
                     <span className={`font-mono rounded text-[8px] ${styles.typeBg} ${styles.text} px-1.5 py-0.5`}>{type}</span>
                 </div>
 
-                <span className="font-mono text-text-mut text-[9px] mt-0.5">x days</span>
+                <span className="font-mono text-mut text-[9px] mt-0.5">x days</span>
             </div>
         </div>
     )

@@ -39,7 +39,7 @@ function AlertCard({ type = "danger", title, description } : AlertCardProps) {
     return (
         <div className={`p-2.5 rounded-lg border ${styles.bg} ${styles.border}`}>
             <p className={`text-xs font-semibold ${styles.text}`}>{title}</p>
-            <p className="text-[10px] text-text-sec leading-relaxed">{description}</p>
+            <p className="text-[10px] text-sec leading-relaxed">{description}</p>
         </div>
     )
 }

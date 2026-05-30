@@ -29,14 +29,14 @@
   --color-surface-hi: #111116;
   --color-hint-bg: #4A7EFF14;
   --color-hint-border: #4A7EFF38;
-  --color-hint-description: #93c5fd;
+  --color-hint-text: #93c5fd;
 
   --color-surface: #0d0d10;
-  --color-text-pri: #e2e8f0;
-  --color-text-sec: #64748b;
-  --color-text-mut: #334155;
-  --color-border-dim: rgba(255, 255, 255, 0.07);
-  --color-border-hi: rgba(255, 255, 255, 0.14);
+  --color-pri: #e2e8f0;
+  --color-sec: #64748b;
+  --color-mut: #334155;
+  --color-dim: rgba(255, 255, 255, 0.07);
+  --color-hi: rgba(255, 255, 255, 0.14);
   --color-blue-glow: rgba(74, 126, 255, 0.18);
   --color-blue-soft: #93c5fd;
   --color-surface-progress: #1a1a22;

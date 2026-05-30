@@ -31,7 +31,7 @@ function WeekCard({ week, load, type = "light" }: WeekCardProps) {
                 <span className="font-mono text-[8px] text-[rgba(255,255,255,.6)] font-medium">{load}</span>
             </div>
 
-            <p className="font-mono text-text-mut text-[8px]">W{week}</p>
+            <p className="font-mono text-mut text-[8px]">W{week}</p>
         </div>
     )
 }

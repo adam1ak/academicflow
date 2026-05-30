@@ -2,8 +2,8 @@ import AlertCard from "./AlertCard"
 
 function AlertsPanel() {
     return (
-        <section className="bg-surface border border-border-dim rounded-xl p-3.5">
-            <p className="font-mono text-[10px] uppercase tracking-widest text-text-sec mb-3">Alerts</p>
+        <section className="bg-surface border border-dim rounded-xl p-3.5">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-sec mb-3">Alerts</p>
 
             <div className="space-y-2.5">
                 <AlertCard

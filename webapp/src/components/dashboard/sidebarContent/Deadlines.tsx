@@ -2,8 +2,8 @@ import DeadlineCard from "./DeadlineCard"
 
 function Deadlines() {
   return (
-    <section className="bg-surface border border-border-dim rounded-xl p-3.5">
-      <p className="font-mono text-[10px] uppercase tracking-widest text-text-sec mb-3">Deadlines</p>
+    <section className="bg-surface border border-dim rounded-xl p-3.5">
+      <p className="font-mono text-[10px] uppercase tracking-widest text-sec mb-3">Deadlines</p>
 
       <div>
         <DeadlineCard
