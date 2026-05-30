@@ -5,14 +5,14 @@ import WeeklyLoad from "./WeeklyLoad";
 
 export function Sidebar() {
   return (
-    <aside className="w-full lg:w-[280px] shrink-0 grid grid-cols-1 md:grid-cols-3 lg:flex lg:flex-col lg:overflow-y-auto">
+    <aside className="w-full lg:w-[280px] shrink-0 grid grid-cols-1 gap-3 md:grid-cols-3 lg:flex lg:flex-col lg:overflow-y-auto">
       
       {/* <div className="md:col-span-3 lg:col-span-1">
         <WeeklyLoad />
-      </div>
+      </div> */}
 
       <ScheduleHealth />
-      <AlertsPanel /> */}
+      {/* <AlertsPanel /> */}
       <Deadlines />
     </aside>
   );

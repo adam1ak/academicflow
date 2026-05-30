@@ -3,7 +3,7 @@ interface HealthRingProps {
   color?: string;
 }
 
-function HealthRing({ value, color = "#a78bfa" }: HealthRingProps) {
+function HealthRing({ value, color = "#3f3f46" }: HealthRingProps) {
   const radius = 28;
   const circumference = 2 * Math.PI * radius;
 
