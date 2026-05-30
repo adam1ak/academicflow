@@ -12,7 +12,7 @@ export function Sidebar() {
       </div> */}
 
       <ScheduleHealth />
-      {/* <AlertsPanel /> */}
+      <AlertsPanel />
       <Deadlines />
     </aside>
   );
