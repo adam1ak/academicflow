@@ -26,7 +26,7 @@ export function DAGPanel() {
           </div>
 
           <button
-            className="border border-border-dim rounded-md text-text-sec text-sm px-2 py-1 hover:bg-white/5 transition-colors leading-none cursor-pointer">
+            className="border border-border-dim rounded-md text-text-sec text-sm px-2 py-1 hover:bg-white/5 transition-colors leading-none ">
             ⛶
           </button>
         </div>

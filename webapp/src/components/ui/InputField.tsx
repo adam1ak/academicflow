@@ -52,7 +52,6 @@ function InputField({ id, label, type = "text", placeholder, value, onChange, re
                         type="button"
                         onClick={() => setIsPasswordVisible(!isPasswordVisible)}
                         className="
-                            cursor-pointer
                             absolute right-4 top-1/2 -translate-y-1/2
                             text-text-muted hover:text-text-secondary
                             transition-colors

@@ -12,7 +12,6 @@ function OAuthButton({ provider, onClick, login } : OAuthButtonProps) {
             type="button"
             onClick={onClick}
             className={`
-                cursor-pointer
                 w-full flex items-center justify-center 
                 gap-3 py-2.5 rounded-md
                 font-sans text-sm font-semibold 

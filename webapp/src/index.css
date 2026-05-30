@@ -47,6 +47,8 @@
   body {
     @apply bg-bg text-text-primary font-sans antialiased;
   }
+
+  button { cursor: pointer }
 }
 
 ::-webkit-scrollbar {
