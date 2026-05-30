@@ -38,7 +38,7 @@ function AppNavbar() {
                     <button
                       type="button"
                       aria-current={isActive ? "page" : undefined}
-                      className={`text-xs lg:text-sm text-text-sec px-2.5 py-1 rounded-sm cursor-pointer ${isActive ? "nav-active font-medium" : ""
+                      className={`text-xs lg:text-sm text-text-sec px-2.5 py-1 rounded-sm ${isActive ? "nav-active font-medium" : ""
                         } hover:bg-white/5`}
                     >
                       {item.label}
@@ -59,7 +59,7 @@ function AppNavbar() {
           <button
             type="button"
             aria-label="User profile"
-            className="flex items-center gap-2 lg:cursor-pointer lg:hover:bg-white/5 lg:px-1.5 lg:py-1 lg:rounded-lg"
+            className="flex items-center gap-2 lg:hover:bg-white/5 lg:px-1.5 lg:py-1 lg:rounded-lg"
           >
             <div className="hidden lg:flex flex-col items-end font-sf">
               <span className="text-xs text-medium text-slate-200">Dr. Alan Turing</span>
@@ -76,7 +76,7 @@ function AppNavbar() {
             aria-expanded={openMenu}
             aria-controls="mobile-nav-menu"
             aria-label="Toggle navigation menu"
-            className="md:hidden flex flex-col gap-1 cursor-pointer"
+            className="md:hidden flex flex-col gap-1"
             onClick={() => setOpenMenu(prev => !prev)}
           >
             {!openMenu ? (
@@ -106,7 +106,7 @@ function AppNavbar() {
                   type="button"
                   onClick={() => setOpenMenu(false)}
                   aria-current={isActive ? "page" : undefined}
-                  className={`w-full text-left text-sm text-text-sec px-3 py-2.5 rounded-sm cursor-pointer ${isActive ? "nav-active font-medium" : ""
+                  className={`w-full text-left text-sm text-text-sec px-3 py-2.5 rounded-sm ${isActive ? "nav-active font-medium" : ""
                     } hover:bg-white/5`}
                 >
                   {item.label}

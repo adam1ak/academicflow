@@ -11,6 +11,7 @@ function Deadlines() {
           title="ML Assign."
           date="Tmr"
           classroom="MATH 102"
+          isFirst={true}
         />
 
         <DeadlineCard
@@ -18,6 +19,7 @@ function Deadlines() {
           title="ML Assign."
           date="Tmr"
           classroom="MATH 102"
+          isFirst={false}
         />
 
         <DeadlineCard
@@ -25,6 +27,7 @@ function Deadlines() {
           title="ML Assign."
           date="Tmr"
           classroom="MATH 102"
+          isFirst={false}
         />
 
         <DeadlineCard
@@ -32,6 +35,7 @@ function Deadlines() {
           title="ML Assign."
           date="Tmr"
           classroom="MATH 102"
+          isFirst={false}
         />
       </div>
     </section>

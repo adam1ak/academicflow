@@ -14,7 +14,7 @@ function Button({ children, type = "button", onClick } : ButtonProps) {
             className="
                 w-full py-3.5 bg-btn-blue hover:bg-btn-blue-hover
                 text-white font-mono text-xs font-semibold tracking-widest uppercase
-                rounded-md border-none cursor-pointer
+                rounded-md border-none 
                 transition-all duration-150 active:scale-95
             "
         >
