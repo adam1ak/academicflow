@@ -1,9 +1,15 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import LogoutModal from "./LogoutModal";
+import { useAuth } from "../../context/AuthContext";
+import { tokenStorage } from "../../services/tokenStorage";
 
 function AppNavbar() {
 
+  const { setIsLogged } = useAuth()
+
   const [openMenu, setOpenMenu] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const location = useLocation()
 
   const navItems = [
@@ -18,105 +24,120 @@ function AppNavbar() {
     setOpenMenu(false);
   }, [location.pathname]);
 
+  const handleLogout = () => {
+    tokenStorage.clear()
+    setIsLogged(false)
+    setIsModalOpen(false)
+  }
+
   return (
-    <header className="bg-surface/95 border-b border-dim backdrop-blur-xl shrink-0">
-      <div className="px-6 py-3 flex justify-between items-center ">
-        <div className="md:flex gap-3 font-sf items-center">
-          <h1 className="text-base tracking-tight font-semibold text-slate-100 cursor-pointer">
-            AcademicFlow
+    <>
+      <LogoutModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={handleLogout} />
+
+      <header className="bg-surface/95 border-b border-dim backdrop-blur-xl shrink-0">
+
+        <div className="px-6 py-3 flex justify-between items-center ">
+          <div className="md:flex gap-3 font-sf items-center">
+            <h1 className="text-base tracking-tight font-semibold text-slate-100 cursor-pointer">
+              AcademicFlow
             </h1>
 
-          <div aria-hidden="true" className="hidden md:block w-px h-4 bg-white/10 rounded-sm" />
+            <div aria-hidden="true" className="hidden md:block w-px h-4 bg-white/10 rounded-sm" />
 
-          <nav aria-label="Desktop navigation">
-            <ul className="hidden md:flex gap-4">
-              {navItems.map((item) => {
-                const isActive = location.pathname === item.path;
+            <nav aria-label="Desktop navigation">
+              <ul className="hidden md:flex gap-4">
+                {navItems.map((item) => {
+                  const isActive = location.pathname === item.path;
 
-                return (
-                  <li key={item.label}>
-                    <button
-                      type="button"
-                      aria-current={isActive ? "page" : undefined}
-                      className={`text-xs lg:text-sm text-sec px-2.5 py-1 rounded-sm ${isActive ? "nav-active font-medium" : ""
-                        } hover:bg-white/5`}
-                    >
-                      {item.label}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <div>
-            <span className="lg:hidden bg-surface-hi font-mono text-xs text-sec border border-dim px-3 py-1 mr-3 rounded-md">Fall 2024 · W3</span>
-            <span className="hidden lg:block bg-surface-hi font-mono text-xs text-sec border border-dim px-3 py-1 mr-3 rounded-md">Fall 2024 · Week 3/12</span>
+                  return (
+                    <li key={item.label}>
+                      <button
+                        type="button"
+                        aria-current={isActive ? "page" : undefined}
+                        className={`text-xs lg:text-sm text-sec px-2.5 py-1 rounded-sm ${isActive ? "nav-active font-medium" : ""
+                          } hover:bg-white/5`}
+                      >
+                        {item.label}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </nav>
           </div>
 
-          <button
-            type="button"
-            aria-label="User profile"
-            className="flex items-center gap-2 lg:hover:bg-white/5 lg:px-1.5 lg:py-1 lg:rounded-lg"
-          >
-            <div className="hidden lg:flex flex-col items-end font-sf">
-              <span className="text-xs text-medium text-slate-200">Dr. Alan Turing</span>
-              <span className="text-[9px] font-mono text-mut">a.turing@flow.edu</span>
+          <div className="flex items-center gap-4">
+            <div>
+              <span className="lg:hidden bg-surface-hi font-mono text-xs text-sec border border-dim px-3 py-1 mr-3 rounded-md">Fall 2024 · W3</span>
+              <span className="hidden lg:block bg-surface-hi font-mono text-xs text-sec border border-dim px-3 py-1 mr-3 rounded-md">Fall 2024 · Week 3/12</span>
             </div>
 
-            <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-avatar cursor-pointer">
-              AT
-            </div>
-          </button>
+            <button
+              type="button"
+              aria-label="User profile"
+              onClick={() => setIsModalOpen(true)}
+              className="flex items-center gap-2 lg:hover:bg-white/5 lg:px-1.5 lg:py-1 lg:rounded-lg"
+            >
+              <div className="hidden lg:flex flex-col items-end font-sf">
+                <span className="text-xs font-medium text-slate-200">Dr. Alan Turing</span>
+                <span className="text-[9px] font-mono text-mut">a.turing@flow.edu</span>
+              </div>
 
-          <button
-            type="button"
-            aria-expanded={openMenu}
-            aria-controls="mobile-nav-menu"
-            aria-label="Toggle navigation menu"
-            className="md:hidden flex flex-col gap-1"
-            onClick={() => setOpenMenu(prev => !prev)}
-          >
-            {!openMenu ? (
-              <>
-                <span className="block w-5 h-[1.5px] bg-sec rounded-sm" />
-                <span className="block w-5 h-[1.5px] bg-sec rounded-sm" />
-                <span className="block w-5 h-[1.5px] bg-sec rounded-sm" />
-              </>
-            ) : (
-              <span className="text-text-primary text-lg font-bold">✕</span>
-            )}
-          </button>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-avatar cursor-pointer">
+                AT
+              </div>
+            </button>
+
+            <button
+              type="button"
+              aria-expanded={openMenu}
+              aria-controls="mobile-nav-menu"
+              aria-label="Toggle navigation menu"
+              className="md:hidden flex flex-col gap-1"
+              onClick={() => setOpenMenu(prev => !prev)}
+            >
+              {!openMenu ? (
+                <>
+                  <span className="block w-5 h-[1.5px] bg-sec rounded-sm" />
+                  <span className="block w-5 h-[1.5px] bg-sec rounded-sm" />
+                  <span className="block w-5 h-[1.5px] bg-sec rounded-sm" />
+                </>
+              ) : (
+                <span className="text-text-primary text-lg font-bold">✕</span>
+              )}
+            </button>
+          </div>
         </div>
-      </div>
 
-      <nav
-        id="mobile-nav-menu"
-        aria-label="Mobile navigation"
-        className={`px-3 border-t border-dim ${openMenu ? "block" : "hidden"}`}>
-        <ul>
-          {navItems.map((item) => {
-            const isActive = location.pathname === item.path;
+        <nav
+          id="mobile-nav-menu"
+          aria-label="Mobile navigation"
+          className={`px-3 border-t border-dim ${openMenu ? "block" : "hidden"}`}>
+          <ul>
+            {navItems.map((item) => {
+              const isActive = location.pathname === item.path;
 
-            return (
-              <li key={item.label}>
-                <button
-                  type="button"
-                  onClick={() => setOpenMenu(false)}
-                  aria-current={isActive ? "page" : undefined}
-                  className={`w-full text-left text-sm text-sec px-3 py-2.5 rounded-sm ${isActive ? "nav-active font-medium" : ""
-                    } hover:bg-white/5`}
-                >
-                  {item.label}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
-    </header>
+              return (
+                <li key={item.label}>
+                  <button
+                    type="button"
+                    onClick={() => setOpenMenu(false)}
+                    aria-current={isActive ? "page" : undefined}
+                    className={`w-full text-left text-sm text-sec px-3 py-2.5 rounded-sm ${isActive ? "nav-active font-medium" : ""
+                      } hover:bg-white/5`}
+                  >
+                    {item.label}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+      </header>
+    </>
   );
 }
 
