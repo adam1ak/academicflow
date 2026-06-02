@@ -1,6 +1,14 @@
+import { useRef } from "react";
+import { useFullscreen } from "../../../hooks/useFullscreen";
+import { FullscreenIcon, ExitFullscreenIcon } from "../../ui/FullscreenIcons";
+
 export function GanttPanel() {
+  const ganttRef = useRef<HTMLElement>(null)
+
+  const { isFullscreen, toggle } = useFullscreen(ganttRef)
+
   return (
-    <section className="bg-surface border border-dim rounded-xl overflow-hidden flex flex-col shrink-0 min-w-0">
+    <section ref={ganttRef} className={`bg-surface border border-dim rounded-xl overflow-hidden flex flex-col shrink-0 min-w-0 ${isFullscreen ? "panel-full-screen" : ""}`}>
       <header className="w-full flex flex-col items-start flex-wrap sm:flex-nowrap sm:flex-row sm:items-center sm:justify-between p-3.5 border-b border-dim bg-surface shrink-0">
         <div>
           <h2 className="text-sm font-semibold text-pri tracking-tight">Semester Timeline</h2>
@@ -31,8 +39,9 @@ export function GanttPanel() {
           </div>
 
           <button
+            onClick={toggle}
             className="border border-dim rounded-md text-sec text-sm px-2 py-1 hover:bg-white/5 transition-colors leading-none ">
-            ⛶
+            {isFullscreen ? <ExitFullscreenIcon /> : <FullscreenIcon />}
           </button>
         </div>
       </header>
