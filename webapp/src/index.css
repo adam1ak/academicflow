@@ -77,3 +77,10 @@
   right: 0;
   height: 2px;
 }
+
+.panel-full-screen {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 99999 !important;
+  border-radius: 0 !important;
+}
