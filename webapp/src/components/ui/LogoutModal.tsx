@@ -9,6 +9,8 @@ interface LogoutModalProps {
 function LogoutModal({ isOpen, onClose, onConfirm }: LogoutModalProps) {
 
     useEffect(() => {
+        if (!isOpen) return
+
         const handleKey = (e: KeyboardEvent) => {
             if (e.key === 'Escape') onClose()
         }
@@ -16,7 +18,7 @@ function LogoutModal({ isOpen, onClose, onConfirm }: LogoutModalProps) {
         document.addEventListener('keydown', handleKey)
         
         return () => document.removeEventListener('keydown', handleKey)
-    }, [onclick])
+    }, [isOpen, onClose])
 
     if (!isOpen) return null;
     return (
