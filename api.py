@@ -122,6 +122,29 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     else:
         return current_user
 
+def get_user_plan_or_404(plan_id: int, user_id: int, db: Session) -> models.Plan:
+    db_plan = db.query(models.Plan).filter(
+        models.Plan.id == plan_id,
+        models.Plan.owner_id == user_id
+    ).first()
+
+    if not db_plan:
+        raise HTTPException(status_code=404, detail="Plan not found")
+
+    return db_plan
+
+
+def get_subject_or_404(subject_id: int, plan_id: int, db: Session) -> models.Subject:
+    db_subject = db.query(models.Subject).filter(
+        models.Subject.id == subject_id,
+        models.Subject.plan_id == plan_id
+    ).first()
+
+    if not db_subject:
+        raise HTTPException(status_code=404, detail="Subject not found")
+
+    return db_subject
+
 @app.get("/")
 def health_check():
     return {
@@ -257,14 +280,7 @@ def add_subject_to_plan(
         db: Session = Depends(get_db),
         current_user: models.User = Depends(get_current_user)
 ):
-    db_plan = db.query(models.Plan).filter(
-        models.Plan.id == plan_id,
-        models.Plan.owner_id == current_user.id
-    ).first()
-
-    if not db_plan:
-        logger.warning(f"non-existent or foreign plan {plan_id}")
-        raise HTTPException(status_code=404, detail="Plan not found")
+    get_user_plan_or_404(plan_id, current_user.id, db)
 
     existing_subject = db.query(models.Subject).filter(
         models.Subject.plan_id == plan_id,
@@ -331,21 +347,8 @@ def update_subject(
         db: Session = Depends(get_db),
         current_user: models.User = Depends(get_current_user)
 ) :
-    db_plan = db.query(models.Plan).filter(
-        models.Plan.id == plan_id,
-        models.Plan.owner_id == current_user.id
-    ).first()
-
-    if not db_plan:
-        raise HTTPException(status_code=404, detail="Plan not found")
-
-    existing_subject = db.query(models.Subject).filter(
-        models.Subject.id == subject_id,
-        models.Subject.plan_id == plan_id
-    ).first()
-
-    if not existing_subject:
-        raise HTTPException(status_code=404, detail="Subject not found")
+    get_user_plan_or_404(plan_id, current_user.id, db)
+    existing_subject = get_subject_or_404(subject_id, plan_id, db)
 
     if payload.name is not None and payload.name != existing_subject.name:
         existing_name = db.query(models.Subject).filter(
@@ -414,21 +417,8 @@ def delete_subject(
         db: Session = Depends(get_db),
         current_user: models.User = Depends(get_current_user)
 ):
-    db_plan = db.query(models.Plan).filter(
-        models.Plan.id == plan_id,
-        models.Plan.owner_id == current_user.id
-    ).first()
-
-    if not db_plan:
-        raise HTTPException(status_code=404, detail="Plan not found")
-
-    existing_subject = db.query(models.Subject).filter(
-        models.Subject.id == subject_id,
-        models.Subject.plan_id == plan_id
-    ).first()
-
-    if not existing_subject:
-        raise HTTPException(status_code=404, detail="Subject not found")
+    get_user_plan_or_404(plan_id, current_user.id, db)
+    existing_subject = get_subject_or_404(subject_id, plan_id, db)
 
     if existing_subject.dependent_subjects:
         dependent_names = [str(dep.name) for dep in existing_subject.dependent_subjects]
@@ -450,13 +440,7 @@ def get_plan(
         db: Session = Depends(get_db),
         current_user: models.User = Depends(get_current_user)
 ):
-    db_plan = db.query(models.Plan).filter(
-        models.Plan.id == plan_id,
-        models.Plan.owner_id == current_user.id
-    ).first()
-
-    if not db_plan:
-        raise HTTPException(status_code=404, detail="Plan not found")
+    db_plan = get_user_plan_or_404(plan_id, current_user.id, db)
 
     try:
         return reconstruct_and_calculate_plan(db_plan)
@@ -557,13 +541,7 @@ def read_users_me(current_user: models.User = Depends(get_current_user)):
 @app.delete("/api/v1/plans/{plan_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_plan(plan_id: int, db: Session = Depends(get_db),
                 current_user: models.User = Depends(get_current_user)):
-    plan = db.query(models.Plan).filter(
-        models.Plan.id == plan_id,
-        models.Plan.owner_id == current_user.id
-    ).first()
-
-    if not plan:
-        raise HTTPException(status_code=404, detail="Plan not found")
+    plan = get_user_plan_or_404(plan_id, current_user.id, db)
 
     db.delete(plan)
     db.commit()
