@@ -28,6 +28,7 @@ class Subject(Base):
     name = Column(String)
     field = Column(String)
     duration = Column(Integer)
+    classroom = Column(String)
     plan_id = Column(Integer, ForeignKey('plans.id', ondelete="CASCADE"))
 
     __table_args__ = (

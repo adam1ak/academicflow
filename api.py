@@ -17,9 +17,9 @@ import models
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
-from core import build_sample_graph, Subject, CourseGraph
+from core import Subject, CourseGraph
 from pydantic import BaseModel, EmailStr, Field, field_validator
-from typing import List
+from typing import List, Optional
 
 from security import get_password_hash, verify_password, create_access_token, create_refresh_token, ACCESS_TOKEN_EXPIRE_MINUTES, SECRET_KEY, \
     ALGORITHM, REFRESH_TOKEN_EXPIRE_DAYS
@@ -28,6 +28,13 @@ from datetime import timedelta
 
 import logging
 logger = logging.getLogger("academicflow.api")
+
+class SingleSubjectCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=100)
+    field: str
+    duration: int = Field(gt=0, description="Duration in weeks")
+    classroom: Optional[str] = Field(default=None, description="Optional room number")
+    dependents: List[str] = Field(default=[], description="List of names of dependent subjects")
 
 class UserCreate(BaseModel):
     email: EmailStr
@@ -67,6 +74,10 @@ class SubjectInput(BaseModel):
 class GraphInput(BaseModel):
     max_concurrent: int = Field(gt=0, le=10)
     subjects: List[SubjectInput]
+
+class PlanCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=100, description="Name of study plan")
+    max_concurrent: int = Field(gt=0, description="Max concurrent subject allowed")
 
 app = FastAPI()
 
@@ -208,6 +219,103 @@ def reconstruct_and_calculate_plan(db_plan: models.Plan):
     result = graph.get_constrained_study_plan(db_plan.max_concurrent)
 
     return result
+
+@app.post("/api/v1/plans", status_code=status.HTTP_201_CREATED)
+def create_empty_plan(
+        payload: PlanCreate,
+        db: Session = Depends(get_db),
+        current_user: models.User = Depends(get_current_user)
+):
+    new_plan = models.Plan(
+        name = payload.name,
+        max_concurrent = payload.max_concurrent,
+        owner_id = current_user.id
+    )
+
+    db.add(new_plan)
+    db.commit()
+    db.refresh(new_plan)
+
+    return {
+        "id": new_plan.id,
+        "name": new_plan.name,
+        "max_concurrent": new_plan.max_concurrent
+    }
+
+
+@app.post("/api/v1/plans/{plan_id}/subjects", status_code=status.HTTP_201_CREATED)
+def add_subject_to_plan(
+        plan_id: int,
+        payload: SingleSubjectCreate,
+        db: Session = Depends(get_db),
+        current_user: models.User = Depends(get_current_user)
+):
+    db_plan = db.query(models.Plan).filter(
+        models.Plan.id == plan_id,
+        models.Plan.owner_id == current_user.id
+    ).first()
+
+    if not db_plan:
+        logger.warning(f"non-existent or foreign plan {plan_id}")
+        raise HTTPException(status_code=404, detail="Plan not found")
+
+    existing_subject = db.query(models.Subject).filter(
+        models.Subject.plan_id == plan_id,
+        models.Subject.name == payload.name
+    ).first()
+
+    if existing_subject:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Subject '{payload.name}' already exists in this plan."
+        )
+
+    dependent_db_subjects = []
+    if payload.dependents:
+        dependent_db_subjects = db.query(models.Subject).filter(
+            models.Subject.plan_id == plan_id,
+            models.Subject.name.in_(payload.dependents)
+        ).all()
+
+        unique_dependents = set(payload.dependents)
+
+        if len(unique_dependents) != len(dependent_db_subjects):
+            found_names = {str(sub.name) for sub in dependent_db_subjects}
+            missing_names = unique_dependents - found_names
+
+            raise HTTPException(
+                status_code=400,
+                detail=f"Cannot link depentents. Subject not found: {', '.join(missing_names)}"
+            )
+
+    new_subject = models.Subject(
+        name=payload.name,
+        field=payload.field,
+        duration=payload.duration,
+        plan_id=plan_id,
+        classroom=payload.classroom
+    )
+
+    for dependent_subject in dependent_db_subjects:
+        new_subject.dependent_subjects.append(dependent_subject)
+
+    try:
+        db.add(new_subject)
+        db.commit()
+        db.refresh(new_subject)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Database integrity error")
+
+    return {
+        "id": new_subject.id,
+        "name": new_subject.name,
+        "field": new_subject.field,
+        "duration": new_subject.duration,
+        "classroom": new_subject.classroom,
+        "dependents": [str(dep.name) for dep in new_subject.dependent_subjects]
+    }
+
 
 @app.get("/api/v1/plans/{plan_id}")
 def get_plan(
