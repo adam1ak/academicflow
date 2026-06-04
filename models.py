@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Table, Boolean, UniqueConstraint
+from sqlalchemy import Column, Integer, String, ForeignKey, Table, Boolean, UniqueConstraint, Date
 from sqlalchemy.orm import relationship
 
 from database import Base
@@ -20,6 +20,7 @@ class Plan(Base):
 
     owner = relationship("User", back_populates="plans")
     subjects = relationship("Subject", back_populates="plan")
+    deadlines = relationship("Deadline", back_populates="plan")
 
 class Subject(Base):
     __tablename__ = "subjects"
@@ -54,3 +55,18 @@ class User(Base):
     is_active = Column(Boolean, default=True)
 
     plans = relationship("Plan", back_populates="owner")
+    deadlines = relationship("Deadline", back_populates="owner")
+
+class Deadline(Base):
+    __tablename__ = "deadlines"
+    id  = Column(Integer, primary_key=True, index=True)
+    owner_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+    title = Column(String)
+    type = Column(String)
+    due_date = Column(Date)
+    classroom = Column(String, nullable=True)
+
+    plan_id = Column(Integer, ForeignKey("plans.id", ondelete="CASCADE"), nullable=True)
+
+    owner = relationship("User", back_populates="deadlines")
+    plan = relationship("Plan", back_populates="deadlines")
