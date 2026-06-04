@@ -50,6 +50,13 @@ class DeadlineCreate(BaseModel):
     classroom: Optional[str] = Field(default=None, description="Optional classroom number")
     plan_id: Optional[int] = Field(default=None, description="Optional relationship with plan")
 
+class DeadlineUpdate(BaseModel):
+    title: Optional[str] = Field(default=None, min_length=1, max_length=100)
+    type: Optional[Literal["exam", "assignment", "project", "task"]] = Field(default=None)
+    due_date: Optional[date] = Field(default=None)
+    classroom: Optional[str] = Field(default=None)
+    plan_id: Optional[int] = Field(default=None)
+
 class DeadlineResponse(BaseModel):
     id: int
     title: str
@@ -524,6 +531,50 @@ def create_deadline(
         "due_date": new_deadline.due_date,
         "classroom": new_deadline.classroom,
         "plan_id": new_deadline.plan_id
+    }
+
+@app.put("/api/v1/deadlines/{deadline_id}", response_model=DeadlineResponse, status_code=status.HTTP_200_OK)
+def update_deadline(
+        deadline_id: int,
+        payload: DeadlineUpdate,
+        db: Session = Depends(get_db),
+        current_user: models.User = Depends(get_current_user)
+):
+    existing_deadline = db.query(models.Deadline).filter(
+        models.Deadline.id == deadline_id,
+        models.Deadline.owner_id == current_user.id
+    ).first()
+
+    if not existing_deadline:
+        raise HTTPException(status_code=404, detail="Deadline not found")
+
+    if payload.plan_id is not None:
+        get_user_plan_or_404(payload.plan_id, current_user.id, db)
+        existing_deadline.plan_id = payload.plan_id
+
+    if payload.title is not None:
+        existing_deadline.title = payload.title
+    if payload.type is not None:
+        existing_deadline.type = payload.type
+    if payload.due_date is not None:
+        existing_deadline.due_date = payload.due_date
+    if payload.classroom is not None:
+        existing_deadline.classroom = payload.classroom
+
+    try:
+        db.commit()
+        db.refresh(existing_deadline)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Database integrity error during update")
+
+    return {
+        "id": existing_deadline.id,
+        "title": existing_deadline.title,
+        "type": existing_deadline.type,
+        "due_date": existing_deadline.due_date,
+        "classroom": existing_deadline.classroom,
+        "plan_id": existing_deadline.plan_id
     }
 
 
