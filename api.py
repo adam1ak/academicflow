@@ -19,12 +19,12 @@ from sqlalchemy.exc import IntegrityError
 
 from core import Subject, CourseGraph
 from pydantic import BaseModel, EmailStr, Field, field_validator
-from typing import List, Optional
+from typing import List, Optional, Literal
 
 from security import get_password_hash, verify_password, create_access_token, create_refresh_token, ACCESS_TOKEN_EXPIRE_MINUTES, SECRET_KEY, \
     ALGORITHM, REFRESH_TOKEN_EXPIRE_DAYS
 
-from datetime import timedelta
+from datetime import timedelta, date
 
 import logging
 logger = logging.getLogger("academicflow.api")
@@ -33,15 +33,30 @@ class SingleSubjectCreate(BaseModel):
     name: str = Field(min_length=1, max_length=100)
     field: str
     duration: int = Field(gt=0, description="Duration in weeks")
-    classroom: Optional[str] = Field(default=None, description="Optional room number")
+    classroom: Optional[str] = Field(default=None, description="Optional classroom number")
     dependents: List[str] = Field(default=[], description="List of names of dependent subjects")
 
 class SubjectUpdate(BaseModel):
     name: Optional[str] = Field(default=None, min_length=1, max_length=100)
     field: Optional[str] = Field(default=None)
     duration: Optional[int] = Field(default=None, gt=0, description="Duration in weeks")
-    classroom: Optional[str] = Field(default=None, description="Optional room number")
+    classroom: Optional[str] = Field(default=None, description="Optional classroom number")
     dependents: Optional[List[str]] = Field(default=None, description="List of names of dependent subjects")
+
+class DeadlineCreate(BaseModel):
+    title: str = Field(min_length=1, max_length=100, description="Title of deadline")
+    type: Literal["exam", "assignment", "project", "task"]
+    due_date: date
+    classroom: Optional[str] = Field(default=None, description="Optional classroom number")
+    plan_id: Optional[int] = Field(default=None, description="Optional relationship with plan")
+
+class DeadlineResponse(BaseModel):
+    id: int
+    title: str
+    type: str
+    due_date: date
+    classroom: Optional[str]
+    plan_id: Optional[int]
 
 class UserCreate(BaseModel):
     email: EmailStr
@@ -452,6 +467,65 @@ def get_plan(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Plan computation failed: {str(exception)}"
         )
+
+@app.get("/api/v1/deadlines", response_model=List[DeadlineResponse])
+def get_deadlines(
+        plan_id: Optional[int] = None,
+        db: Session = Depends(get_db),
+        current_user: models.User = Depends(get_current_user)
+):
+    query = db.query(models.Deadline).filter(
+        models.Deadline.owner_id == current_user.id
+    )
+
+    if plan_id is not None:
+        query = query.filter(models.Deadline.plan_id == plan_id)
+
+    deadlines = query.order_by(models.Deadline.due_date.asc()).all()
+
+    return [
+        {
+            "id": deadline.id,
+            "title": deadline.title,
+            "type": deadline.type,
+            "due_date": deadline.due_date,
+            "classroom": deadline.classroom,
+            "plan_id": deadline.plan_id
+        }
+        for deadline in deadlines
+    ]
+
+@app.post("/api/v1/deadlines", response_model=DeadlineResponse, status_code=status.HTTP_201_CREATED)
+def create_deadline(
+        payload: DeadlineCreate,
+        db: Session = Depends(get_db),
+        current_user: models.User = Depends(get_current_user)
+):
+    if payload.plan_id is not None:
+        get_user_plan_or_404(payload.plan_id, current_user.id, db)
+
+    new_deadline = models.Deadline(
+        title=payload.title,
+        type=payload.type,
+        due_date=payload.due_date,
+        classroom=payload.classroom,
+        plan_id=payload.plan_id,
+        owner_id=current_user.id
+    )
+
+    db.add(new_deadline)
+    db.commit()
+    db.refresh(new_deadline)
+
+    return {
+        "id": new_deadline.id,
+        "title": new_deadline.title,
+        "type": new_deadline.type,
+        "due_date": new_deadline.due_date,
+        "classroom": new_deadline.classroom,
+        "plan_id": new_deadline.plan_id
+    }
+
 
 @app.get("/api/v1/my-plans")
 def get_my_plan(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
