@@ -502,6 +502,23 @@ def get_deadlines(
         for deadline in deadlines
     ]
 
+@app.delete("/api/v1/deadlines/{deadline_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_deadline(
+        deadline_id: int,
+        db: Session = Depends(get_db),
+        current_user: models.User = Depends(get_current_user)
+):
+    deadline = db.query(models.Deadline).filter(
+        models.Deadline.id == deadline_id,
+        models.Deadline.owner_id == current_user.id
+    ).first()
+
+    if not deadline:
+        raise HTTPException(status_code=404, detail="Deadline not found")
+
+    db.delete(deadline)
+    db.commit()
+
 @app.post("/api/v1/deadlines", response_model=DeadlineResponse, status_code=status.HTTP_201_CREATED)
 def create_deadline(
         payload: DeadlineCreate,
