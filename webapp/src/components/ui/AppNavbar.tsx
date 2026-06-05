@@ -1,16 +1,28 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import LogoutModal from "./LogoutModal";
 import { useAuth } from "../../context/AuthContext";
 import { tokenStorage } from "../../services/tokenStorage";
 
+import { usePlan } from "../../context/PlanContext";
+import { usePlanHealth } from "../../hooks/usePlanHealth";
+import PlanSelector from "./PlanSelector";
+
 function AppNavbar() {
 
   const { setIsLogged } = useAuth()
 
+  const { activePlan } = usePlan()
+  const { color } = usePlanHealth(activePlan)
+
   const [openMenu, setOpenMenu] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const location = useLocation()
+
+  const [isSelectorOpen, setIsSelectorOpen] = useState(false)
+  const [selectorPos, setSelectorPos] = useState({ top: 0, right: 0 })
+  const triggerRef = useRef<HTMLDivElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   const navItems = [
     { label: "Dashboard", path: "/dashboard" },
@@ -21,8 +33,36 @@ function AppNavbar() {
   ];
 
   useEffect(() => {
-    setOpenMenu(false);
-  }, [location.pathname]);
+    setOpenMenu(false)
+  }, [location.pathname])
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node
+
+      if (
+        dropdownRef.current && !dropdownRef.current.contains(target) &&
+        triggerRef.current && !triggerRef.current.contains(target)
+      ) {
+        setIsSelectorOpen(false)
+      }
+    }
+
+    if (isSelectorOpen) {
+      document.addEventListener("mousedown", handleClickOutside)
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [isSelectorOpen])
+
+  const handleToggleSelector = () => {
+    if (!isSelectorOpen && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect()
+      setSelectorPos({ top: rect.bottom + 8, right: window.innerWidth - rect.right })
+    }
+    setIsSelectorOpen((prev) => !prev)
+  };
 
   const handleLogout = () => {
     tokenStorage.clear()
@@ -36,6 +76,13 @@ function AppNavbar() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onConfirm={handleLogout} />
+
+      <PlanSelector
+        isOpen={isSelectorOpen}
+        onClose={() => setIsSelectorOpen(false)}
+        position={selectorPos}
+        innerRef={dropdownRef}
+      />
 
       <header className="bg-surface/95 border-b border-dim backdrop-blur-xl shrink-0">
 
@@ -69,10 +116,18 @@ function AppNavbar() {
             </nav>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div>
-              <span className="lg:hidden bg-surface-hi font-mono text-xs text-sec border border-dim px-3 py-1 mr-3 rounded-md">Fall 2024 · W3</span>
-              <span className="hidden lg:block bg-surface-hi font-mono text-xs text-sec border border-dim px-3 py-1 mr-3 rounded-md">Fall 2024 · Week 3/12</span>
+          <div className="flex  items-center gap-4">
+            <div className="flex">
+              <div
+                ref={triggerRef}
+                onClick={handleToggleSelector}
+                className="flex gap-3 items-center bg-surface-hi text-sec border border-dim px-3 py-1 mr-3 rounded-md cursor-pointer select-none">
+                <div className={`w-2 h-2 rounded-full bg-current ${color.valueColor}`}></div>
+                <p className="font-mono text-xs">{activePlan ? activePlan.name : "Select Plan"}</p>
+                <div className="text-[9px]">▾</div>
+              </div>
+
+              <span className="hidden xl:block bg-surface-hi font-mono text-xs text-sec border border-dim px-3 py-1 mr-3 rounded-md">Fall 2024 · Week 3/12</span>
             </div>
 
             <button
