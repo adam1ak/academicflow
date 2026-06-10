@@ -4,10 +4,22 @@ export interface SubjectScheduleItem {
     end_time: number
 }
 
+export interface SubjectDetailResponse {
+    id: number
+    name: string
+    field: string
+    duration: number
+    classroom: string | null
+    is_completed: boolean
+    status: "ready" | "blocked" | "completed"
+    dependents: string[]
+}
+
 export interface PlanData {
     id: number
     name: string
     schedule: SubjectScheduleItem[]
+    subjects?: SubjectDetailResponse[]
 }
 
 export interface SubjectInput {
@@ -50,10 +62,10 @@ export interface SubjectUpdatePayload {
 }
 
 export interface SubjectResponse {
-  id: number;
-  name: string;
-  field: string;
-  duration: number;
-  classroom: string | null;
-  dependents: string[];
+    id: number
+    name: string
+    field: string
+    duration: number
+    classroom: string | null
+    dependents: string[]
 }
