@@ -3,17 +3,15 @@ import DependentsSelect from "./DependentsSelect"
 import GanttPreviewBar from "./GanttPreviewBar"
 import { usePlan } from "../../context/PlanContext";
 import { addSubject, getSubjects } from "../../api/plans";
-import { SubjectDetailResponse } from "../../types/plan";
 
 function AddSubjectModal({ onClose }: { onClose: () => void }) {
-    const { activePlanId, refreshPlans } = usePlan()
+    const { activePlanId, subjects, refreshDetails } = usePlan()
 
     const [name, setName] = useState<string>("")
     const [classroom, setClassroom] = useState<string>("")
     const [field, setField] = useState<string>("")
     const [duration, setDuration] = useState<number>(1)
 
-    const [subjects, setSubjects] = useState<SubjectDetailResponse[]>([])
     const [selectedDepIds, setSelectedDepIds] = useState<number[]>([])
 
     const [apiError, setApiError] = useState<string>("")
@@ -29,21 +27,6 @@ function AddSubjectModal({ onClose }: { onClose: () => void }) {
         setApiError("")
         setShowErrors(false)
     }, [])
-
-    useEffect(() => {
-        if (!activePlanId) return
-
-        const fetchSubjectData = async () => {
-            try {
-                const data = await getSubjects(activePlanId)
-                setSubjects(data)
-            } catch (error) {
-                console.error("Failed to fetch subjects for plan: ", error)
-            }
-        }
-
-        fetchSubjectData()
-    }, [activePlanId])
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -77,7 +60,7 @@ function AddSubjectModal({ onClose }: { onClose: () => void }) {
                 dependents: selectedSubjectsNames
             })
 
-            if (refreshPlans) await refreshPlans()
+            await refreshDetails()
             onClose()
         } catch (error: any) {
             const backendError = error.response?.data?.detail

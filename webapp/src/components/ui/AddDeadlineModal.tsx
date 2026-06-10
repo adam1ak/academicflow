@@ -17,7 +17,6 @@ const ENGLISH_MONTHS = [
 
 function AddDeadlineModal({ onClose, onSuccess }: AddDeadlineModalProps) {
     const { activePlanId } = usePlan()
-    const { getStyles } = useStatusStyles()
 
     const [title, setTitle] = useState<string>("")
     const [classroom, setClassroom] = useState<string>("")

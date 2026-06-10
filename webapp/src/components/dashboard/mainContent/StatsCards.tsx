@@ -1,15 +1,8 @@
 import StatisticCard from "./StatisticCard"
-
-import { usePlan } from "../../../context/PlanContext"
-import { usePlanHealth } from "../../../hooks/usePlanHealth"
+import { usePlanStats } from "../../../hooks/usePlanStats"
 
 export function StatsCards() {
-
-  const { activePlan } = usePlan()
-  const { score, label, color } = usePlanHealth(activePlan)
-
-  const creditLoad = activePlan ? activePlan.schedule.length * 3 : 0
-  const activeCourseCount = activePlan ? activePlan.schedule.length : 0
+  const { activeCourses, completion, creditLoad, scheduleHealth } = usePlanStats()
 
   return (
     <section
@@ -18,35 +11,35 @@ export function StatsCards() {
     >
       <StatisticCard
         title="Active Courses"
-        value={activeCourseCount.toString()}
-        description="2 unlocked · 3 locked"
-        statBar={color.statBar}
-        textColor={color.valueColor}
+        value={activeCourses.value.toString()}
+        description={activeCourses.description}
+        statBar={activeCourses.theme.statBar}
+        textColor={activeCourses.theme.valueColor}
       />
 
       <StatisticCard
         title="Completion"
-        value="0%"
-        description="3 of 9 topics done"
-        statBar={color.statBar}
-        textColor={color.valueColor}
+        value={completion.value}
+        description={completion.description}
+        statBar={completion.theme.statBar}
+        textColor={completion.theme.valueColor}
       />
 
       <StatisticCard
         title="Credit Load"
-        value={`${creditLoad} ECTS`}
-        description="Estimated Workload"
-        statBar={color.statBar}
-        textColor={color.valueColor}
+        value={creditLoad.value}
+        description={creditLoad.description}
+        statBar={creditLoad.theme.statBar}
+        textColor={creditLoad.theme.valueColor}
       />
 
       <StatisticCard
         title="Schedule Health"
-        value={score.toString()}
-        description={label}
-        statBar={color.statBar}
-        textColor={color.valueColor}
+        value={scheduleHealth.score.toString()}
+        description={scheduleHealth.label}
+        statBar={scheduleHealth.theme.statBar}
+        textColor={scheduleHealth.theme.valueColor}
       />
-    </section >
-  );
+    </section>
+  )
 }

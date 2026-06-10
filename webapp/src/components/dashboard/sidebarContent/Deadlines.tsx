@@ -1,46 +1,20 @@
 import { useEffect, useState } from "react"
 import { usePlan } from "../../../context/PlanContext"
 import DeadlineCard from "./DeadlineCard"
-import { DeadlineResponse } from "../../../types/deadline"
 import { getDeadlines } from "../../../api/deadlines"
 import AddDeadlineModal from "../../ui/AddDeadlineModal"
 
 
 function Deadlines() {
-  const { activePlanId } = usePlan()
-  const [deadlines, setDeadlines] = useState<DeadlineResponse[]>([])
-  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const { deadlines, isLoadingDetails, refreshDetails } = usePlan()
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
-
-  const fetchDeadlinesData = async () => {
-    if (!activePlanId) return
-    setIsLoading(true)
-
-    try {
-      const data = await getDeadlines(activePlanId)
-      setDeadlines(data)
-    } catch (error) {
-      console.error("Failed to fetch deadlines for plan: ", error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    if (!activePlanId) {
-      setDeadlines([])
-      return
-    }
-
-    fetchDeadlinesData()
-  }, [activePlanId])
 
   return (
     <section className="bg-surface border border-dim rounded-xl p-3.5">
       <div className="flex justify-between items-center mb-4">
         <p className="font-mono text-[10px] uppercase tracking-widest text-sec">Deadlines</p>
 
-        <button 
+        <button
           type="button"
           onClick={() => setIsModalOpen(true)}
           className="flex items-center gap-1.5 border border-accent-amber/45 bg-accent-amber/10 text-accent-amber-light hover:bg-accent-amber/15 font-mono rounded-md px-2.5 py-1 text-[11px] font-medium leading-none">
@@ -51,7 +25,7 @@ function Deadlines() {
         </button>
       </div>
 
-      {isLoading ? (
+      {isLoadingDetails ? (
         <div className="py-6 text-center">
           <p className="font-mono text-[10px] text-mut animate-pulse">Loading operational metrics...</p>
         </div>
@@ -74,10 +48,10 @@ function Deadlines() {
         </div>
       )}
 
-{isModalOpen && (
-        <AddDeadlineModal 
-          onClose={() => setIsModalOpen(false)} 
-          onSuccess={fetchDeadlinesData} 
+      {isModalOpen && (
+        <AddDeadlineModal
+          onClose={() => setIsModalOpen(false)}
+          onSuccess={refreshDetails}
         />
       )}
     </section>
