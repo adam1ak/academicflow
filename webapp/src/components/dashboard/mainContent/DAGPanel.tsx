@@ -2,12 +2,15 @@ import { useRef, useState } from "react";
 import { useFullscreen } from "../../../hooks/useFullscreen";
 import { FullscreenIcon, ExitFullscreenIcon } from "../../ui/FullscreenIcons";
 import AddSubjectModal from "../../ui/AddSubjectModal";
+import { useStatusStyles } from "../../../hooks/useStatusStyles";
 
 export function DAGPanel() {
   const dagRef = useRef<HTMLElement>(null)
   const { isFullscreen, toggle } = useFullscreen(dagRef)
 
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
+
+  const { getStyles } = useStatusStyles()
 
   return (
     <>
@@ -23,17 +26,17 @@ export function DAGPanel() {
           <div className="flex items-center gap-3 flex-wrap">
             <div className="hidden md:flex items-center gap-4">
               <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-accent-green" />
+                <div className={`w-2 h-2 rounded-full ${getStyles("completed").dot}`} />
                 <span className="font-mono text-[10px] text-sec">Completed</span>
               </div>
 
               <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-accent-blue" />
+                <div className={`w-2 h-2 rounded-full ${getStyles("ready").dot}`} />
                 <span className="font-mono text-[10px] text-sec">Ready</span>
               </div>
 
               <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-[#3f3f46]" />
+                <div className={`w-2 h-2 rounded-full ${getStyles("blocked").dot}`}/>
                 <span className="font-mono text-[10px] text-sec">Blocked</span>
               </div>
             </div>
@@ -45,9 +48,9 @@ export function DAGPanel() {
               Add Deadline
             </button>
 
-            <button 
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-1.5 border border-accent-blue/45 bg-accent-blue/12 text-blue-soft hover:bg-accent-blue/22 transition-all font-mono rounded-md px-2.5 py-1 text-[11px] font-medium leading-none">
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="flex items-center gap-1.5 border border-accent-blue/45 bg-accent-blue/12 text-blue-soft hover:bg-accent-blue/22 transition-all font-mono rounded-md px-2.5 py-1 text-[11px] font-medium leading-none">
               <span className="text-sm leading-1">
                 +
               </span>

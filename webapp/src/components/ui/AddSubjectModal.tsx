@@ -1,8 +1,29 @@
-import { useEffect } from "react";
+import { act, useEffect, useState } from "react";
 import DependentsSelect from "./DependentsSelect"
 import GanttPreviewBar from "./GanttPreviewBar"
+import { usePlan } from "../../context/PlanContext";
+import { getSubjects } from "../../api/plans";
+import { SubjectDetailResponse } from "../../types/plan";
 
 function AddSubjectModal({ onClose }: { onClose: () => void }) {
+    const { activePlanId } = usePlan()
+    
+    const [subjects, setSubjects] = useState<SubjectDetailResponse[]>([])
+
+    useEffect(() => {
+        if(!activePlanId) return
+
+        const fetchSubjectData = async () => {
+            try {
+                const data = await getSubjects(activePlanId)
+                setSubjects(data)
+            } catch (error) {
+                console.error("Failed to fetch subjects for plan: ", error)
+            }
+        }
+
+        fetchSubjectData()
+    }, [activePlanId])
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -91,7 +112,7 @@ function AddSubjectModal({ onClose }: { onClose: () => void }) {
                             duration={3} />
                     </div>
 
-                    <DependentsSelect />
+                    <DependentsSelect subjects={subjects} />
                 </div>
 
                 <div className="flex font-sf border-t border-dim shrink-0 gap-2 px-6 py-4">

@@ -1,35 +1,20 @@
 import { useState, useMemo, useRef, useEffect } from "react"
 import PillTab from "./PillTab"
+import { SubjectDetailResponse } from "../../types/plan"
+import { useStatusStyles } from "../../hooks/useStatusStyles"
 
-interface SubjectOption {
-    id: number;
-    name: string;
-    classroom: string;
-    status: "ready" | "blocked" | "completed";
+interface DependentsSelectProps {
+    subjects: SubjectDetailResponse[]
 }
 
-const AVAILABLE_SUBJECTS: SubjectOption[] = [
-    { id: 1, name: "Discrete Mathematics", classroom: "Auditorium B", status: "ready" },
-    { id: 2, name: "Intro to Computer Science", classroom: "Lab 101", status: "completed" },
-    { id: 3, name: "Data Structures", classroom: "Lab 102", status: "blocked" },
-    { id: 4, name: "Algorithms & Complexity", classroom: "Room 205", status: "blocked" },
-    { id: 5, name: "Advanced Calculus", classroom: "Auditorium A", status: "ready" },
-    { id: 6, name: "Software Engineering", classroom: "Lab 105", status: "completed" },
-    { id: 7, name: "Operating Systems", classroom: "Room 112", status: "blocked" },
-    { id: 8, name: "Computer Networks", classroom: "Room 220", status: "ready" },
-    { id: 9, name: "Database Systems", classroom: "Lab 103", status: "completed" },
-    { id: 10, name: "Artificial Intelligence", classroom: "Auditorium C", status: "blocked" },
-    { id: 11, name: "Cybersecurity Basics", classroom: "Lab 104", status: "ready" },
-    { id: 12, name: "Web Development", classroom: "Room 301", status: "completed" },
-];
-
-function DependentsSelect() {
+function DependentsSelect({ subjects }: DependentsSelectProps) {
 
     const [searchQuery, setSearchQuery] = useState<string>("")
     const [selectedIds, setSelectedIds] = useState<number[]>([])
     const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false)
 
     const containerRef = useRef<HTMLDivElement>(null)
+    const { getStyles } = useStatusStyles()
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -45,18 +30,18 @@ function DependentsSelect() {
 
     const filteredSubject = useMemo(() => {
         const query = searchQuery.toLowerCase().trim()
-        if (!query) return AVAILABLE_SUBJECTS
+        if (!query) return subjects
 
-        return AVAILABLE_SUBJECTS.filter((subject) =>
+        return subjects.filter((subject) =>
             subject.name.toLowerCase().includes(query)
         )
-    }, [searchQuery])
+    }, [searchQuery, subjects])
 
     const subjectsToRender = filteredSubject
 
     const selectedSubjects = useMemo(() => {
-        return AVAILABLE_SUBJECTS.filter((subject) => selectedIds.includes(subject.id))
-    }, [selectedIds])
+        return subjects.filter((subject) => selectedIds.includes(subject.id))
+    }, [selectedIds, subjects])
 
     const handleToggleSubject = (id: number) => {
         setSelectedIds((prev) =>
@@ -76,7 +61,7 @@ function DependentsSelect() {
                     <PillTab
                         key={subject.id}
                         label={`${subject.name} ✕`}
-                        variant="ready"
+                        variant={subject.status}
                         isActive={true}
                         onClick={() => handleToggleSubject(subject.id)}
                     />
@@ -100,6 +85,7 @@ function DependentsSelect() {
                     ) : (
                         subjectsToRender.map((subject) => {
                             const isChecked = selectedIds.includes(subject.id)
+                            const currentStyles = getStyles(subject.status)
 
                             return (
                                 <div
@@ -108,11 +94,15 @@ function DependentsSelect() {
                                     className={`flex items-center gap-2 px-2.5 py-2.5 border-b border-b-dim rounded-md cursor-pointer transition-colors ${isChecked ? "bg-[rgba(74,126,255,0.09)]" : "hover:bg-dim/55"
                                         }`}
                                 >
-                                    <div className="w-1.5 h-1.5 rounded-full bg-accent-amber shrink-0" />
+                                    <div className={`w-1.5 h-1.5 rounded-full shrink-0 transition-colors ${currentStyles.dot}`} />
 
                                     <div className="flex-1 min-w-0">
                                         <p className="font-sf text-[11px] font-medium overflow-hidden whitespace-nowrap text-ellipsis text-[#94a3b8]">{subject.name}</p>
-                                        <p className="text-[9px] font-mono text-[#16a34a]">{subject.status} · {subject.classroom}</p>
+                                        <p className={`text-[9px] font-mono transition-colors ${currentStyles.text}`}>
+                                            <span className="capitalize">{subject.status}</span>
+                                            {" · "}
+                                            {subject.classroom?.toUpperCase() || "No room"}
+                                        </p>
                                     </div>
 
                                     {isChecked && (
