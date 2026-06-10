@@ -30,6 +30,7 @@ class Subject(Base):
     field = Column(String)
     duration = Column(Integer)
     classroom = Column(String)
+    is_completed = Column(Boolean, default=False)
     plan_id = Column(Integer, ForeignKey('plans.id', ondelete="CASCADE"))
 
     __table_args__ = (
@@ -43,8 +44,24 @@ class Subject(Base):
         secondary=subject_dependencies,
         primaryjoin="Subject.id == subject_dependencies.c.prerequisite_id",
         secondaryjoin="Subject.id == subject_dependencies.c.target_id",
-        backref="prerequisites"
+        back_populates="prerequisites"
     )
+
+    prerequisites = relationship(
+        "Subject",
+        secondary=subject_dependencies,
+        primaryjoin="Subject.id == subject_dependencies.c.target_id",
+        secondaryjoin="Subject.id == subject_dependencies.c.prerequisite_id",
+        back_populates="dependent_subjects"
+    )
+
+    @property
+    def computed_status(self) -> str:
+        if self.is_completed:
+            return "completed"
+        if all(prereq.is_completed for prereq in self.prerequisites):
+            return "ready"
+        return "blocked"
 
 class User(Base):
     __tablename__ = "users"

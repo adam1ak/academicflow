@@ -43,6 +43,16 @@ class SubjectUpdate(BaseModel):
     classroom: Optional[str] = Field(default=None, description="Optional classroom number")
     dependents: Optional[List[str]] = Field(default=None, description="List of names of dependent subjects")
 
+class SubjectResponse(BaseModel):
+    id: int
+    name: str
+    field: str
+    duration: int
+    classroom: Optional[str]
+    is_completed: bool
+    status: Literal["completed", "ready", "blocked"]
+    dependents: List[str]
+
 class DeadlineCreate(BaseModel):
     title: str = Field(min_length=1, max_length=100, description="Title of deadline")
     type: Literal["exam", "assignment", "project", "task"]
@@ -455,6 +465,57 @@ def delete_subject(
     except IntegrityError:
         db.rollback()
         raise HTTPException(status_code=400, detail="Database integrity error during deletion")
+
+@app.get("/api/v1/plans/{plan_id}/subjects", response_model=List[SubjectResponse])
+def get_plan_subjects(
+        plan_id: int,
+        db: Session = Depends(get_db),
+        current_user: models.User = Depends(get_current_user)
+):
+    db_plan = get_user_plan_or_404(plan_id, current_user.id, db)
+
+    return [
+        {
+            "id": subject.id,
+            "name": subject.name,
+            "field": subject.field,
+            "duration": subject.duration,
+            "classroom": subject.classroom,
+            "is_completed": subject.is_completed,
+            "status": subject.computed_status,
+            "dependents": [str(dep.name) for dep in subject.dependent_subjects]
+        }
+        for subject in db_plan.subjects
+    ]
+
+@app.patch("/api/v1/plans/{plan_id}/subjects/{subject_id}/complete", response_model=SubjectResponse)
+def toggle_subject_completion(
+        plan_id: int,
+        subject_id: int,
+        db: Session = Depends(get_db),
+        current_user: models.User = Depends(get_current_user)
+):
+    get_user_plan_or_404(plan_id, current_user.id, db)
+    db_subject = get_subject_or_404(subject_id, plan_id, db)
+    db_subject.is_completed = not db_subject.is_completed
+
+    try:
+        db.commit()
+        db.refresh(db_subject)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Database integrity error during completion toggle")
+
+    return {
+        "id": db_subject.id,
+        "name": db_subject.name,
+        "field": db_subject.field,
+        "duration": db_subject.duration,
+        "classroom": db_subject.classroom,
+        "is_completed": db_subject.is_completed,
+        "status": db_subject.computed_status,
+        "dependents": [str(dep.name) for dep in db_subject.dependent_subjects]
+    }
 
 @app.get("/api/v1/plans/{plan_id}")
 def get_plan(
