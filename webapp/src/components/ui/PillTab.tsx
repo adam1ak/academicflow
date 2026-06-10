@@ -18,7 +18,7 @@ function PillTab({ label, variant, isActive = false, onClick }: PillTabProps) {
         <button
             type="button"
             onClick={onClick}
-            className={`px-3 py-1 border rounded-2xl transition-colors text-[10px] ${isActive ? currentStyle : inactiveStyle}`}
+            className={`capitalize px-3 py-1 border rounded-2xl transition-colors text-[10px] ${isActive ? currentStyle : inactiveStyle}`}
         >
             {label}
         </button>
