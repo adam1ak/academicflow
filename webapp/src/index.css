@@ -111,6 +111,19 @@
   outline: none;
 }
 
+.input-af-error {
+  width: 100%;
+  background-color: var(--color-card-bg);
+  border: 1px solid var(--color-accent-red);
+  border-radius: 6px;
+  padding: 9px 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-pri);
+  transition: border-color .15s;
+  outline: none;
+}
+
 .input-af::placeholder {
   color: var(--color-mut);
 }

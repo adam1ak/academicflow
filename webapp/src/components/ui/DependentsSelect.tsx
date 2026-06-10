@@ -5,12 +5,13 @@ import { useStatusStyles } from "../../hooks/useStatusStyles"
 
 interface DependentsSelectProps {
     subjects: SubjectDetailResponse[]
+    selectedIds: number[]
+    onSelectedIdsChange: (ids: number[]) => void
 }
 
-function DependentsSelect({ subjects }: DependentsSelectProps) {
+function DependentsSelect({ subjects, selectedIds, onSelectedIdsChange }: DependentsSelectProps) {
 
     const [searchQuery, setSearchQuery] = useState<string>("")
-    const [selectedIds, setSelectedIds] = useState<number[]>([])
     const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false)
 
     const containerRef = useRef<HTMLDivElement>(null)
@@ -44,9 +45,11 @@ function DependentsSelect({ subjects }: DependentsSelectProps) {
     }, [selectedIds, subjects])
 
     const handleToggleSubject = (id: number) => {
-        setSelectedIds((prev) =>
-            prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-        )
+        const updateIds = selectedIds.includes(id)
+            ? selectedIds.filter((item) => item !== id)
+            : [...selectedIds, id]
+
+        onSelectedIdsChange(updateIds)
     }
 
     return (
