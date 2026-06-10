@@ -2,7 +2,7 @@ import HealthRing from "../../ui/HealthRing"
 
 function ScheduleHealth() {
     return (
-        <section className="bg-surface border border-dim rounded-xl p-3.5">
+        <section className="lg:order-first bg-surface border border-dim rounded-xl p-3.5">
             <p className="font-mono text-[10px] uppercase tracking-widest text-sec mb-3">Schedule health</p>
 
             <div className="flex items-center gap-3.5 mb-4">
