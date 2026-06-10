@@ -14,7 +14,7 @@ export interface DeadlineCreatePayload {
     type: DeadlineType
     due_date: string
     classroom?: string | null
-    plan_id?: string | null
+    plan_id?: number | null
 }
 
 export interface DeadlineUpdatePayload {

@@ -41,13 +41,6 @@ export function DAGPanel() {
               </div>
             </div>
 
-            <button className="hidden md:flex items-center gap-1.5 border border-accent-amber/45 bg-accent-amber/10 text-accent-amber-light hover:bg-accent-amber/15 font-mono rounded-md px-2.5 py-1 text-[11px] font-medium leading-none">
-              <span className="text-sm leading-1">
-                +
-              </span>
-              Add Deadline
-            </button>
-
             <button
               onClick={() => setIsModalOpen(true)}
               className="flex items-center gap-1.5 border border-accent-blue/45 bg-accent-blue/12 text-blue-soft hover:bg-accent-blue/22 transition-all font-mono rounded-md px-2.5 py-1 text-[11px] font-medium leading-none">

@@ -1,23 +1,42 @@
 import { useStatusStyles, PillVariant } from "../../../hooks/useStatusStyles"
+import { DeadlineType } from "../../../types/deadline"
 
 interface DeadlineCardProps {
-    type: Exclude<PillVariant, "ready" | "blocked" | "completed">
+    type: DeadlineType
     title: string
-    date: string
-    classroom: string
+    due_date: string
+    classroom: string | null
     isFirst?: boolean
 }
 
-function DeadlineCard({ type, title, date, classroom, isFirst }: DeadlineCardProps) {
+function DeadlineCard({ type, title, due_date, classroom, isFirst }: DeadlineCardProps) {
     const { getStyles } = useStatusStyles()
-    const styles = getStyles(type)
+    const styles = getStyles(type as PillVariant)
     const separatorClasses = !isFirst ? "border-t mt-2 pt-2 border-[rgba(255,255,255,0.04)]" : ""
+
+    const dateObj = new Date(due_date)
+    const monthShort = isNaN(dateObj.getTime()) ? "DUE" : dateObj.toLocaleDateString("en-US", { month: "short" }).toUpperCase()
+    const dayNum = isNaN(dateObj.getTime()) ? "??" : dateObj.getDate()
+
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    const targetDate = new Date(dateObj)
+    targetDate.setHours(0, 0, 0, 0)
+
+    const diffTime = targetDate.getTime() - today.getTime()
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    
+    let daysLeftText = `${diffDays} days left`
+    if (diffDays === 0) daysLeftText = "Today"
+    if (diffDays === 1) daysLeftText = "Tomorrow"
+    if (diffDays < 0) daysLeftText = "Overdue"
 
     return (
         <div className={`flex items-center gap-2.5 ${separatorClasses}`}>
             <div className={`flex shrink-0 flex-col justify-center items-center rounded-lg ${styles.bgColor} w-10 h-10 border ${styles.bgBorder}`}>
-                <span className={`font-mono uppercase tracking-widest text-[8px] ${styles.text}`}>{date}</span>
-                <span className={`font-bold leading-tight text-sm ${styles.text}`}>11</span>
+                <span className={`font-mono uppercase tracking-widest text-[8px] ${styles.text}`}>{monthShort}</span>
+                <span className={`font-bold leading-tight text-sm ${styles.text}`}>{dayNum}</span>
             </div>
 
             <div className="flex flex-col min-w-0 flex-1">
@@ -30,7 +49,7 @@ function DeadlineCard({ type, title, date, classroom, isFirst }: DeadlineCardPro
                     </span>
                 </div>
 
-                <span className="font-mono text-mut text-[9px] mt-0.5">x days</span>
+                <span className="font-mono text-mut text-[9px] mt-0.5">{daysLeftText}</span>
             </div>
         </div>
     )

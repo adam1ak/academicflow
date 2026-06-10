@@ -1,6 +1,38 @@
+import { useEffect, useState } from "react"
+import { usePlan } from "../../../context/PlanContext"
 import DeadlineCard from "./DeadlineCard"
+import { DeadlineResponse } from "../../../types/deadline"
+import { getDeadlines } from "../../../api/deadlines"
+
 
 function Deadlines() {
+  const { activePlanId } = usePlan()
+  const [deadlines, setDeadlines] = useState<DeadlineResponse[]>([])
+  const [isLoading, setIsLoading] = useState<boolean>(false)
+
+  useEffect(() => {
+    if (!activePlanId) {
+      setDeadlines([])
+
+      return
+    }
+
+    const fetchDeadlinesData = async () => {
+      setIsLoading(true)
+
+      try {
+        const data = await getDeadlines(activePlanId)
+        setDeadlines(data)
+      } catch (error) {
+        console.error("Failed to fetch deadlines for plan: ", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchDeadlinesData()
+  }, [activePlanId])
+
   return (
     <section className="bg-surface border border-dim rounded-xl p-3.5">
       <div className="flex justify-between items-center mb-4">
@@ -14,39 +46,28 @@ function Deadlines() {
         </button>
       </div>
 
-      <div>
-        <DeadlineCard
-          type="exam"
-          title="ML Assign."
-          date="Tmr"
-          classroom="MATH 102"
-          isFirst={true}
-        />
-
-        <DeadlineCard
-          type="project"
-          title="ML Assign."
-          date="Tmr"
-          classroom="MATH 102"
-          isFirst={false}
-        />
-
-        <DeadlineCard
-          type="task"
-          title="ML Assign."
-          date="Tmr"
-          classroom="MATH 102"
-          isFirst={false}
-        />
-
-        <DeadlineCard
-          type="assignment"
-          title="ML Assign."
-          date="Tmr"
-          classroom="MATH 102"
-          isFirst={false}
-        />
-      </div>
+      {isLoading ? (
+        <div className="py-6 text-center">
+          <p className="font-mono text-[10px] text-mut animate-pulse">Loading operational metrics...</p>
+        </div>
+      ) : deadlines.length === 0 ? (
+        <div className="py-8 text-center border border-dashed border-dim/60 rounded-xl bg-dim/5">
+          <p className="font-mono text-[10px] text-mut">No deadlines yet</p>
+        </div>
+      ) : (
+        <div className="space-y-0">
+          {deadlines.map((deadline, index) => (
+            <DeadlineCard
+              key={deadline.id}
+              type={deadline.type}
+              title={deadline.title}
+              due_date={deadline.due_date}
+              classroom={deadline.classroom}
+              isFirst={index === 0}
+            />
+          ))}
+        </div>
+      )}
     </section>
   )
 }
