@@ -2,7 +2,7 @@ import WeekCard from "./WeekCard"
 
 function WeeklyLoad() {
   return (
-    <section className="bg-surface border border-dim rounded-xl p-3.5">
+    <section className="md:col-span-3 lg:col-span-1 bg-surface border border-dim rounded-xl p-3.5">
       <p className="font-mono text-[10px] uppercase tracking-widest text-sec mb-3">Weekly load</p>
 
       <div className="grid grid-cols-6 gap-1">

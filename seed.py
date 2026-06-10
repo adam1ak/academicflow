@@ -53,13 +53,13 @@ def seed_database():
         db.refresh(plan_math)
 
         # --- SUBJECTS DLA CS PLAN ---
-        intro_cs = models.Subject(name="Intro to Computer Science", field="CS", duration=3, classroom="Lab 101", plan_id=plan_cs.id)
+        intro_cs = models.Subject(name="Intro to Computer Science", field="CS", duration=3, classroom="Lab 101", is_completed=True, plan_id=plan_cs.id)
         math_101 = models.Subject(name="Discrete Mathematics", field="Math", duration=4, classroom="Auditorium B", plan_id=plan_cs.id)
-        data_struct = models.Subject(name="Data Structures", field="CS", duration=4, classroom="Lab 102", plan_id=plan_cs.id)
+        data_struct = models.Subject(name="Data Structures", field="CS", duration=4, classroom="Lab 102", is_completed=True, plan_id=plan_cs.id)
         algo = models.Subject(name="Algorithms & Complexity", field="CS", duration=3, classroom="Room 205", plan_id=plan_cs.id)
         db_sys = models.Subject(name="Database Systems", field="CS", duration=3, classroom="Lab 105", plan_id=plan_cs.id)
         ml = models.Subject(name="Machine Learning", field="AI", duration=5, classroom="Lab 201", plan_id=plan_cs.id)
-        soft_eng = models.Subject(name="Software Engineering", field="CS", duration=4, classroom="Room 304", plan_id=plan_cs.id)
+        soft_eng = models.Subject(name="Software Engineering", field="CS", duration=4, classroom="Room 304", is_completed=True, plan_id=plan_cs.id)
 
         db.add_all([intro_cs, math_101, data_struct, algo, db_sys, ml, soft_eng])
         db.commit()
@@ -75,8 +75,8 @@ def seed_database():
         db.commit()
 
         # --- SUBJECTS DLA MATH PLAN ---
-        calc1 = models.Subject(name="Calculus I", field="Math", duration=3, classroom="Room 204", plan_id=plan_math.id)
-        calc2 = models.Subject(name="Calculus II", field="Math", duration=4, classroom="Room 204", plan_id=plan_math.id)
+        calc1 = models.Subject(name="Calculus I", field="Math", duration=3, classroom="Room 204", is_completed=True, plan_id=plan_math.id)
+        calc2 = models.Subject(name="Calculus II", field="Math", duration=4, is_completed=True, classroom="Room 204", plan_id=plan_math.id)
         linalg = models.Subject(name="Linear Algebra", field="Math", duration=3, classroom="Room 205", plan_id=plan_math.id)
         
         db.add_all([calc1, calc2, linalg])

@@ -12,6 +12,7 @@
 
   --color-btn-blue: #1044c4;
   --color-btn-blue-hover: #0e3ba8;
+  --color-btn-amber: #f59e0b;
 
   --color-text-primary: #f0f0f0;
   --color-text-secondary: #888888;
@@ -20,11 +21,12 @@
 
   --font-sf: 'SF Pro Display', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-sans: "Geist", sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
+  --font-mono: "SF Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
   --color-accent-blue: #4a7eff;
   --color-accent-green: #22c55e;
   --color-accent-amber: #f59e0b;
+  --color-accent-amber-light: #fcd34d;
   --color-accent-red: #ef4444;
   --color-accent-purple: #a78bfa;
   --color-surface-hi: #111116;
@@ -49,7 +51,9 @@
     @apply bg-bg text-text-primary font-sans antialiased;
   }
 
-  button { cursor: pointer }
+  button {
+    cursor: pointer
+  }
 }
 
 ::-webkit-scrollbar {
@@ -84,4 +88,47 @@
   inset: 0 !important;
   z-index: 99999 !important;
   border-radius: 0 !important;
+}
+
+.af-label {
+  color: var(--color-sec);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  letter-spacing: .09em;
+}
+
+.input-af {
+  width: 100%;
+  background-color: var(--color-card-bg);
+  border: 1px solid var(--color-dim);
+  border-radius: 6px;
+  padding: 9px 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-pri);
+  transition: border-color .15s;
+  outline: none;
+}
+
+.input-af-error {
+  width: 100%;
+  background-color: var(--color-card-bg);
+  border: 1px solid var(--color-accent-red);
+  border-radius: 6px;
+  padding: 9px 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-pri);
+  transition: border-color .15s;
+  outline: none;
+}
+
+.input-af::placeholder {
+  color: var(--color-mut);
+}
+
+.input-af:focus {
+  border: 1px solid var(--color-hi);
 }
