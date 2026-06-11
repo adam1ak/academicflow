@@ -86,7 +86,7 @@ class RefreshToken(Base):
     token_hash = Column(String, unique=True, index=True, nullable=False)
     expires_at = Column(DateTime, nullable=False)
     revoke = Column(Boolean, default=False, nullable=False)
-    created_at = Column(DateTime, default=datetime.now(UTC), nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC).replace(tzinfo=None), nullable=False)
 
     user = relationship("User", back_populates="refresh_tokens")
 
