@@ -7,9 +7,13 @@ load_dotenv()
 
 from jose import jwt, JWTError
 
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 from database import engine, SessionLocal
 import models
@@ -123,7 +127,11 @@ class PlanCreate(BaseModel):
     name: str = Field(min_length=1, max_length=100, description="Name of study plan")
     max_concurrent: int = Field(gt=0, description="Max concurrent subject allowed")
 
+limiter = Limiter(key_func=get_remote_address)
 app = FastAPI()
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -691,7 +699,8 @@ def get_my_plan(db: Session = Depends(get_db), current_user: models.User = Depen
     return all_plans
 
 @app.post("/api/v1/register", response_model=UserResponse, status_code=HTTP_201_CREATED)
-def register_user(user: UserCreate, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def register_user(user: UserCreate, request: Request, db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.email == user.email).first()
     if db_user:
         logger.warning(f"Registration failed: Email {user.email} is already taken.")
@@ -714,14 +723,15 @@ def logout(request: RefreshTokenRequest,
     db_token = db.query(models.RefreshToken).filter(models.RefreshToken.token_hash == hashed_token).first()
 
     if db_token:
-        db_token.revoke = True  #
+        db_token.revoke = True
         db.commit()
         logger.info(f"User session successfully revoked. Token blacklisted.")
 
     return {"message": "Successfully logged out"}
 
 @app.post("/api/v1/token", response_model=Token, status_code=HTTP_201_CREATED)
-def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def login_for_access_token(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == form_data.username).first()
 
     if not user or not verify_password(form_data.password, user.hashed_password):
@@ -747,7 +757,7 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
     expire_time = (datetime.now(timezone.utc) + refresh_token_expires).replace(tzinfo=None)
 
     db_refresh_token = models.RefreshToken(
-        user_id=user.id,
+        user_id=int(user.id),
         token_hash=hashed_token,
         expires_at=expire_time,
         revoke=False
@@ -797,7 +807,7 @@ def refresh_acces_token(request: RefreshTokenRequest, db: Session = Depends(get_
     hashed_token = hash_refresh_token(request.refresh_token)
     db_token = db.query(models.RefreshToken).filter(
         models.RefreshToken.token_hash == hashed_token,
-        models.RefreshToken.user_id == current_user.id
+        models.RefreshToken.user_id == int(current_user.id)
     ).first()
 
     current_time_naive = datetime.now(timezone.utc).replace(tzinfo=None)
