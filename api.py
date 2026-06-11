@@ -7,9 +7,13 @@ load_dotenv()
 
 from jose import jwt, JWTError
 
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 from database import engine, SessionLocal
 import models
@@ -21,10 +25,14 @@ from core import Subject, CourseGraph
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import List, Optional, Literal
 
-from security import get_password_hash, verify_password, create_access_token, create_refresh_token, ACCESS_TOKEN_EXPIRE_MINUTES, SECRET_KEY, \
-    ALGORITHM, REFRESH_TOKEN_EXPIRE_DAYS
+from security import (
+    get_password_hash, verify_password, create_access_token, create_refresh_token,
+    ACCESS_TOKEN_EXPIRE_MINUTES, SECRET_KEY, ALGORITHM, REFRESH_TOKEN_EXPIRE_DAYS,
+    hash_refresh_token
+)
 
-from datetime import timedelta, date
+from datetime import timedelta, date, datetime, timezone
+
 
 import logging
 logger = logging.getLogger("academicflow.api")
@@ -97,6 +105,7 @@ class UserResponse(BaseModel):
 
 class Token(BaseModel):
     access_token: str
+    refresh_token: str
     token_type: str
 
 class RefreshTokenRequest(BaseModel):
@@ -118,7 +127,11 @@ class PlanCreate(BaseModel):
     name: str = Field(min_length=1, max_length=100, description="Name of study plan")
     max_concurrent: int = Field(gt=0, description="Max concurrent subject allowed")
 
+limiter = Limiter(key_func=get_remote_address)
 app = FastAPI()
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -686,7 +699,8 @@ def get_my_plan(db: Session = Depends(get_db), current_user: models.User = Depen
     return all_plans
 
 @app.post("/api/v1/register", response_model=UserResponse, status_code=HTTP_201_CREATED)
-def register_user(user: UserCreate, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def register_user(user: UserCreate, request: Request, db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.email == user.email).first()
     if db_user:
         logger.warning(f"Registration failed: Email {user.email} is already taken.")
@@ -702,9 +716,22 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
     logger.info(f"New user successfully registered with email: {new_user.email}")
     return new_user
 
+@app.post("/api/v1/logout", status_code=status.HTTP_200_OK)
+def logout(request: RefreshTokenRequest,
+           db: Session = Depends(get_db)):
+    hashed_token = hash_refresh_token(request.refresh_token)
+    db_token = db.query(models.RefreshToken).filter(models.RefreshToken.token_hash == hashed_token).first()
+
+    if db_token:
+        db_token.revoke = True
+        db.commit()
+        logger.info(f"User session successfully revoked. Token blacklisted.")
+
+    return {"message": "Successfully logged out"}
 
 @app.post("/api/v1/token", response_model=Token, status_code=HTTP_201_CREATED)
-def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def login_for_access_token(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == form_data.username).first()
 
     if not user or not verify_password(form_data.password, user.hashed_password):
@@ -725,6 +752,18 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
     refresh_token = create_refresh_token(
         data={"sub": user.email}, expires_delta=refresh_token_expires
     )
+
+    hashed_token = hash_refresh_token(refresh_token)
+    expire_time = (datetime.now(timezone.utc) + refresh_token_expires).replace(tzinfo=None)
+
+    db_refresh_token = models.RefreshToken(
+        user_id=int(user.id),
+        token_hash=hashed_token,
+        expires_at=expire_time,
+        revoke=False
+    )
+    db.add(db_refresh_token)
+    db.commit()
 
     logger.info(f"User {user.email} logged in successfully. JWT Access Token issued.")
     return {
@@ -764,11 +803,22 @@ def refresh_acces_token(request: RefreshTokenRequest, db: Session = Depends(get_
 
     if not current_user :
         raise HTTPException(status_code=401, detail="User does not exists")
-    else:
-        new_access_token = create_access_token(
-            data={"sub": current_user.email}
-        )
-        return {
-            "access_token": new_access_token,
-            "token_type": "bearer"
-        }
+
+    hashed_token = hash_refresh_token(request.refresh_token)
+    db_token = db.query(models.RefreshToken).filter(
+        models.RefreshToken.token_hash == hashed_token,
+        models.RefreshToken.user_id == int(current_user.id)
+    ).first()
+
+    current_time_naive = datetime.now(timezone.utc).replace(tzinfo=None)
+
+    if not db_token or db_token.revoke or db_token.expires_at < current_time_naive:  #
+        raise HTTPException(status_code=401, detail="Refresh token is invalid, revoked, or expired")
+
+    new_access_token = create_access_token(
+        data={"sub": current_user.email}
+    )
+    return {
+        "access_token": new_access_token,
+        "token_type": "bearer"
+    }
