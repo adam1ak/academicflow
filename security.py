@@ -1,4 +1,5 @@
 import bcrypt
+import hashlib
 from datetime import datetime, timedelta, timezone
 from jose import jwt
 from config import settings
@@ -7,6 +8,9 @@ SECRET_KEY = settings.secret_key
 ALGORITHM = settings.algorithm
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.access_token_expire_minutes
 REFRESH_TOKEN_EXPIRE_DAYS = settings.refresh_token_expire_days
+
+def hash_refresh_token(token: str) -> str:
+    return hashlib.sha256(token.encode('utf-8')).hexdigest()
 
 def get_password_hash(password: str) -> str:
     pwd_bytes = password.encode('utf-8')
