@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react"
 import { usePlan } from "../../context/PlanContext"
-import { PillVariant, useStatusStyles } from "../../hooks/useStatusStyles"
-import PillTab from "./PillTab"
-import DeadlineCard from "../dashboard/sidebarContent/DeadlineCard"
+import { PillVariant } from "../../hooks/useStatusStyles"
+import PillTab from "../ui/PillTab"
+import InputField from "../ui/InputField"
+import DeadlineCard from "../dashboard/sidebar/DeadlineCard"
 import { createDeadline } from "../../api/deadlines"
 
 interface AddDeadlineModalProps {
@@ -103,11 +104,11 @@ function AddDeadlineModal({ onClose, onSuccess }: AddDeadlineModalProps) {
     return (
         <div
             onClick={onClose}
-            className="flex items-center justify-center p-4 fixed inset-0 z-99 bg-black/65 backdrop-blur-xs">
+            className="modal-overlay">
             <form
                 onSubmit={handleSubmit}
                 onClick={(e) => e.stopPropagation()}
-                className="flex flex-col bg-surface-hi border border-hi rounded-2xl max-w-full w-[420px]">
+                className="modal-container">
                 <div className="flex items-start justify-between border-b border-dim shrink-0 px-6 p-4">
                     <div>
                         <p className="text-sm tracking-tight text-slate-100 font-semibold">Add Deadline</p>
@@ -123,32 +124,22 @@ function AddDeadlineModal({ onClose, onSuccess }: AddDeadlineModalProps) {
                 </div>
 
                 <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
-                    <div className="flex gap-3">
-                        <div className="flex flex-col flex-1">
-                            <label
-                                htmlFor="deadline-title"
-                                className="af-label flex items-center justify-between">
-                                <span>event title</span>
-                                {showErrors && !title.trim() && (
-                                    <span className="text-accent-red font-mono text-[8px] tracking-wide uppercase opacity-90">* required</span>
-                                )}
-                            </label>
-                            <input
+                    <div className="flex gap-3 w-full">
+                        <div className="flex-1">
+                            <InputField
                                 id="deadline-title"
-                                className={showErrors && !title.trim() ? "input-af-error" : "input-af"}
+                                label="event title"
                                 placeholder="e.g. ML Assignment"
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
+                                hasError={showErrors && !title.trim()}
                             />
                         </div>
 
-                        <div className="flex flex-col flex-1">
-                            <label
-                                htmlFor="classroom"
-                                className="af-label">classroom</label>
-                            <input
+                        <div className="flex-1">
+                            <InputField
                                 id="classroom"
-                                className="input-af"
+                                label="classroom"
                                 placeholder="e.g. Room 452"
                                 value={classroom}
                                 onChange={(e) => setClassroom(e.target.value)}
@@ -187,22 +178,15 @@ function AddDeadlineModal({ onClose, onSuccess }: AddDeadlineModalProps) {
                                 ))}
                             </select>
                         </div>
-                        <div className="flex flex-col flex-1">
-                            <label htmlFor="deadline-day" className="af-label flex items-center justify-between">
-                                <span>day</span>
-                                {showErrors && (day < 1 || day > maxDaysInMonth) && (
-                                    <span className="text-accent-red font-mono text-[8px] tracking-wide uppercase opacity-90">!</span>
-                                )}
-                            </label>
-                            <input
+                        <div className="flex-1">
+                            <InputField
                                 id="deadline-day"
+                                label="day"
                                 type="number"
-                                min={1}
-                                max={maxDaysInMonth}
-                                className={showErrors && (day < 1 || day > maxDaysInMonth) ? "input-af-error" : "input-af"}
                                 placeholder="e.g. 15"
-                                value={day || ""}
+                                value={day ? day.toString() : ""}
                                 onChange={(e) => setDay(Number(e.target.value))}
+                                hasError={showErrors && (day < 1 || day > maxDaysInMonth)}
                             />
                         </div>
                     </div>

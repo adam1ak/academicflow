@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import DependentsSelect from "./DependentsSelect"
-import GanttPreviewBar from "./GanttPreviewBar"
+import GanttPreviewBar from "../ui/GanttPreviewBar"
+import InputField from "../ui/InputField"
 import { usePlan } from "../../context/PlanContext";
-import { addSubject, getSubjects } from "../../api/plans";
+import { addSubject } from "../../api/plans";
 
 function AddSubjectModal({ onClose }: { onClose: () => void }) {
     const { activePlanId, subjects, refreshDetails } = usePlan()
@@ -73,11 +74,11 @@ function AddSubjectModal({ onClose }: { onClose: () => void }) {
     return (
         <div
             onClick={onClose}
-            className="flex items-center justify-center p-4 fixed inset-0 z-99 bg-black/65 backdrop-blur-xs">
+            className="modal-overlay">
             <form
                 onSubmit={handleSubmit}
                 onClick={(e) => e.stopPropagation()}
-                className="h-full max-h-[650px] flex flex-col bg-surface-hi border border-hi rounded-2xl max-w-full w-[420px]">
+                className="modal-container h-full max-h-[650px]">
                 <div className="flex items-start justify-between border-b border-dim shrink-0 px-6 p-4">
                     <div>
                         <p className="text-sm tracking-tight text-slate-100 font-semibold">Add Subject</p>
@@ -93,32 +94,22 @@ function AddSubjectModal({ onClose }: { onClose: () => void }) {
                 </div>
 
                 <div className="flex-1 overflow-y-auto px-6 pt-6 space-y-4">
-                    <div className="flex gap-3">
-                        <div className="flex flex-col flex-1">
-                            <label
-                                htmlFor="subject-name"
-                                className="af-label flex items-center justify-between">
-                                <span>subject name</span>
-                                {showErrors && !name.trim() && (
-                                    <span className="text-accent-red font-mono text-[8px] tracking-wide uppercase opacity-90">* required</span>
-                                )}
-                            </label>
-                            <input
+                    <div className="flex gap-3 w-full">
+                        <div className="flex-1">
+                            <InputField
                                 id="subject-name"
-                                className={showErrors && !name.trim() ? "input-af-error" : "input-af"}
+                                label="subject name"
                                 placeholder="e.g. Algorithms"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
+                                hasError={showErrors && !name.trim()}
                             />
                         </div>
 
-                        <div className="flex flex-col flex-1">
-                            <label
-                                htmlFor="classroom"
-                                className="af-label">classroom</label>
-                            <input
+                        <div className="flex-1">
+                            <InputField
                                 id="classroom"
-                                className="input-af"
+                                label="classroom"
                                 placeholder="e.g. Room 452"
                                 value={classroom}
                                 onChange={(e) => setClassroom(e.target.value)}
@@ -126,41 +117,26 @@ function AddSubjectModal({ onClose }: { onClose: () => void }) {
                         </div>
                     </div>
 
-                    <div className="flex flex-col">
-                        <label
-                            htmlFor="field"
-                            className="af-label">Field</label>
-                        <input
-                            id="field"
-                            className="input-af"
-                            placeholder="e.g. Algorithms"
-                            value={field}
-                            onChange={(e) => setField(e.target.value)}
-                        />
-                    </div>
+                    <InputField
+                        id="field"
+                        label="Field"
+                        placeholder="e.g. Algorithms"
+                        value={field}
+                        onChange={(e) => setField(e.target.value)}
+                    />
 
                     <div className="flex flex-col">
                         <p className="af-label">Semestr timeline</p>
-
-                        <div className="w-full mb-2">
-                            <label
-                                htmlFor="duration"
-                                className="font-mono text-mut text-[9px] mb-1.5 flex items-center justify-between">
-                                <span>Duration (weeks)</span>
-                                {showErrors && (duration <= 0 || !duration) && (
-                                    <span className="text-accent-red text-[8px] tracking-wide uppercase opacity-90">* required</span>
-                                )}
-                            </label>
-                            <input
-                                id="duration"
-                                className={showErrors && (duration <= 0 || !duration) ? "input-af-error" : "input-af"}
-                                type="number"
-                                min={1}
-                                max={12}
-                                value={duration}
-                                onChange={(e) => setDuration(Number(e.target.value))}
-                            />
-                        </div>
+                        <InputField
+                            id="duration"
+                            label="Duration (weeks)"
+                            type="number"
+                            placeholder="e.g. 1"
+                            value={duration.toString()}
+                            onChange={(e) => setDuration(Number(e.target.value))}
+                            hasError={showErrors && (duration <= 0 || !duration)}
+                            labelClassName="font-mono text-mut text-[9px] mb-1.5 uppercase tracking-widest"
+                        />
 
                         <GanttPreviewBar
                             start={1}

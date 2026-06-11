@@ -9,7 +9,7 @@ function ScheduleHealth() {
             <p className="font-mono text-[10px] uppercase tracking-widest text-sec mb-3">Schedule health</p>
 
             <div className="flex items-center gap-3.5 mb-4">
-                <HealthRing value={scheduleHealth.score} color={scheduleHealth.colorHex} />
+                <HealthRing value={scheduleHealth.score} className={scheduleHealth.textColorClass} />
 
                 <div className="flex flex-col">
                     <span className={`font-bold ${scheduleHealth.textColorClass} tracking-tight`}>{scheduleHealth.label}</span>
