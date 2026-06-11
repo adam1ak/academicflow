@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Table, Boolean, UniqueConstraint, Date
+from sqlalchemy import Column, Integer, String, ForeignKey, Table, Boolean, UniqueConstraint, Date, DateTime
 from sqlalchemy.orm import relationship
+from datetime import datetime, UTC
 
 from database import Base
 
@@ -12,6 +13,7 @@ subject_dependencies = Table(
 
 class Plan(Base):
     __tablename__ = "plans"
+
     id = Column(Integer, primary_key=True, index=True)
     owner_id = Column(Integer, ForeignKey("users.id"))
 
@@ -65,6 +67,7 @@ class Subject(Base):
 
 class User(Base):
     __tablename__ = "users"
+
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String, nullable=True)
@@ -73,9 +76,23 @@ class User(Base):
 
     plans = relationship("Plan", back_populates="owner")
     deadlines = relationship("Deadline", back_populates="owner")
+    refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
+
+class RefreshToken(Base):
+    __tablename__ = "refresh_tokens"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    token_hash = Column(String, unique=True, index=True, nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    revoke = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime, default=datetime.now(UTC), nullable=False)
+
+    user = relationship("User", back_populates="refresh_tokens")
 
 class Deadline(Base):
     __tablename__ = "deadlines"
+
     id  = Column(Integer, primary_key=True, index=True)
     owner_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     title = Column(String)
