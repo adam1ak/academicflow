@@ -8,8 +8,11 @@ interface InputFieldProps {
     value: string
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
     required?: boolean
+    hasError?: boolean
+    labelClassName?: string
 }
-function InputField({ id, label, type = "text", placeholder, value, onChange, required } : InputFieldProps) {
+
+function InputField({ id, label, type = "text", placeholder, value, onChange, required, hasError, labelClassName } : InputFieldProps) {
     const [isPasswordVisible, setIsPasswordVisible] = useState(false)
     const isPasswordType = type === "password"
     const inputType = isPasswordType && isPasswordVisible ? "text" : type
@@ -22,11 +25,12 @@ function InputField({ id, label, type = "text", placeholder, value, onChange, re
         >
             <label
                 htmlFor={id}
-                className="
-                    font-mono text-xs text-text-secondary uppercase tracking-widest mb-1.5
-                "
+                className={`${labelClassName || "af-label"} flex items-center justify-between`}
             >
-                {label}
+                <span>{label}</span>
+                {hasError && (
+                    <span className="text-accent-red font-mono text-[8px] tracking-wide uppercase opacity-90">* required</span>
+                )}
             </label>
 
             <div className="relative">
@@ -38,13 +42,9 @@ function InputField({ id, label, type = "text", placeholder, value, onChange, re
                     onChange={onChange}
                     required={required}
                     className={`
-                    w-full bg-input-bg border border-input-border
-                    text-text-primary px-3.5 py-2.5 rounded-sm
-                    font-mono text-sm
-                    focus:outline-none focus:border-input-focus
-                    transition-colors duration-150
-                    ${isPasswordType ? "pr-10" : ""}
-                `}
+                        ${hasError ? "input-af-error" : "input-af"}
+                        ${isPasswordType ? "pr-10" : ""}
+                    `}
                 />
 
                 {isPasswordType && (

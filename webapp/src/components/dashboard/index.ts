@@ -1,5 +1,5 @@
 export { DashboardShell } from './DashboardShell';
-export { Sidebar } from './sidebarContent/Sidebar';
-export { StatsCards } from './mainContent/StatsCards';
-export { DAGPanel } from './mainContent/DAGPanel';
-export { GanttPanel } from './mainContent/GanttPanel';
+export { Sidebar } from './sidebar/Sidebar';
+export { StatsCards } from './main/StatsCards';
+export { DAGPanel } from './main/DAGPanel';
+export { GanttPanel } from './main/GanttPanel';

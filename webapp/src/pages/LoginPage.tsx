@@ -3,7 +3,7 @@ import { login } from '../api/auth'
 import { Link, useNavigate } from 'react-router-dom'
 
 import { useAuth } from '../context/AuthContext'
-import Header from "../components/ui/Header"
+import Header from "../components/layout/Header"
 import InputField from "../components/ui/InputField"
 import Button from "../components/ui/Button"
 import OAuthButton from "../components/ui/OAuthButton"

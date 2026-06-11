@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
-import LogoutModal from "./LogoutModal";
+import LogoutModal from "../ui/LogoutModal";
 import { useAuth } from "../../context/AuthContext";
 import { tokenStorage } from "../../services/tokenStorage";
 
 import { usePlan } from "../../context/PlanContext";
 import { usePlanHealth } from "../../hooks/usePlanHealth";
-import PlanSelector from "./PlanSelector";
+import PlanSelector from "../plan/PlanSelector";
 
 function AppNavbar() {
 

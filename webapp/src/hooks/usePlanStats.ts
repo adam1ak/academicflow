@@ -9,7 +9,6 @@ export interface MetricItem {
 }
 
 export interface DynamicColorTheme {
-    hex: string
     text: string
     bg: string
 }
@@ -20,7 +19,6 @@ export interface ScheduleHealthItem extends MetricItem {
     prereqCoverage: number
     loadBalance: number
     deadlineSpacing: number
-    colorHex: string
     textColorClass: string
     prereqColor: DynamicColorTheme
     loadColor: DynamicColorTheme
@@ -35,10 +33,10 @@ export interface PlanStatistics {
 }
 
 const getDynamicTheme = (score: number): DynamicColorTheme => {
-    if (score >= 85) return { hex: "#4ade80", text: "text-accent-green", bg: "bg-accent-green" }
-    if (score >= 70) return { hex: "#c084fc", text: "text-accent-purple", bg: "bg-accent-purple" }
-    if (score >= 50) return { hex: "#fbbf24", text: "text-accent-amber", bg: "bg-accent-amber" }
-    return { hex: "#ef4444", text: "text-accent-red", bg: "bg-accent-red" }
+    if (score >= 85) return { text: "text-accent-green", bg: "bg-accent-green" }
+    if (score >= 70) return { text: "text-accent-purple", bg: "bg-accent-purple" }
+    if (score >= 50) return { text: "text-accent-amber", bg: "bg-accent-amber" }
+    return { text: "text-accent-red", bg: "bg-accent-red" }
 }
 
 const getCompletionTheme = (pct: number): ColorTheme => {
@@ -92,7 +90,6 @@ export function usePlanStats(): PlanStatistics {
                     prereqCoverage: 0,
                     loadBalance: 0,
                     deadlineSpacing: 0,
-                    colorHex: redDynamic.hex,
                     textColorClass: redDynamic.text,
                     prereqColor: redDynamic,
                     loadColor: redDynamic,
@@ -156,7 +153,6 @@ export function usePlanStats(): PlanStatistics {
                 prereqCoverage,
                 loadBalance,
                 deadlineSpacing,
-                colorHex: mainHealthDynamic.hex,
                 textColorClass: mainHealthDynamic.text,
                 prereqColor,
                 loadColor,

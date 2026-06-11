@@ -3,24 +3,24 @@ import { PlanData } from "../types/plan";
 
 export const PLAN_COLORS = {
     green: {
-        statBar: "bg-[linear-gradient(90deg,rgba(34,197,94,.27),rgba(34,197,94,.1),transparent)]",
+        statBar: "stat-bar-green",
         valueColor: "text-accent-green",
     },
     blue: {
-        statBar: "bg-[linear-gradient(90deg,rgba(74,126,255,.27),rgba(74,126,255,.1),transparent)]",
+        statBar: "stat-bar-blue",
         valueColor: "text-accent-blue",
     },
     purple: {
-        statBar: "bg-[linear-gradient(90deg,rgba(167,139,250,.27),rgba(167,139,250,.1),transparent)]",
+        statBar: "stat-bar-purple",
         valueColor: "text-accent-purple",
     },
     orange: {
-        statBar: "bg-[linear-gradient(90deg,rgba(245,158,11,.27),rgba(245,158,11,.1),transparent)]",
+        statBar: "stat-bar-amber",
         valueColor: "text-accent-amber",
     },
     red: {
-        statBar: "bg-[linear-gradient(90deg,rgba(239,68,68,.27),rgba(239,68,68,.1),transparent)]",
-        valueColor: "text-red-500",
+        statBar: "stat-bar-red",
+        valueColor: "text-accent-red",
     }
 }
 

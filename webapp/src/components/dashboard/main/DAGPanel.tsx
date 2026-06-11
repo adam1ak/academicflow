@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { useFullscreen } from "../../../hooks/useFullscreen";
 import { FullscreenIcon, ExitFullscreenIcon } from "../../ui/FullscreenIcons";
-import AddSubjectModal from "../../ui/AddSubjectModal";
+import AddSubjectModal from "../../plan/AddSubjectModal";
 import { useStatusStyles } from "../../../hooks/useStatusStyles";
 
 export function DAGPanel() {

@@ -1,16 +1,18 @@
 interface HealthRingProps {
   value: number;
+  className?: string;
   color?: string;
 }
 
-function HealthRing({ value, color = "#3f3f46" }: HealthRingProps) {
+function HealthRing({ value, className = "", color }: HealthRingProps) {
   const radius = 28;
   const circumference = 2 * Math.PI * radius;
 
   const offset = circumference - (value / 100) * circumference;
+  const activeColor = color || "currentColor";
 
   return (
-    <svg width="68" height="68" viewBox="0 0 68 68" className="shrink-0">
+    <svg width="68" height="68" viewBox="0 0 68 68" className={`shrink-0 ${className}`}>
       <circle
         cx="34"
         cy="34"
@@ -25,7 +27,7 @@ function HealthRing({ value, color = "#3f3f46" }: HealthRingProps) {
         cy="34"
         r={radius}
         fill="none"
-        stroke={color}
+        stroke={activeColor}
         strokeWidth="8"
         strokeDasharray={circumference}
         strokeDashoffset={offset}
@@ -38,7 +40,7 @@ function HealthRing({ value, color = "#3f3f46" }: HealthRingProps) {
         y="34"
         textAnchor="middle"
         dominantBaseline="central"
-        fill={color}
+        fill={activeColor}
         fontSize="14"
         fontWeight="700"
       >

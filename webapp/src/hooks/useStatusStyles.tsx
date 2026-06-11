@@ -11,60 +11,60 @@ export interface StatusStyle {
 
 const styles: Record<PillVariant, StatusStyle> = {
     assignment: {
-        bgColor: "bg-[#f59e0b12]",
-        bgBorder: "border-[#f59e0b33]",
-        text: "text-[#f59e0b]",
-        typeBg: "bg-[#f59e0b15]",
-        pill: "bg-[#f59e0b12] border-[#f59e0b33] text-[#f59e0b]",
-        dot: "bg-[#f59e0b]"
+        bgColor: "bg-accent-amber/7",
+        bgBorder: "border-accent-amber/20",
+        text: "text-accent-amber",
+        typeBg: "bg-accent-amber/8",
+        pill: "bg-accent-amber/7 border-accent-amber/20 text-accent-amber",
+        dot: "bg-accent-amber"
     },
     exam: {
-        bgColor: "bg-[#ef444412]",
-        bgBorder: "border-[#ef444433]",
-        text: "text-[#ef4444]",
-        typeBg: "bg-[#ef444415]",
-        pill: "bg-[#ef444412] border-[#ef444433] text-[#ef4444]",
-        dot: "bg-[#ef4444]"
+        bgColor: "bg-accent-red/7",
+        bgBorder: "border-accent-red/20",
+        text: "text-accent-red",
+        typeBg: "bg-accent-red/8",
+        pill: "bg-accent-red/7 border-accent-red/20 text-accent-red",
+        dot: "bg-accent-red"
     },
     task: {
-        bgColor: "bg-[#3b82f612]",
-        bgBorder: "border-[#3b82f633]",
-        text: "text-[#3b82f6]",
-        typeBg: "bg-[#3b82f615]",
-        pill: "bg-[#3b82f612] border-[#3b82f633] text-[#3b82f6]",
-        dot: "bg-[#3b82f6]"
+        bgColor: "bg-accent-blue/7",
+        bgBorder: "border-accent-blue/20",
+        text: "text-accent-blue",
+        typeBg: "bg-accent-blue/8",
+        pill: "bg-accent-blue/7 border-accent-blue/20 text-accent-blue",
+        dot: "bg-accent-blue"
     },
     project: {
-        bgColor: "bg-[#a855f712]",
-        bgBorder: "border-[#a855f733]",
-        text: "text-[#a855f7]",
-        typeBg: "bg-[#a855f715]",
-        pill: "bg-[#a855f712] border-[#a855f733] text-[#a855f7]",
-        dot: "bg-[#a855f7]"
+        bgColor: "bg-accent-purple/7",
+        bgBorder: "border-accent-purple/20",
+        text: "text-accent-purple",
+        typeBg: "bg-accent-purple/8",
+        pill: "bg-accent-purple/7 border-accent-purple/20 text-accent-purple",
+        dot: "bg-accent-purple"
     },
 
     ready: {
-        bgColor: "bg-[rgba(15,28,70,0.8)]",
-        bgBorder: "border-[#2563eb]",
+        bgColor: "bg-status-ready-bg",
+        bgBorder: "border-status-ready-border",
         text: "text-blue-soft",
-        typeBg: "bg-[rgba(15,28,70,0.8)]",
-        pill: "bg-[rgba(15,28,70,0.8)] border-[#2563eb] text-blue-soft",
+        typeBg: "bg-status-ready-bg",
+        pill: "bg-status-ready-bg border-status-ready-border text-blue-soft",
         dot: "bg-accent-blue"
     },
     blocked: {
-        bgColor: "bg-[rgba(20,20,26,0.8)]",
-        bgBorder: "border-[#2d2d35]",
-        text: "text-[#52525b]",
-        typeBg: "bg-[rgba(20,20,26,0.8)]",
-        pill: "bg-[rgba(20,20,26,0.8)] border-[#2d2d35] text-[#52525b]",
-        dot: "bg-[#3f3f46]"
+        bgColor: "bg-status-blocked-bg",
+        bgBorder: "border-status-blocked-border",
+        text: "text-status-blocked-text",
+        typeBg: "bg-status-blocked-bg",
+        pill: "bg-status-blocked-bg border-status-blocked-border text-status-blocked-text",
+        dot: "bg-status-blocked-text"
     },
     completed: {
-        bgColor: "bg-[rgba(5,46,22,0.8)]",
-        bgBorder: "border-[#16a34a]",
-        text: "text-[#4ade80]",
-        typeBg: "bg-[rgba(5,46,22,0.8)]",
-        pill: "bg-[rgba(5,46,22,0.8)] border-[#16a34a] text-[#4ade80]",
+        bgColor: "bg-status-completed-bg",
+        bgBorder: "border-status-completed-border",
+        text: "text-status-completed-text",
+        typeBg: "bg-status-completed-bg",
+        pill: "bg-status-completed-bg border-status-completed-border text-status-completed-text",
         dot: "bg-accent-green"
     }
 };

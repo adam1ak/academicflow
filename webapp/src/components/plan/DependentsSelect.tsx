@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from "react"
-import PillTab from "./PillTab"
+import PillTab from "../ui/PillTab"
 import { SubjectDetailResponse } from "../../types/plan"
 import { useStatusStyles } from "../../hooks/useStatusStyles"
 

@@ -44,9 +44,26 @@
   --color-blue-soft: #93c5fd;
   --color-surface-progress: #1a1a22;
   --shadow-avatar: 0 0 0 2px rgba(74, 126, 255, 0.3);
+
+  --color-status-ready-bg: rgba(15, 28, 70, 0.8);
+  --color-status-ready-border: #2563eb;
+  
+  --color-status-blocked-bg: rgba(20, 20, 26, 0.8);
+  --color-status-blocked-border: #2d2d35;
+  --color-status-blocked-text: #52525b;
+  
+  --color-status-completed-bg: rgba(5, 46, 22, 0.8);
+  --color-status-completed-border: #16a34a;
+  --color-status-completed-text: #4ade80;
 }
 
 @layer base {
+  @media (min-width: 1280px) {
+    html {
+      font-size: 110%;
+    }
+  }
+
   body {
     @apply bg-bg text-text-primary font-sans antialiased;
   }
@@ -81,6 +98,22 @@
   left: 0;
   right: 0;
   height: 2px;
+}
+
+.stat-bar-green {
+  background: linear-gradient(90deg, rgba(34, 197, 94, 0.27), rgba(34, 197, 94, 0.1), transparent);
+}
+.stat-bar-blue {
+  background: linear-gradient(90deg, rgba(74, 126, 255, 0.27), rgba(74, 126, 255, 0.1), transparent);
+}
+.stat-bar-purple {
+  background: linear-gradient(90deg, rgba(167, 139, 250, 0.27), rgba(167, 139, 250, 0.1), transparent);
+}
+.stat-bar-amber {
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.27), rgba(245, 158, 11, 0.1), transparent);
+}
+.stat-bar-red {
+  background: linear-gradient(90deg, rgba(239, 68, 68, 0.27), rgba(239, 68, 68, 0.1), transparent);
 }
 
 .panel-full-screen {
@@ -131,4 +164,12 @@
 
 .input-af:focus {
   border: 1px solid var(--color-hi);
+}
+
+.modal-overlay {
+  @apply flex items-center justify-center p-4 fixed inset-0 z-99 bg-black/65 backdrop-blur-xs;
+}
+
+.modal-container {
+  @apply flex flex-col bg-surface-hi border border-hi rounded-2xl max-w-full w-[420px] overflow-hidden;
 }

@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { usePlan } from "../../../context/PlanContext"
 import DeadlineCard from "./DeadlineCard"
-import { getDeadlines } from "../../../api/deadlines"
-import AddDeadlineModal from "../../ui/AddDeadlineModal"
+import AddDeadlineModal from "../../plan/AddDeadlineModal"
 
 
 function Deadlines() {
