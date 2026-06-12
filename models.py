@@ -15,7 +15,7 @@ class Plan(Base):
     __tablename__ = "plans"
 
     id = Column(Integer, primary_key=True, index=True)
-    owner_id = Column(Integer, ForeignKey("users.id"))
+    owner_id = Column(Integer, ForeignKey("users.id"), index=True)
 
     name = Column(String)
     max_concurrent = Column(Integer)
@@ -33,7 +33,7 @@ class Subject(Base):
     duration = Column(Integer)
     classroom = Column(String)
     is_completed = Column(Boolean, default=False)
-    plan_id = Column(Integer, ForeignKey('plans.id', ondelete="CASCADE"))
+    plan_id = Column(Integer, ForeignKey('plans.id', ondelete="CASCADE"), index=True)
 
     __table_args__ = (
         UniqueConstraint('plan_id', 'name', name='uq_subject_plan_name'),
