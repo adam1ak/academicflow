@@ -18,7 +18,7 @@ from slowapi.errors import RateLimitExceeded
 from database import engine, SessionLocal
 import models
 
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, joinedload, selectinload
 from sqlalchemy.exc import IntegrityError
 
 from core import Subject, CourseGraph
@@ -719,7 +719,8 @@ def get_my_plan(db: Session = Depends(get_db),
                 limit: int = 10):
     user_plans = (
         db.query(models.Plan)
-        .options(joinedload(models.Plan.subjects))
+        .options(joinedload(models.Plan.subjects).
+                 selectinload(models.Subject.dependent_subjects))
         .filter(models.Plan.owner_id == int(current_user.id))
         .offset(skip)
         .limit(limit)
