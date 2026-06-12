@@ -18,7 +18,7 @@ from slowapi.errors import RateLimitExceeded
 from database import engine, SessionLocal
 import models
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import IntegrityError
 
 from core import Subject, CourseGraph
@@ -670,8 +670,18 @@ def update_deadline(
 
 
 @app.get("/api/v1/my-plans")
-def get_my_plan(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    user_plans = db.query(models.Plan).filter(models.Plan.owner_id == current_user.id).all()
+def get_my_plan(db: Session = Depends(get_db),
+                current_user: models.User = Depends(get_current_user),
+                skip: int = 0,
+                limit: int = 10):
+    user_plans = (
+        db.query(models.Plan)
+        .options(joinedload(models.Plan.subjects))
+        .filter(models.Plan.owner_id == int(current_user.id))
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
 
     all_plans = []
 
