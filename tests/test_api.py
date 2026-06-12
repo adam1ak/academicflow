@@ -177,3 +177,20 @@ def test_get_plan_idor_protection(client, db_session):
 
     response_delete = client.delete(f"/api/v1/plans/{plan_a.id}")
     assert response_delete.status_code == 404
+
+
+def test_update_plan_details(client, db_session):
+    plan = models.Plan(name="Old Name", max_concurrent=2, owner_id=1)
+    db_session.add(plan)
+    db_session.commit()
+    db_session.refresh(plan)
+
+    payload = {"name": "New Name", "max_concurrent": 3}
+
+    response = client.patch(f"/api/v1/plans/{plan.id}", json=payload)
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["name"] == "New Name"
+    assert data["max_concurrent"] == 3
+    assert "schedule" in data
