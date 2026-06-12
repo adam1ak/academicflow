@@ -55,3 +55,56 @@ def test_isolated_subjects():
 
     assert plan[0]["start_time"] == 0
     assert plan[1]["start_time"] == 0
+
+def test_large_isolated_set_packing():
+    graph = CourseGraph()
+    for i in range(1, 7):
+        graph.add_subject(Subject(f"Subject_{i}", "General", 2))
+
+    plan = graph.get_constrained_study_plan(max_concurrent=3)
+    assert len(plan) == 6
+
+    total_duration = max(item["end_time"] for item in plan)
+    assert total_duration == 4
+
+def test_multilevel_chain_dependencies():
+    graph = CourseGraph()
+    graph.add_subject(Subject("A", "CS", 2))
+    graph.add_subject(Subject("B", "CS", 3))
+    graph.add_subject(Subject("C", "CS", 4))
+
+    graph.add_dependent("A", "B")
+    graph.add_dependent("B", "C")
+
+    plan = graph.get_constrained_study_plan(max_concurrent=5)
+
+    sorted_plan = sorted(plan, key=lambda x: x["start_time"])
+
+    assert sorted_plan[0]["name"] == "A"
+    assert sorted_plan[0]["start_time"] == 0
+    assert sorted_plan[0]["end_time"] == 2
+
+    assert sorted_plan[1]["name"] == "B"
+    assert sorted_plan[1]["start_time"] == 2
+    assert sorted_plan[1]["end_time"] == 5
+
+    assert sorted_plan[2]["name"] == "C"
+    assert sorted_plan[2]["start_time"] == 5
+    assert sorted_plan[2]["end_time"] == 9
+
+def test_time_optimization_variance():
+    graph = CourseGraph()
+    graph.add_subject(Subject("A", "Math", 3))
+    graph.add_subject(Subject("B", "Math", 3))
+    graph.add_subject(Subject("C", "Math", 2))
+
+    graph.add_dependent("A", "C")
+    graph.add_dependent("B", "C")
+
+    plan_bottleneck = graph.get_constrained_study_plan(max_concurrent=1)
+    duration_bottleneck = max(item["end_time"] for item in plan_bottleneck)
+    assert duration_bottleneck == 8
+
+    plan_optimized = graph.get_constrained_study_plan(max_concurrent=2)
+    duration_optimized = max(item["end_time"] for item in plan_optimized)
+    assert duration_optimized == 5
