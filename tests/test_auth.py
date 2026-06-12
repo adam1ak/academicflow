@@ -1,5 +1,5 @@
-import pytest
 import models
+from security import get_password_hash
 
 TEST_EMAIL = "new_user@flow.edu"
 TEST_PASSWORD = "StrongPassword123!"
@@ -14,7 +14,12 @@ def test_register_new_account(client):
     assert response.json()["email"] == TEST_EMAIL
 
 
-def test_login_success_and_get_token(client):
+def test_login_success_and_get_token(client, db_session):
+    hashed_password = get_password_hash(TEST_PASSWORD)
+    user = models.User(email=TEST_EMAIL, hashed_password=hashed_password, is_active=True)
+    db_session.add(user)
+    db_session.commit()
+
     response = client.post("/api/v1/token", data={
         "username": TEST_EMAIL,
         "password": TEST_PASSWORD
@@ -26,7 +31,12 @@ def test_login_success_and_get_token(client):
     assert data["token_type"] == "bearer"
 
 
-def test_access_protected_endpoint_with_token(client):
+def test_access_protected_endpoint_with_token(client, db_session):
+    hashed_password = get_password_hash(TEST_PASSWORD)
+    user = models.User(email=TEST_EMAIL, hashed_password=hashed_password, is_active=True)
+    db_session.add(user)
+    db_session.commit()
+
     login_resp = client.post("/api/v1/token", data={
         "username": TEST_EMAIL,
         "password": TEST_PASSWORD
@@ -42,7 +52,12 @@ def test_access_protected_endpoint_with_token(client):
     assert response.json()["user"] == TEST_EMAIL
 
 
-def test_login_wrong_password(client):
+def test_login_wrong_password(client, db_session):
+    hashed_password = get_password_hash(TEST_PASSWORD)
+    user = models.User(email=TEST_EMAIL, hashed_password=hashed_password, is_active=True)
+    db_session.add(user)
+    db_session.commit()
+
     response = client.post("/api/v1/token", data={
         "username": TEST_EMAIL,
         "password": "WrongPassword999!"
