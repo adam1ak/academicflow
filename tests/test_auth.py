@@ -1,16 +1,10 @@
-from fastapi.testclient import TestClient
-from api import app
-from database import engine
 import models
-
-models.Base.metadata.drop_all(bind=engine)
-models.Base.metadata.create_all(bind=engine)
-client = TestClient(app)
+from security import get_password_hash
 
 TEST_EMAIL = "new_user@flow.edu"
 TEST_PASSWORD = "StrongPassword123!"
 
-def test_register_new_account():
+def test_register_new_account(client):
     response = client.post("/api/v1/register", json={
         "email": TEST_EMAIL,
         "password": TEST_PASSWORD
@@ -20,7 +14,12 @@ def test_register_new_account():
     assert response.json()["email"] == TEST_EMAIL
 
 
-def test_login_success_and_get_token():
+def test_login_success_and_get_token(client, db_session):
+    hashed_password = get_password_hash(TEST_PASSWORD)
+    user = models.User(email=TEST_EMAIL, hashed_password=hashed_password, is_active=True)
+    db_session.add(user)
+    db_session.commit()
+
     response = client.post("/api/v1/token", data={
         "username": TEST_EMAIL,
         "password": TEST_PASSWORD
@@ -32,7 +31,12 @@ def test_login_success_and_get_token():
     assert data["token_type"] == "bearer"
 
 
-def test_access_protected_endpoint_with_token():
+def test_access_protected_endpoint_with_token(client, db_session):
+    hashed_password = get_password_hash(TEST_PASSWORD)
+    user = models.User(email=TEST_EMAIL, hashed_password=hashed_password, is_active=True)
+    db_session.add(user)
+    db_session.commit()
+
     login_resp = client.post("/api/v1/token", data={
         "username": TEST_EMAIL,
         "password": TEST_PASSWORD
@@ -48,7 +52,12 @@ def test_access_protected_endpoint_with_token():
     assert response.json()["user"] == TEST_EMAIL
 
 
-def test_login_wrong_password():
+def test_login_wrong_password(client, db_session):
+    hashed_password = get_password_hash(TEST_PASSWORD)
+    user = models.User(email=TEST_EMAIL, hashed_password=hashed_password, is_active=True)
+    db_session.add(user)
+    db_session.commit()
+
     response = client.post("/api/v1/token", data={
         "username": TEST_EMAIL,
         "password": "WrongPassword999!"
@@ -57,7 +66,7 @@ def test_login_wrong_password():
     assert response.status_code == 401
     assert response.json()["detail"] == "Incorrect username or password"
 
-def test_register_weak_password_validation():
+def test_register_weak_password_validation(client):
     payload = {
         "email": "password_test@flow.edu",
         "password": "onlyletters"
