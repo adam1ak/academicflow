@@ -127,6 +127,10 @@ class PlanCreate(BaseModel):
     name: str = Field(min_length=1, max_length=100, description="Name of study plan")
     max_concurrent: int = Field(gt=0, description="Max concurrent subject allowed")
 
+class PlanUpdate(BaseModel):
+    name: Optional[str] = Field(default=None, min_length=1, max_length=100, description="Optional new name")
+    max_concurrent: Optional[int] = Field(default=None, gt=0, le=10, description="Optional new concurrency limit")
+
 limiter = Limiter(key_func=get_remote_address)
 app = FastAPI()
 
@@ -548,6 +552,45 @@ def get_plan(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Plan computation failed: {str(exception)}"
         )
+
+@app.patch("/api/v1/plans/{plan_id}", status_code=status.HTTP_200_OK)
+def update_plan(
+        plan_id: int,
+        payload: PlanUpdate,
+        db: Session = Depends(get_db),
+        current_user: models.User = Depends(get_current_user)
+):
+    db_plan = get_user_plan_or_404(plan_id, current_user.id, db)
+
+    update_data = payload.model_dump(exclude_unset=True)
+
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No fields provided for update")
+
+    for key, value in update_data.items():
+        setattr(db_plan, key, value)
+
+    try:
+        db.commit()
+        db.refresh(db_plan)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Database integrity error during patch")
+
+    try:
+        calculated_schedule = reconstruct_and_calculate_plan(db_plan)
+    except ValueError as exception:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Recalculation failed after patch: {str(exception)}"
+        )
+
+    return {
+        "id": db_plan.id,
+        "name": db_plan.name,
+        "max_concurrent": db_plan.max_concurrent,
+        "schedule": calculated_schedule
+    }
 
 @app.get("/api/v1/deadlines", response_model=List[DeadlineResponse])
 def get_deadlines(
