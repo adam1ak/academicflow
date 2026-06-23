@@ -1,6 +1,5 @@
-import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
-import { register, login } from "../api/auth"
+import { register as registerUserApi, login } from "../api/auth"
 
 import { useAuth } from "../context/AuthContext"
 import Header from "../components/layout/Header"
@@ -8,25 +7,38 @@ import InputField from "../components/ui/InputField"
 import Button from "../components/ui/Button"
 import OAuthButton from "../components/ui/OAuthButton"
 
+import { useForm } from "react-hook-form"
+import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
+
+const registerSchema = z.object({
+    email: z.string().email("Invalid email address"),
+    password: z.string()
+        .min(8, "Password must be at least 8 characters long")
+        .regex(/\d/, "Password must contain at least one digit (0-9)")
+        .regex(/[!@#$%^&*(),.?":{}|<>_+-]/, "Password must contain at least one special character")
+})
+
+type RegisterFormData = z.infer<typeof registerSchema>
+
 function RegisterPage() {
     const navigate = useNavigate()
     const { setIsLogged } = useAuth()
 
-    const [email, setEmail] = useState<string>("")
-    const [password, setPassword] = useState<string>("")
+    const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormData>({
+        resolver: zodResolver(registerSchema)
+    })
 
-    const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault()
+    const handleRegister = async (data: RegisterFormData) => {
+        const { email, password } = data
 
         try {
-            await register(email, password)
+            await registerUserApi(email, password)
             await login(email, password)
-
             setIsLogged(true)
 
             console.log("Account created successfully.")
             navigate('/dashboard')
-
         } catch (error) {
             console.log("Registration error: ", error)
         }
@@ -86,26 +98,24 @@ function RegisterPage() {
                         <div className="flex-1 h-px bg-card-border"></div>
                     </div>
 
-                    <form onSubmit={handleRegister} className="flex flex-col">
+                    <form onSubmit={handleSubmit(handleRegister)} className="flex flex-col">
                         <InputField
                             id="register-email"
                             label="Email Address"
                             type="email"
                             placeholder="a.turing@flow.edu"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
+                            {...register("email")}
                         />
+                        {errors.email && <span className="text-red-500 text-xs mb-3 -mt-1 font-mono">{errors.email.message}</span>}
 
                         <InputField
                             id="register-password"
                             label="Password"
                             type="password"
                             placeholder="* * * * * * *"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
+                            {...register("password")}
                         />
+                        {errors.password && <span className="text-red-500 text-xs mb-3 -mt-1 font-mono">{errors.password.message}</span>}
 
                         <div className="mt-2">
                             <Button type="submit">
@@ -120,11 +130,11 @@ function RegisterPage() {
                         "
                     >
                         Already have an account?{' '}
-                        <Link 
-                            to="/login" 
+                        <Link
+                            to="/login"
                             className="ml-1 text-text-primary font-semibold hover:text-link transition-colors"
                             aria-label="Log in to existing account">
-                                Log in
+                            Log in
                         </Link>
                     </div>
                 </div>

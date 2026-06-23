@@ -30,7 +30,7 @@ export const usePlans = () => {
 
             return { previousPlans };
         },
-        onError: (error, deletedPlanId, context) => {
+        onError: (error, _deletedPlanId, context) => {
             if (context?.previousPlans) {
                 queryClient.setQueryData(["plans"], context.previousPlans);
             }
