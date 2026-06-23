@@ -4,6 +4,8 @@ import LogoutModal from "../ui/LogoutModal";
 import { useAuth } from "../../context/AuthContext";
 import { tokenStorage } from "../../services/tokenStorage";
 
+import api from "../../api/client"
+
 import { usePlan } from "../../context/PlanContext";
 import { usePlanHealth } from "../../hooks/usePlanHealth";
 import PlanSelector from "../plan/PlanSelector";
@@ -64,10 +66,20 @@ function AppNavbar() {
     setIsSelectorOpen((prev) => !prev)
   };
 
-  const handleLogout = () => {
-    tokenStorage.clear()
-    setIsLogged(false)
-    setIsModalOpen(false)
+  const handleLogout = async () => {
+    try {
+      const refreshToken = tokenStorage.getRefreshToken()
+
+      await api.post("/api/v1/logout", {
+        refresh_token: refreshToken
+      })
+    } catch (error) {
+      console.error("Backend token revocation failed: ", error)
+    } finally {
+      tokenStorage.clear()
+      setIsLogged(false)
+      setIsModalOpen(false)
+    }
   }
 
   return (
