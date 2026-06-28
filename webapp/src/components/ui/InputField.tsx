@@ -3,7 +3,7 @@ import React, { useState, forwardRef } from "react"
 interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
     id: string
     label: string
-    type?: "text" | "password" | "email" | "number"
+    type?: "text" | "password" | "email" | "number" | "date"
     placeholder?: string
     hasError?: boolean
     labelClassName?: string

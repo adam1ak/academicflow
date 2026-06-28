@@ -16,8 +16,11 @@ export interface SubjectDetailResponse {
 }
 
 export interface PlanData {
-    id: number
+id: number
     name: string
+    semester?: string
+    start_date?: string
+    accent_color?: string
     schedule: SubjectScheduleItem[]
     subjects?: SubjectDetailResponse[]
 }

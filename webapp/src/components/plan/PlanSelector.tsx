@@ -5,11 +5,12 @@ import { usePlan } from "../../context/PlanContext"
 interface PlanSelectorProps {
     isOpen: boolean
     onClose: () => void
+    createPlanModal: () => void
     position: { top: number, right: number }
     innerRef: React.RefObject<HTMLDivElement | null>
 }
 
-function PlanSelector({ isOpen, onClose, position, innerRef }: PlanSelectorProps) {
+function PlanSelector({ isOpen, onClose, createPlanModal, position, innerRef }: PlanSelectorProps) {
 
     const { plans, activePlanId, setActivePlanId } = usePlan()
 
@@ -31,7 +32,7 @@ function PlanSelector({ isOpen, onClose, position, innerRef }: PlanSelectorProps
                 />
             ))}
 
-            <button className="flex gap-1 items-center justify-center w-full text-[12px] text-sec font-sf font-medium py-2 hover:bg-[rgba(74,126,255,0.07)] hover:text-hint-text">
+            <button onClick={createPlanModal} className="flex gap-1 items-center justify-center w-full text-[12px] text-sec font-sf font-medium py-2 hover:bg-[rgba(74,126,255,0.07)] hover:text-hint-text">
                 <span className="text-xs leading-0">+</span>
                 New Schedule
             </button>

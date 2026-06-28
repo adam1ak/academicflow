@@ -7,24 +7,25 @@ import { tokenStorage } from "../../services/tokenStorage";
 import api from "../../api/client"
 
 import { usePlan } from "../../context/PlanContext";
-import { usePlanHealth } from "../../hooks/usePlanHealth";
 import PlanSelector from "../plan/PlanSelector";
+import CreatePlanModal from "../plan/CreatePlanModal";
 
 function AppNavbar() {
 
   const { setIsLogged } = useAuth()
 
-  const { activePlan } = usePlan()
-  const { color } = usePlanHealth(activePlan)
+  const { activePlan, setActivePlanId, refreshPlans } = usePlan()
 
   const [openMenu, setOpenMenu] = useState(false)
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
   const location = useLocation()
 
   const [isSelectorOpen, setIsSelectorOpen] = useState(false)
   const [selectorPos, setSelectorPos] = useState({ top: 0, right: 0 })
   const triggerRef = useRef<HTMLDivElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  const [isCreatePlanModalOpen, setIsCreatePlanModalOpen] = useState(false)
 
   const navItems = [
     { label: "Dashboard", path: "/dashboard" },
@@ -78,23 +79,38 @@ function AppNavbar() {
     } finally {
       tokenStorage.clear()
       setIsLogged(false)
-      setIsModalOpen(false)
+      setIsLoginModalOpen(false)
     }
   }
 
   return (
     <>
       <LogoutModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
         onConfirm={handleLogout} />
 
       <PlanSelector
         isOpen={isSelectorOpen}
         onClose={() => setIsSelectorOpen(false)}
+        createPlanModal={() => {
+          setIsCreatePlanModalOpen(true)
+          setIsSelectorOpen(false)
+        }}
         position={selectorPos}
         innerRef={dropdownRef}
       />
+
+      {isCreatePlanModalOpen && (
+        <CreatePlanModal
+          onClose={() => setIsCreatePlanModalOpen(false)}
+          onSuccess={ async (newPlanId) => {
+            await refreshPlans()
+
+            setActivePlanId(newPlanId)
+          }}
+        />
+      )}
 
       <header className="bg-surface/95 border-b border-dim backdrop-blur-xl shrink-0">
 
@@ -134,7 +150,14 @@ function AppNavbar() {
                 ref={triggerRef}
                 onClick={handleToggleSelector}
                 className="flex gap-3 items-center bg-surface-hi text-sec border border-dim px-3 py-1 mr-3 rounded-md cursor-pointer select-none">
-                <div className={`w-2 h-2 rounded-full bg-current ${color.valueColor}`}></div>
+                <div 
+                  className="w-2 h-2 rounded-full transition-colors duration-200 bg-current"
+                  style={{
+                      backgroundColor: activePlan?.accent_color
+                        ? `var(--color-accent-${activePlan.accent_color})`
+                        : "currentColor"
+                  }}
+                />
                 <p className="font-mono text-xs">{activePlan ? activePlan.name : "Select Plan"}</p>
                 <div className="text-[9px]">▾</div>
               </div>
@@ -145,7 +168,7 @@ function AppNavbar() {
             <button
               type="button"
               aria-label="User profile"
-              onClick={() => setIsModalOpen(true)}
+              onClick={() => setIsLoginModalOpen(true)}
               className="flex items-center gap-2 lg:hover:bg-white/5 lg:px-1.5 lg:py-1 lg:rounded-lg"
             >
               <div className="hidden lg:flex flex-col items-end font-sf">
