@@ -1,7 +1,7 @@
 services:
   db:
     image: postgres:15
-    container_name: examflow-db-compose
+    container_name: academicflow-db
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -11,7 +11,7 @@ services:
 
   api:
     build: .
-    container_name: examflow-api
+    container_name: academicflow-api
     restart: on-failure
     ports:
       - "8000:8000"
@@ -21,3 +21,12 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       SECRET_KEY: ${SECRET_KEY}
       ALGORITHM: ${ALGORITHM}
+
+  frontend:
+      build: ./webapp
+      container_name: academicflow-frontend
+      restart: on-failure
+      ports:
+        - "5173:5173"
+      depends_on:
+        - api
