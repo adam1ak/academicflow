@@ -126,6 +126,20 @@ class GraphInput(BaseModel):
 class PlanCreate(BaseModel):
     name: str = Field(min_length=1, max_length=100, description="Name of study plan")
     max_concurrent: int = Field(gt=0, description="Max concurrent subject allowed")
+    semester: str = Field(min_length=1, description="Semester identity (e.g., fall26)")
+    start_date: date = Field(description="Plan baseline start date")
+    accent_color: str = Field(min_length=1, description="Accent color theme configuration")
+
+class PlanResponse(BaseModel):
+    id: int
+    name: str
+    max_concurrent: int
+    semester: str
+    start_date: date
+    accent_color: str
+
+    class Config:
+        from_attributes = True
 
 class PlanUpdate(BaseModel):
     name: Optional[str] = Field(default=None, min_length=1, max_length=100, description="Optional new name")
@@ -137,7 +151,7 @@ app = FastAPI()
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-models.Base.metadata.create_all(bind=engine)
+# models.Base.metadata.create_all(bind=engine)
 
 app.add_middleware(
     CORSMiddleware,
@@ -299,7 +313,7 @@ def reconstruct_and_calculate_plan(db_plan: models.Plan):
 
     return result
 
-@app.post("/api/v1/plans", status_code=status.HTTP_201_CREATED)
+@app.post("/api/v1/plans", response_model=PlanResponse, status_code=status.HTTP_201_CREATED)
 def create_empty_plan(
         payload: PlanCreate,
         db: Session = Depends(get_db),
@@ -308,18 +322,17 @@ def create_empty_plan(
     new_plan = models.Plan(
         name = payload.name,
         max_concurrent = payload.max_concurrent,
-        owner_id = current_user.id
+        owner_id = current_user.id,
+        semester = payload.semester,
+        start_date = payload.start_date,
+        accent_color = payload.accent_color
     )
 
     db.add(new_plan)
     db.commit()
     db.refresh(new_plan)
 
-    return {
-        "id": new_plan.id,
-        "name": new_plan.name,
-        "max_concurrent": new_plan.max_concurrent
-    }
+    return new_plan
 
 
 @app.post("/api/v1/plans/{plan_id}/subjects", status_code=status.HTTP_201_CREATED)
@@ -589,6 +602,9 @@ def update_plan(
         "id": db_plan.id,
         "name": db_plan.name,
         "max_concurrent": db_plan.max_concurrent,
+        "semester": db_plan.semester,
+        "start_date": db_plan.start_date.isoformat() if db_plan.start_date else None,
+        "accent_color": db_plan.accent_color,
         "schedule": calculated_schedule
     }
 
@@ -736,6 +752,9 @@ def get_my_plan(db: Session = Depends(get_db),
             single_plan_data = {
                 "id": single_plan.id,
                 "name": single_plan.name,
+                "semester": single_plan.semester,
+                "start_date": single_plan.start_date.isoformat() if single_plan.start_date else None,
+                "accent_color": single_plan.accent_color,
                 "schedule": calculated_schedule
             }
 
@@ -746,6 +765,9 @@ def get_my_plan(db: Session = Depends(get_db),
             all_plans.append({
                 "id": single_plan.id,
                 "name": f"{single_plan.name} (Computation Error)",
+                "semester": single_plan.semester,
+                "start_date": single_plan.start_date.isoformat() if single_plan.start_date else None,
+                "accent_color": single_plan.accent_color,
                 "schedule": [],
                 "error": "Corrupted prerequisite structure"
             })

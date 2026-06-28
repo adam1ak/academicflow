@@ -1,33 +1,59 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import DependentsSelect from "./DependentsSelect"
 import GanttPreviewBar from "../ui/GanttPreviewBar"
 import InputField from "../ui/InputField"
 import { usePlan } from "../../context/PlanContext";
 import { addSubject } from "../../api/plans";
 
+import { useForm, useFieldArray } from "react-hook-form"
+import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
+
+const subjectSchema = z.object({
+    name: z.string().min(1, "Subject name is required").max(100),
+    classroom: z.string(),
+    field: z.string(),
+    duration: z.number().gt(0, "Duration must be greater than 0"),
+    dependents: z.array(z.object({
+        id: z.number(),
+        name: z.string()
+    }))
+})
+
+type SubjectFormData = z.infer<typeof subjectSchema>
+
 function AddSubjectModal({ onClose }: { onClose: () => void }) {
     const { activePlanId, subjects, refreshDetails } = usePlan()
-
-    const [name, setName] = useState<string>("")
-    const [classroom, setClassroom] = useState<string>("")
-    const [field, setField] = useState<string>("")
-    const [duration, setDuration] = useState<number>(1)
-
-    const [selectedDepIds, setSelectedDepIds] = useState<number[]>([])
-
     const [apiError, setApiError] = useState<string>("")
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
-    const [showErrors, setShowErrors] = useState<boolean>(false)
+
+    const { register, handleSubmit, control, watch, reset, formState: { errors } } = useForm<SubjectFormData>({
+        resolver: zodResolver(subjectSchema),
+        defaultValues: {
+            name: "",
+            classroom: "",
+            field: "General",
+            duration: 1,
+            dependents: []
+        }
+    })
+
+    const { replace }= useFieldArray({
+        control,
+        name: "dependents"
+    })
+
+    const watchedDuration = watch("duration")
+    const watchedDependents = watch("dependents")
+
+    const selectedDepIds = useMemo(() => {
+        return (watchedDependents || []).map(f => f.id)
+    }, [watchedDependents])
 
     useEffect(() => {
-        setName("")
-        setClassroom("")
-        setField("")
-        setDuration(1)
-        setSelectedDepIds([])
+        reset()
         setApiError("")
-        setShowErrors(false)
-    }, [])
+    }, [reset])
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -37,27 +63,31 @@ function AddSubjectModal({ onClose }: { onClose: () => void }) {
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [onClose]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        setApiError("")
+    const handleDepsChange = (nextIds: number[]) => {
+        const nextFields = nextIds.map(id => {
+            const sub = subjects.find(s => s.id === id)
+            return { id, name: sub ? sub.name : "" }
+        })
+        replace(nextFields)
+    }
 
-        if (!name.trim() || duration <= 0 || !activePlanId) {
-            setShowErrors(true)
+    const onSubmitForm = async (data: SubjectFormData) => {
+        if (!activePlanId) {
+            setApiError("Active plan context missing")
             return
         }
 
-        const selectedSubjectsNames = subjects
-            .filter((sub) => selectedDepIds.includes(sub.id))
-            .map((sub) => sub.name)
-
         setIsSubmitting(true)
+        setApiError("")
+
+        const selectedSubjectsNames = data.dependents.map(d => d.name)
 
         try {
             await addSubject(activePlanId, {
-                name: name.trim(),
-                field: field.trim() || "General",
-                duration: duration,
-                classroom: classroom.trim() || null,
+                name: data.name.trim(),
+                field: data.field.trim() || "General",
+                duration: data.duration,
+                classroom: data.classroom.trim() || null,
                 dependents: selectedSubjectsNames
             })
 
@@ -76,7 +106,7 @@ function AddSubjectModal({ onClose }: { onClose: () => void }) {
             onClick={onClose}
             className="modal-overlay">
             <form
-                onSubmit={handleSubmit}
+                onSubmit={handleSubmit(onSubmitForm)}
                 onClick={(e) => e.stopPropagation()}
                 className="modal-container h-full max-h-[650px]">
                 <div className="flex items-start justify-between border-b border-dim shrink-0 px-6 p-4">
@@ -100,9 +130,8 @@ function AddSubjectModal({ onClose }: { onClose: () => void }) {
                                 id="subject-name"
                                 label="subject name"
                                 placeholder="e.g. Algorithms"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                hasError={showErrors && !name.trim()}
+                                hasError={!!errors.name}
+                                {...register("name")}
                             />
                         </div>
 
@@ -111,8 +140,7 @@ function AddSubjectModal({ onClose }: { onClose: () => void }) {
                                 id="classroom"
                                 label="classroom"
                                 placeholder="e.g. Room 452"
-                                value={classroom}
-                                onChange={(e) => setClassroom(e.target.value)}
+                                {...register("classroom")}
                             />
                         </div>
                     </div>
@@ -121,8 +149,7 @@ function AddSubjectModal({ onClose }: { onClose: () => void }) {
                         id="field"
                         label="Field"
                         placeholder="e.g. Algorithms"
-                        value={field}
-                        onChange={(e) => setField(e.target.value)}
+                        {...register("field")}
                     />
 
                     <div className="flex flex-col">
@@ -132,21 +159,20 @@ function AddSubjectModal({ onClose }: { onClose: () => void }) {
                             label="Duration (weeks)"
                             type="number"
                             placeholder="e.g. 1"
-                            value={duration.toString()}
-                            onChange={(e) => setDuration(Number(e.target.value))}
-                            hasError={showErrors && (duration <= 0 || !duration)}
+                            hasError={!!errors.duration}
                             labelClassName="font-mono text-mut text-[9px] mb-1.5 uppercase tracking-widest"
+                            {...register("duration", { valueAsNumber: true })}
                         />
 
                         <GanttPreviewBar
                             start={1}
-                            duration={duration} />
+                            duration={watchedDuration || 1} />
                     </div>
 
                     <DependentsSelect
                         subjects={subjects}
                         selectedIds={selectedDepIds}
-                        onSelectedIdsChange={setSelectedDepIds}
+                        onSelectedIdsChange={handleDepsChange}
                     />
 
                     {apiError && (

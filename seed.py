@@ -45,8 +45,22 @@ def seed_database():
         print("Cleared existing plans and deadlines for the user.")
 
         # --- PLANY ---
-        plan_cs = models.Plan(name="Computer Science BSc", max_concurrent=4, owner_id=user.id)
-        plan_math = models.Plan(name="Math Minor", max_concurrent=3, owner_id=user.id)
+        plan_cs = models.Plan(
+            name="Computer Science BSc",
+            max_concurrent=4,
+            owner_id=user.id,
+            semester="fall26",
+            start_date=datetime.date.today(),
+            accent_color="purple"
+        )
+        plan_math = models.Plan(
+            name="Math Minor",
+            max_concurrent=3,
+            owner_id=user.id,
+            semester="spr26",
+            start_date=datetime.date.today() - datetime.timedelta(days=90),
+            accent_color="blue"
+        )
         db.add_all([plan_cs, plan_math])
         db.commit()
         db.refresh(plan_cs)

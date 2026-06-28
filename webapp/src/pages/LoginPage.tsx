@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { login } from '../api/auth'
 import { Link, useNavigate } from 'react-router-dom'
 
@@ -8,16 +7,28 @@ import InputField from "../components/ui/InputField"
 import Button from "../components/ui/Button"
 import OAuthButton from "../components/ui/OAuthButton"
 
+import { useForm } from "react-hook-form"
+import { z } from "zod"
+import { zodResolver } from '@hookform/resolvers/zod'
+
+const loginSchema = z.object({
+    email: z.string().email("Invalid email adress"),
+    password: z.string().min(8, "Password must be at least 8 characters long")
+})
+
+type LoginFormData = z.infer<typeof loginSchema>
+
 function LoginPage() {
     const navigate = useNavigate()
 
     const { setIsLogged } = useAuth()
 
-    const [email, setEmail] = useState<string>("")
-    const [password, setPassword] = useState<string>("")
+    const { register, handleSubmit, formState: {errors} } = useForm<LoginFormData>({
+        resolver: zodResolver(loginSchema)
+    })
 
-    const handleLogin = async (e: React.FormEvent) => {
-        e.preventDefault()
+    const handleLogin = async (data: LoginFormData) => {
+        const { email, password } = data
 
         try {
             await login(email, password)
@@ -27,7 +38,6 @@ function LoginPage() {
         } catch (e) {
             console.log("Login error: ", e)
         }
-
     }
 
 
@@ -85,26 +95,24 @@ function LoginPage() {
                         <div className="flex-1 h-px bg-card-border"></div>
                     </div>
 
-                    <form onSubmit={handleLogin} className="flex flex-col">
+                    <form onSubmit={handleSubmit(handleLogin)} className="flex flex-col">
                         <InputField
                             id="register-email"
                             label="Email Address"
                             type="email"
                             placeholder="a.turing@flow.edu"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
+                            {...register("email")}
                         />
+                        {errors.email && <span className="text-red-500 text-xs mb-3 -mt-1 font-mono">{errors.email.message}</span>}
 
                         <InputField
                             id="register-password"
                             label="Password"
                             type="password"
                             placeholder="* * * * * * *"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
+                            {...register("password")}
                         />
+                        {errors.password && <span className="text-red-500 text-xs mb-3 -mt-1 font-mono">{errors.password.message}</span>}
 
                         <div className="flex justify-end mb-6 -mt-2">
                             <a

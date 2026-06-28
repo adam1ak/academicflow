@@ -24,11 +24,29 @@
   --font-mono: "SF Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
   --color-accent-blue: #4a7eff;
+  --color-accent-blue-glow: #60a5fa;
+
   --color-accent-green: #22c55e;
+  --color-accent-green-glow: #4ade80;
+
   --color-accent-amber: #f59e0b;
+  --color-accent-amber-glow: #fbbf24;
+
   --color-accent-amber-light: #fcd34d;
+  --color-accent-amber-light-glow: #fef08a;
+
   --color-accent-red: #ef4444;
+  --color-accent-red-glow: #f87171;
+
   --color-accent-purple: #a78bfa;
+  --color-accent-purple-glow: #c084fc;
+
+  --color-accent-pink: #ec4899;
+  --color-accent-pink-glow: #f472b6;
+
+  --color-accent-teal: #2dd4bf;
+  --color-accent-teal-glow: #99f6e4;
+
   --color-surface-hi: #111116;
   --color-hint-bg: #4A7EFF14;
   --color-hint-border: #4A7EFF38;
@@ -47,11 +65,11 @@
 
   --color-status-ready-bg: rgba(15, 28, 70, 0.8);
   --color-status-ready-border: #2563eb;
-  
+
   --color-status-blocked-bg: rgba(20, 20, 26, 0.8);
   --color-status-blocked-border: #2d2d35;
   --color-status-blocked-text: #52525b;
-  
+
   --color-status-completed-bg: rgba(5, 46, 22, 0.8);
   --color-status-completed-border: #16a34a;
   --color-status-completed-text: #4ade80;
@@ -103,15 +121,19 @@
 .stat-bar-green {
   background: linear-gradient(90deg, rgba(34, 197, 94, 0.27), rgba(34, 197, 94, 0.1), transparent);
 }
+
 .stat-bar-blue {
   background: linear-gradient(90deg, rgba(74, 126, 255, 0.27), rgba(74, 126, 255, 0.1), transparent);
 }
+
 .stat-bar-purple {
   background: linear-gradient(90deg, rgba(167, 139, 250, 0.27), rgba(167, 139, 250, 0.1), transparent);
 }
+
 .stat-bar-amber {
   background: linear-gradient(90deg, rgba(245, 158, 11, 0.27), rgba(245, 158, 11, 0.1), transparent);
 }
+
 .stat-bar-red {
   background: linear-gradient(90deg, rgba(239, 68, 68, 0.27), rgba(239, 68, 68, 0.1), transparent);
 }

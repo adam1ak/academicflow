@@ -6,6 +6,10 @@ import InputField from "../ui/InputField"
 import DeadlineCard from "../dashboard/sidebar/DeadlineCard"
 import { createDeadline } from "../../api/deadlines"
 
+import { useForm } from "react-hook-form"
+import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
+
 interface AddDeadlineModalProps {
     onClose: () => void
     onSuccess: () => void
@@ -16,35 +20,49 @@ const ENGLISH_MONTHS = [
     "July", "August", "September", "October", "November", "December"
 ]
 
+const currentYear = new Date().getFullYear()
+const deadlineSchema = z.object({
+    title: z.string().min(1, "Event title is required").max(100),
+    classroom: z.string(),
+    type: z.enum(["assignment", "exam", "project", "task"]),
+    monthIndex: z.number(),
+    day: z.number().gte(1, "Day must be at least 1")
+}).refine((data) => {
+    const maxDays = new Date(currentYear, data.monthIndex + 1, 0).getDate()
+    return data.day <= maxDays
+}, {
+    message: "Invalid day for the selected month",
+    path: ["day"]
+})
+
+type DeadlineFormData = z.infer<typeof deadlineSchema>
+
 function AddDeadlineModal({ onClose, onSuccess }: AddDeadlineModalProps) {
     const { activePlanId } = usePlan()
-
-    const [title, setTitle] = useState<string>("")
-    const [classroom, setClassroom] = useState<string>("")
-    const [type, setType] = useState<string>("assignment")
-
-    const currentMonthIndex = new Date().getMonth()
-    const [monthIndex, setMonthIndex] = useState<number>(currentMonthIndex)
-    const [day, setDay] = useState<number>(new Date().getDate())
-
     const [apiError, setApiError] = useState<string>("")
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
-    const [showErrors, setShowErrors] = useState<boolean>(false)
 
-    const maxDaysInMonth = useMemo(() => {
-        const currentYear = new Date().getFullYear()
-        return new Date(currentYear, monthIndex + 1, 0).getDate()
-    }, [monthIndex])
+    const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<DeadlineFormData>({
+        resolver: zodResolver(deadlineSchema),
+        defaultValues: {
+            title: "",
+            classroom: "",
+            type: "assignment",
+            monthIndex: new Date().getMonth(),
+            day: new Date().getDate()
+        }
+    })
+
+    const watchedType = watch("type")
+    const watchedMonth = watch("monthIndex")
+    const watchedDay = watch("day")
+    const watchedTitle = watch("title")
+    const watchedClassroom = watch("classroom")
 
     useEffect(() => {
-        setTitle("")
-        setClassroom("")
-        setType("assignment")
-        setMonthIndex(new Date().getMonth())
-        setDay(new Date().getDate())
+        reset()
         setApiError("")
-        setShowErrors(false)
-    }, [])
+    }, [reset])
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -56,12 +74,10 @@ function AddDeadlineModal({ onClose, onSuccess }: AddDeadlineModalProps) {
 
     const assembledIsoDate = useMemo(() => {
         const today = new Date()
-        const currentYear = today.getFullYear()
-
-        let targetDate = new Date(currentYear, monthIndex, day)
+        let targetDate = new Date(currentYear, watchedMonth, watchedDay || 1)
 
         if (targetDate < today && targetDate.toDateString() !== today.toDateString()) {
-            targetDate = new Date(currentYear + 1, monthIndex, day)
+            targetDate = new Date(currentYear + 1, watchedMonth, watchedDay || 1)
         }
 
         const year = targetDate.getFullYear()
@@ -69,29 +85,27 @@ function AddDeadlineModal({ onClose, onSuccess }: AddDeadlineModalProps) {
         const dayStr = String(targetDate.getDate()).padStart(2, "0")
 
         return `${year}-${monthStr}-${dayStr}`
-    }, [monthIndex, day])
+    }, [watchedMonth, watchedDay])
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        setApiError("")
-
-        if (!title.trim() || day < 1 || day > maxDaysInMonth || !activePlanId) {
-            setShowErrors(true)
+    const onSubmitForm = async (data: DeadlineFormData) => {
+        if (!activePlanId) {
+            setApiError("Active plan context missing")
             return
         }
 
         setIsSubmitting(true)
+        setApiError("")
 
         try {
             await createDeadline({
-                title: title.trim(),
-                type: type,
+                title: data.title.trim(),
+                type: data.type,
                 due_date: assembledIsoDate,
-                classroom: classroom.trim() || null,
-                plan_id: activePlanId ? activePlanId : null
+                classroom: data.classroom.trim() || null,
+                plan_id: activePlanId
             })
 
-            await onSuccess()
+            onSuccess()
             onClose()
         } catch (error: any) {
             const backendError = error.response?.data?.detail
@@ -106,7 +120,7 @@ function AddDeadlineModal({ onClose, onSuccess }: AddDeadlineModalProps) {
             onClick={onClose}
             className="modal-overlay">
             <form
-                onSubmit={handleSubmit}
+                onSubmit={handleSubmit(onSubmitForm)}
                 onClick={(e) => e.stopPropagation()}
                 className="modal-container">
                 <div className="flex items-start justify-between border-b border-dim shrink-0 px-6 p-4">
@@ -130,9 +144,8 @@ function AddDeadlineModal({ onClose, onSuccess }: AddDeadlineModalProps) {
                                 id="deadline-title"
                                 label="event title"
                                 placeholder="e.g. ML Assignment"
-                                value={title}
-                                onChange={(e) => setTitle(e.target.value)}
-                                hasError={showErrors && !title.trim()}
+                                hasError={!!errors.title}
+                                {...register("title")}
                             />
                         </div>
 
@@ -141,8 +154,7 @@ function AddDeadlineModal({ onClose, onSuccess }: AddDeadlineModalProps) {
                                 id="classroom"
                                 label="classroom"
                                 placeholder="e.g. Room 452"
-                                value={classroom}
-                                onChange={(e) => setClassroom(e.target.value)}
+                                {...register("classroom")}
                             />
                         </div>
                     </div>
@@ -150,13 +162,13 @@ function AddDeadlineModal({ onClose, onSuccess }: AddDeadlineModalProps) {
                     <div className="flex flex-col gap-1.5">
                         <label className="af-label">Event type</label>
                         <div className="flex gap-3">
-                            {["assignment", "exam", "project", "task"].map((item) => (
+                            {(["assignment", "exam", "project", "task"] as const).map((item) => (
                                 <PillTab
                                     key={item}
                                     label={item}
                                     variant={item as PillVariant}
-                                    isActive={type === item}
-                                    onClick={() => setType(item)}
+                                    isActive={watchedType === item}
+                                    onClick={() => setValue("type", item)}
                                 />
                             ))}
                         </div>
@@ -168,8 +180,7 @@ function AddDeadlineModal({ onClose, onSuccess }: AddDeadlineModalProps) {
                             <select
                                 id="month-select"
                                 className="input-af capitalize cursor-pointer"
-                                value={monthIndex}
-                                onChange={(e) => setMonthIndex(Number(e.target.value))}
+                                {...register("monthIndex", { valueAsNumber: true })}
                             >
                                 {ENGLISH_MONTHS.map((m, idx) => (
                                     <option key={m} value={idx} className="bg-surface-hi text-pri">
@@ -184,9 +195,8 @@ function AddDeadlineModal({ onClose, onSuccess }: AddDeadlineModalProps) {
                                 label="day"
                                 type="number"
                                 placeholder="e.g. 15"
-                                value={day ? day.toString() : ""}
-                                onChange={(e) => setDay(Number(e.target.value))}
-                                hasError={showErrors && (day < 1 || day > maxDaysInMonth)}
+                                hasError={!!errors.day}
+                                {...register("day", { valueAsNumber: true })}
                             />
                         </div>
                     </div>
@@ -194,10 +204,10 @@ function AddDeadlineModal({ onClose, onSuccess }: AddDeadlineModalProps) {
                     <div className="bg-[#0a0a0c] px-2.5 py-3 border border-dim rounded-lg">
                         <p className="font-mono text-[9px] uppercase tracking-wider text-mut mb-2 select-none">Preview {new Date().getFullYear()}</p>
                         <DeadlineCard
-                            type={type}
+                            type={watchedType}
                             due_date={assembledIsoDate}
-                            title={title || "Untitled Event"}
-                            classroom={classroom || "General"}
+                            title={watchedTitle || "Untitled Event"}
+                            classroom={watchedClassroom || "General"}
                             isFirst={true}
                         />
                     </div>
