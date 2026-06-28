@@ -19,6 +19,9 @@ class Plan(Base):
 
     name = Column(String)
     max_concurrent = Column(Integer)
+    semester = Column(String)
+    start_date = Column(Date)
+    accent_color = Column(String)
 
     owner = relationship("User", back_populates="plans")
     subjects = relationship("Subject", back_populates="plan")
