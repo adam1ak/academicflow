@@ -1,4 +1,4 @@
-name: FastAPI CI Pipeline
+name: AcademicFlow CI Pipeline
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ "master" ]
 
 jobs:
-  test:
+  backend-tests:
     runs-on: ubuntu-latest
 
     steps:
@@ -27,3 +27,29 @@ jobs:
     - name: Run Pytest
       run: |
         pytest
+
+  frontend-ci:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: "20"
+        cache: "npm"
+        cache-dependency-path: "webapp/package-lock.json"
+
+    - name: Install dependencies
+      working-directory: webapp
+      run: npm ci
+
+    - name: Run TypeScript type-check
+      working-directory: webapp
+      run: npx tsc --noEmit
+
+    - name: Run Linter (ESLint)
+      working-directory: webapp
+      run: npm run lint
