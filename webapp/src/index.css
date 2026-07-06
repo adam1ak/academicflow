@@ -65,6 +65,7 @@
 
   --color-status-ready-bg: rgba(15, 28, 70, 0.8);
   --color-status-ready-border: #2563eb;
+  --color-status-ready-text: #60a5fa;
 
   --color-status-blocked-bg: rgba(20, 20, 26, 0.8);
   --color-status-blocked-border: #2d2d35;
