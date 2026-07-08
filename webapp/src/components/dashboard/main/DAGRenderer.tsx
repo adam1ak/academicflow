@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { usePlan } from "../../../context/PlanContext";
 import { PillVariant } from "../../../hooks/useStatusStyles";
 import { calculateLevels } from "./dag/dagUtils";
@@ -21,6 +21,7 @@ const DAGRenderer = forwardRef<DAGRendererRef, DAGRendererProps>(
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [hoveredId, setHoveredId] = useState<string | null>(null);
     const [zoom, setZoom] = useState<number>(1);
+    const isDragging = useRef(false);
 
     const nodeWidth = isFullscreen ? 260 : 180;
     const nodeHeight = isFullscreen ? 76 : 52;
@@ -55,21 +56,23 @@ const DAGRenderer = forwardRef<DAGRendererRef, DAGRendererProps>(
       if (!container) return;
       if (e.button !== 0) return;
 
+      isDragging.current = false;
       container.style.cursor = "grabbing";
       container.style.userSelect = "none";
 
-      const startX = e.pageX - container.offsetLeft;
-      const startY = e.pageY - container.offsetTop;
+      const startX = e.pageX;
+      const startY = e.pageY;
       const scrollLeft = container.scrollLeft;
       const scrollTop = container.scrollTop;
 
       const handleMouseMove = (moveEvent: MouseEvent) => {
-        const x = moveEvent.pageX - container.offsetLeft;
-        const y = moveEvent.pageY - container.offsetTop;
-        const walkX = (x - startX) * 1.5;
-        const walkY = (y - startY) * 1.5;
-        container.scrollLeft = scrollLeft - walkX;
-        container.scrollTop = scrollTop - walkY;
+        const dx = moveEvent.pageX - startX;
+        const dy = moveEvent.pageY - startY;
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+          isDragging.current = true;
+        }
+        container.scrollLeft = scrollLeft - dx * 1.5;
+        container.scrollTop = scrollTop - dy * 1.5;
       };
 
       const handleMouseUp = () => {
@@ -82,6 +85,12 @@ const DAGRenderer = forwardRef<DAGRendererRef, DAGRendererProps>(
       document.addEventListener("mousemove", handleMouseMove);
       document.addEventListener("mouseup", handleMouseUp);
     };
+
+    const handleContainerClick = useCallback(() => {
+      if (!isDragging.current) {
+        setSelectedId(null);
+      }
+    }, []);
 
     const statusColors = {
       completed: {
@@ -252,6 +261,7 @@ const DAGRenderer = forwardRef<DAGRendererRef, DAGRendererProps>(
         <div
           ref={setContainerNode}
           onMouseDown={handleMouseDown}
+          onClick={handleContainerClick}
           className="flex-1 w-full h-full overflow-auto select-none p-2"
           style={{ cursor: "grab" }}
         >
