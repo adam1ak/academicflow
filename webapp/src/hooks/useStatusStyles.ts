@@ -27,12 +27,12 @@ const styles: Record<PillVariant, StatusStyle> = {
         dot: "bg-accent-red"
     },
     task: {
-        bgColor: "bg-accent-blue/7",
-        bgBorder: "border-accent-blue/20",
-        text: "text-accent-blue",
-        typeBg: "bg-accent-blue/8",
-        pill: "bg-accent-blue/7 border-accent-blue/20 text-accent-blue",
-        dot: "bg-accent-blue"
+        bgColor: "bg-accent-pink/7",
+        bgBorder: "border-accent-pink/20",
+        text: "text-accent-pink",
+        typeBg: "bg-accent-pink/8",
+        pill: "bg-accent-pink/7 border-accent-pink/20 text-accent-pink",
+        dot: "bg-accent-pink"
     },
     project: {
         bgColor: "bg-accent-purple/7",
