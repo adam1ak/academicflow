@@ -1,5 +1,6 @@
-import { useState } from "react"
-import GanttTooltip from "./GanttTooltip"
+import { useState, useEffect, useMemo } from "react"
+import { LegendStatus } from "../GanttPanel"
+import GanttTooltip, { GanttTooltipItem } from "./GanttTooltip"
 
 const TOTAL_WEEKS = 12
 const LABEL_WIDTH = 170
@@ -24,9 +25,14 @@ interface GanttRowProps {
   }>
   assignedDeadlinesMap: Map<number, string>
   isDimmed: boolean
+  isSelected: boolean
+  onRowClick: () => void
   isMarkerDimmed: (d: { id: number; week: number; label: string; type: string; color: string }) => boolean
   getBarLabel: (status: string) => string
   currentWeek: number | null
+  rowIdx: number
+  hoveredLegendStatus: LegendStatus
+  hoveredCardDeadlineId: number | null
 }
 
 export default function GanttRow({
@@ -34,11 +40,17 @@ export default function GanttRow({
   deadlineMarks,
   assignedDeadlinesMap,
   isDimmed,
+  isSelected,
+  onRowClick,
   isMarkerDimmed,
   getBarLabel,
-  currentWeek
+  currentWeek,
+  rowIdx,
+  hoveredLegendStatus,
+  hoveredCardDeadlineId
 }: GanttRowProps) {
-  const [hoveredMarkerId, setHoveredMarkerId] = useState<number | null>(null)
+  const [hoveredWeek, setHoveredWeek] = useState<number | null>(null)
+  const [barWidth, setBarWidth] = useState("0%")
 
   const leftPct = ((row.startWeek / TOTAL_WEEKS) * 100).toFixed(2)
   const widthPct = ((row.duration / TOTAL_WEEKS) * 100).toFixed(2)
@@ -47,13 +59,38 @@ export default function GanttRow({
     d => assignedDeadlinesMap.get(d.id) === row.name
   )
 
+  const deadlinesByWeek = useMemo(() => {
+    const map = new Map<number, typeof rowDeadlines>()
+    rowDeadlines.forEach(d => {
+      const list = map.get(d.week) || []
+      list.push(d)
+      map.set(d.week, list)
+    })
+    return map
+  }, [rowDeadlines])
+
+  const weekEntries = useMemo(() => {
+    return Array.from(deadlinesByWeek.entries())
+  }, [deadlinesByWeek])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setBarWidth(`${widthPct}%`)
+    }, rowIdx * 40)
+    return () => clearTimeout(timer)
+  }, [widthPct, rowIdx])
+
   return (
     <div
-      className="gantt-row flex items-center mb-2"
+      onClick={(e) => {
+        e.stopPropagation()
+        onRowClick()
+      }}
+      className={`gantt-row flex items-center mb-2 rounded-lg ${isSelected ? "selected" : ""}`}
       style={{
         height: `${ROW_HEIGHT}px`,
-        cursor: "default",
-        opacity: isDimmed ? 0.2 : 1
+        cursor: "pointer",
+        opacity: isDimmed ? 0.15 : 1
       }}
     >
       <div style={{ width: `${LABEL_WIDTH}px`, flexShrink: 0, paddingRight: "12px" }}>
@@ -92,7 +129,7 @@ export default function GanttRow({
           style={{
             position: "absolute",
             left: `${leftPct}%`,
-            width: `${widthPct}%`,
+            width: barWidth,
             top: "50%",
             transform: "translateY(-50%)",
             height: `${BAR_HEIGHT}px`,
@@ -104,6 +141,7 @@ export default function GanttRow({
             zIndex: 2,
             background: `var(--color-status-${row.status}-bg)`,
             border: `1px solid var(--color-status-${row.status}-border)`,
+            transition: "width 0.8s cubic-bezier(0.16, 1, 0.3, 1)"
           }}
         >
           <span
@@ -118,42 +156,68 @@ export default function GanttRow({
           </span>
         </div>
 
-        {rowDeadlines.map((d, di) => {
-          const isFirstWeek = d.week === row.startWeek + 1
-          const targetWeek = isFirstWeek ? d.week : d.week - 0.5
+        {weekEntries.map(([week, list]) => {
+          const d = list[0]
+          const isFirstWeek = week === row.startWeek + 1
+          const targetWeek = isFirstWeek ? week : week - 0.5
           const markerLeftPct = ((targetWeek / TOTAL_WEEKS) * 100).toFixed(2)
-          const markerDimmed = isMarkerDimmed(d)
-          const isHovered = hoveredMarkerId === d.id
+
+          const hasCardHover = list.some(item => hoveredCardDeadlineId === item.id)
+          const hasLegendHover = list.some(item => hoveredLegendStatus === item.type.toLowerCase())
+          const isHighlighted = hasLegendHover || hasCardHover
+          
+          const isHovered = hoveredWeek === week
+          const anyDimmed = list.every(item => isMarkerDimmed(item))
+          const showTooltip = isHovered
 
           return (
-            <div key={di}>
+            <div 
+              key={week}
+              style={{
+                position: "absolute",
+                left: `${markerLeftPct}%`,
+                top: "50%",
+                transform: "translate(-50%, -50%)",
+                width: "24px",
+                height: "24px",
+                zIndex: showTooltip ? 40 : isHighlighted ? 25 : 3,
+                pointerEvents: anyDimmed ? "none" : "auto"
+              }}
+              onMouseEnter={() => setHoveredWeek(week)}
+              onMouseLeave={() => setHoveredWeek(null)}
+              onClick={(e) => {
+                if (isSelected) {
+                  e.stopPropagation()
+                }
+              }}
+            >
               <div
                 className="gantt-deadline-marker"
                 style={{
                   position: "absolute",
-                  left: `${markerLeftPct}%`,
+                  left: "50%",
                   top: "50%",
-                  transform: "translate(-50%, -18px) rotate(45deg)",
+                  transform: isHighlighted
+                    ? "translate(-50%, -50%) rotate(45deg) scale(1.4)"
+                    : isHovered
+                      ? "translate(-50%, -50%) rotate(45deg) scale(1.3)"
+                      : "translate(-50%, -50%) rotate(45deg)",
                   width: "11px",
                   height: "11px",
                   background: d.color,
                   borderRadius: "1px",
                   border: "2px solid #ffffff",
-                  boxShadow: "0 0 5px rgba(0, 0, 0, 0.6)",
-                  zIndex: isHovered ? 40 : 3,
-                  opacity: markerDimmed ? 0.15 : 1,
-                  cursor: "pointer"
+                  boxShadow: isHighlighted
+                    ? `0 0 12px ${d.color}, 0 0 5px rgba(0, 0, 0, 0.6)`
+                    : "0 0 5px rgba(0, 0, 0, 0.6)",
+                  opacity: anyDimmed ? 0.15 : 1,
+                  cursor: "pointer",
                 }}
-                onMouseEnter={() => setHoveredMarkerId(d.id)}
-                onMouseLeave={() => setHoveredMarkerId(null)}
               />
-              {isHovered && (
+              {showTooltip && (
                 <GanttTooltip
-                  label={d.label}
-                  type={d.type}
-                  week={d.week}
-                  color={d.color}
-                  leftPct={markerLeftPct}
+                  items={list as GanttTooltipItem[]}
+                  leftPct="50"
                 />
               )}
             </div>

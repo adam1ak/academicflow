@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { usePlan } from "../../../../context/PlanContext"
 import { SubjectScheduleItem, SubjectDetailResponse } from "../../../../types/plan"
 import { DeadlineResponse } from "../../../../types/deadline"
@@ -90,7 +90,7 @@ function mapDeadlines(
       id: d.id,
       week,
       label: d.title,
-      type: d.type,
+      type: d.type.toLowerCase().trim(),
       color: getDeadlineColor(d.type)
     }
   })
@@ -107,6 +107,8 @@ function hashCode(str: string): number {
 export default function GanttChart({ hoveredLegendStatus }: GanttChartProps) {
   const { activePlan, subjects, deadlines } = usePlan()
   const schedule = activePlan?.schedule ?? []
+  const [selectedRowName, setSelectedRowName] = useState<string | null>(null)
+  const [hoveredCardDeadlineId, setHoveredCardDeadlineId] = useState<number | null>(null)
 
   const rows = useMemo(() => buildRows(schedule, subjects), [schedule, subjects])
 
@@ -143,6 +145,7 @@ export default function GanttChart({ hoveredLegendStatus }: GanttChartProps) {
   }, [activePlan?.start_date])
 
   const isRowDimmed = (row: GanttRowData) => {
+    if (selectedRowName !== null) return selectedRowName !== row.name
     if (!hoveredLegendStatus) return false
     if (hoveredLegendStatus === "active") return row.status !== "ready"
     if (hoveredLegendStatus === "upcoming") return row.status !== "blocked"
@@ -152,10 +155,53 @@ export default function GanttChart({ hoveredLegendStatus }: GanttChartProps) {
   }
 
   const isMarkerDimmed = (d: GanttDeadlineMark) => {
+    if (hoveredCardDeadlineId !== null) return d.id !== hoveredCardDeadlineId
     if (!hoveredLegendStatus) return false
     if (["active", "upcoming"].includes(hoveredLegendStatus)) return false
-    return d.type.toLowerCase() !== hoveredLegendStatus
+    return d.type !== hoveredLegendStatus
   }
+
+  const containerRef = useRef<HTMLDivElement>(null)
+  const cardRef = useRef<HTMLDivElement>(null)
+  const [displayedRow, setDisplayedRow] = useState<GanttRowData | null>(null)
+
+  useEffect(() => {
+    let startedInside = false
+    const handleMouseDown = (e: MouseEvent) => {
+      startedInside = containerRef.current?.contains(e.target as Node) || false
+    }
+    const handleMouseUp = (e: MouseEvent) => {
+      const endedInside = containerRef.current?.contains(e.target as Node) || false
+      if (!startedInside && !endedInside) {
+        setSelectedRowName(null)
+      }
+    }
+    document.addEventListener("mousedown", handleMouseDown)
+    document.addEventListener("mouseup", handleMouseUp)
+    return () => {
+      document.removeEventListener("mousedown", handleMouseDown)
+      document.removeEventListener("mouseup", handleMouseUp)
+    }
+  }, [])
+
+  const selectedRow = useMemo(() => {
+    return rows.find(r => r.name === selectedRowName) || null
+  }, [selectedRowName, rows])
+
+  useEffect(() => {
+    if (selectedRow) {
+      setDisplayedRow(selectedRow)
+    }
+  }, [selectedRow])
+
+  useEffect(() => {
+    if (selectedRowName && cardRef.current) {
+      const timer = setTimeout(() => {
+        cardRef.current?.scrollIntoView({ behavior: "smooth", block: "end" })
+      }, 350)
+      return () => clearTimeout(timer)
+    }
+  }, [selectedRowName])
 
   if (rows.length === 0) {
     return (
@@ -166,38 +212,53 @@ export default function GanttChart({ hoveredLegendStatus }: GanttChartProps) {
   }
 
   return (
-    <div style={{ minWidth: "1050px" }} className="min-w-[850px] md:min-w-[1050px] lg:min-w-[1200px] xl:min-w-[1350px]">
+    <div 
+      ref={containerRef}
+      style={{ minWidth: "1050px" }} 
+      className={`gantt-container min-w-[850px] md:min-w-[1050px] lg:min-w-[1200px] xl:min-w-[1350px] ${selectedRowName !== null ? "gantt-has-selection" : ""}`}
+    >
       <style>{`
         .gantt-row {
           transition: opacity 0.15s ease, background-color 0.15s ease;
+          padding-left: 8px;
+          padding-right: 8px;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
         }
-        .gantt-row:hover {
+        .gantt-container:not(.gantt-has-selection) .gantt-row:hover {
           background-color: rgba(255, 255, 255, 0.02);
         }
-        .gantt-row:hover .gantt-row-name {
+        .gantt-container:not(.gantt-has-selection) .gantt-row:hover .gantt-row-name {
           color: #ffffff !important;
         }
-        .gantt-row:hover .gantt-bar-status-ready {
+        .gantt-row.selected {
+          background-color: rgba(255, 255, 255, 0.035);
+          box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+        }
+        .gantt-row.selected .gantt-row-name {
+          color: #ffffff !important;
+        }
+        .gantt-container:not(.gantt-has-selection) .gantt-row:hover .gantt-bar-status-ready {
           border-color: rgba(96, 165, 250, 0.6) !important;
           box-shadow: 0 0 10px rgba(59, 130, 246, 0.25);
         }
-        .gantt-row:hover .gantt-bar-status-completed {
+        .gantt-container:not(.gantt-has-selection) .gantt-row:hover .gantt-bar-status-completed {
           border-color: rgba(74, 222, 128, 0.6) !important;
           box-shadow: 0 0 10px rgba(34, 197, 94, 0.25);
         }
-        .gantt-row:hover .gantt-bar-status-blocked {
+        .gantt-container:not(.gantt-has-selection) .gantt-row:hover .gantt-bar-status-blocked {
           border-color: rgba(161, 161, 170, 0.4) !important;
         }
         .gantt-deadline-marker {
           transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
         }
         .gantt-deadline-marker:hover {
-          transform: translate(-50%, -18px) rotate(45deg) scale(1.3) !important;
+          transform: translate(-50%, -18px) rotate(45deg) scale(1.3);
           box-shadow: 0 0 8px currentColor;
         }
       `}</style>
 
-      <div className="flex mb-3" style={{ marginLeft: `${LABEL_WIDTH}px`, marginRight: "32px" }}>
+      <div className="flex mb-3" style={{ marginLeft: `${LABEL_WIDTH + 8}px`, marginRight: "40px" }}>
         {Array.from({ length: TOTAL_WEEKS }, (_, i) => {
           const weekNum = i + 1
           return (
@@ -223,11 +284,82 @@ export default function GanttChart({ hoveredLegendStatus }: GanttChartProps) {
             deadlineMarks={deadlineMarks}
             assignedDeadlinesMap={assignedDeadlinesMap}
             isDimmed={isRowDimmed(row)}
+            isSelected={selectedRowName === row.name}
+            onRowClick={() => {
+              setSelectedRowName(selectedRowName === row.name ? null : row.name)
+            }}
             isMarkerDimmed={isMarkerDimmed}
             getBarLabel={getBarLabel}
             currentWeek={currentWeek}
+            rowIdx={idx}
+            hoveredLegendStatus={hoveredLegendStatus}
+            hoveredCardDeadlineId={hoveredCardDeadlineId}
           />
         ))}
+      </div>
+
+      <div 
+        ref={cardRef}
+        onClick={(e) => e.stopPropagation()}
+        className="rounded-xl border border-dim bg-surface/60 backdrop-blur-md shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all duration-300 ease-in-out overflow-hidden"
+        style={{
+          maxHeight: selectedRowName ? "200px" : "0px",
+          opacity: selectedRowName ? 1 : 0,
+          marginTop: selectedRowName ? "16px" : "0px",
+          padding: selectedRowName ? "16px" : "0px",
+          borderWidth: selectedRowName ? "1px" : "0px",
+          WebkitFontSmoothing: "antialiased",
+          MozOsxFontSmoothing: "grayscale"
+        }}
+      >
+        {displayedRow && (
+          <>
+            <div>
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="font-sans font-bold text-sm text-pri">{displayedRow.name}</span>
+                <span 
+                  className="font-mono text-[9px] rounded-full px-2 py-0.5 font-bold border"
+                  style={{
+                    background: `var(--color-status-${displayedRow.status}-bg)`,
+                    borderColor: `var(--color-status-${displayedRow.status}-border)`,
+                    color: displayedRow.status === "completed" ? "var(--color-status-completed-text)" : displayedRow.status === "ready" ? "var(--color-blue-soft)" : "var(--color-status-blocked-text)",
+                  }}
+                >
+                  {getBarLabel(displayedRow.status)}
+                </span>
+              </div>
+              <div className="flex flex-wrap items-center gap-4 text-sec font-mono text-[10px]">
+                <div>Classroom: <span className="text-pri font-sans font-medium">{displayedRow.classroom || "—"}</span></div>
+                <div>Weeks: <span className="text-pri font-sans font-medium">W{displayedRow.startWeek + 1}–W{displayedRow.endWeek}</span></div>
+                <div>Duration: <span className="text-pri font-sans font-medium">{displayedRow.duration} Weeks</span></div>
+              </div>
+            </div>
+
+            <div className="flex-1 md:max-w-[50%] flex flex-col gap-1.5 md:items-end">
+              <span className="font-mono text-[9px] text-sec uppercase tracking-widest font-bold">Deadlines</span>
+              <div className="flex flex-wrap gap-2 md:justify-end max-h-[90px] overflow-y-auto w-full pr-1 scrollbar-thin">
+                {deadlineMarks.filter(d => assignedDeadlinesMap.get(d.id) === displayedRow.name).length === 0 ? (
+                  <span className="font-mono text-[9px] text-mut">No deadlines for this subject</span>
+                ) : (
+                  deadlineMarks
+                    .filter(d => assignedDeadlinesMap.get(d.id) === displayedRow.name)
+                    .map((d, i) => (
+                      <div 
+                        key={i} 
+                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-dim bg-surface/50 text-[10px] font-mono font-semibold cursor-pointer hover:bg-white/5 transition-all select-none"
+                        style={{ color: d.color }}
+                        onMouseEnter={() => setHoveredCardDeadlineId(d.id)}
+                        onMouseLeave={() => setHoveredCardDeadlineId(null)}
+                      >
+                        <div className="w-1.5 h-1.5 rounded-xs" style={{ background: d.color }} />
+                        <span>{d.label} (W{d.week})</span>
+                      </div>
+                    ))
+                )}
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
