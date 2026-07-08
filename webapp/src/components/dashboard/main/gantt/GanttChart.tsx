@@ -3,13 +3,12 @@ import { usePlan } from "../../../../context/PlanContext"
 import { SubjectScheduleItem, SubjectDetailResponse } from "../../../../types/plan"
 import { DeadlineResponse } from "../../../../types/deadline"
 import { LegendStatus } from "../GanttPanel"
+import GanttRow from "./GanttRow"
 
 const TOTAL_WEEKS = 12
 const LABEL_WIDTH = 170
-const ROW_HEIGHT = 48
-const BAR_HEIGHT = 28
 
-interface GanttRow {
+interface GanttRowData {
   name: string
   classroom: string | null
   status: "ready" | "blocked" | "completed"
@@ -33,7 +32,7 @@ interface GanttChartProps {
 function buildRows(
   schedule: SubjectScheduleItem[],
   subjects: SubjectDetailResponse[]
-): GanttRow[] {
+): GanttRowData[] {
   const subjectMap = new Map(subjects.map(s => [s.name, s]))
 
   return schedule
@@ -42,7 +41,7 @@ function buildRows(
       return {
         name: item.name,
         classroom: subject?.classroom ?? null,
-        status: (subject?.status ?? "blocked") as GanttRow["status"],
+        status: (subject?.status ?? "blocked") as GanttRowData["status"],
         startWeek: item.start_time,
         endWeek: Math.min(item.end_time, TOTAL_WEEKS),
         duration: Math.min(item.end_time, TOTAL_WEEKS) - item.start_time,
@@ -51,7 +50,7 @@ function buildRows(
     .sort((a, b) => a.startWeek - b.startWeek || a.name.localeCompare(b.name))
 }
 
-function getBarLabel(status: GanttRow["status"]) {
+function getBarLabel(status: string) {
   switch (status) {
     case "completed": return "✓ Done"
     case "ready": return "▶ Active"
@@ -130,7 +129,20 @@ export default function GanttChart({ hoveredLegendStatus }: GanttChartProps) {
     return map
   }, [deadlineMarks, rows])
 
-  const isRowDimmed = (row: GanttRow) => {
+  const currentWeek = useMemo(() => {
+    if (!activePlan?.start_date) return null
+    const startDate = new Date(activePlan.start_date)
+    const today = new Date()
+    const diffMs = today.getTime() - startDate.getTime()
+    const diffDays = Math.max(0, Math.floor(diffMs / (24 * 60 * 60 * 1000)))
+    const week = Math.floor(diffDays / 7) + 1
+    if (week >= 1 && week <= 12) {
+      return week
+    }
+    return null
+  }, [activePlan?.start_date])
+
+  const isRowDimmed = (row: GanttRowData) => {
     if (!hoveredLegendStatus) return false
     if (hoveredLegendStatus === "active") return row.status !== "ready"
     if (hoveredLegendStatus === "upcoming") return row.status !== "blocked"
@@ -203,112 +215,20 @@ export default function GanttChart({ hoveredLegendStatus }: GanttChartProps) {
         })}
       </div>
 
-      {rows.map((row, idx) => {
-        const leftPct = ((row.startWeek / TOTAL_WEEKS) * 100).toFixed(2)
-        const widthPct = ((row.duration / TOTAL_WEEKS) * 100).toFixed(2)
-        const dimmed = isRowDimmed(row)
-
-        return (
-          <div
+      <div className="relative">
+        {rows.map((row, idx) => (
+          <GanttRow
             key={idx}
-            className="gantt-row flex items-center mb-2"
-            style={{ 
-              height: `${ROW_HEIGHT}px`, 
-              cursor: "default",
-              opacity: dimmed ? 0.2 : 1
-            }}
-          >
-            <div style={{ width: `${LABEL_WIDTH}px`, flexShrink: 0, paddingRight: "12px" }}>
-              <div
-                className="gantt-row-name font-sans text-[12px] font-semibold overflow-hidden whitespace-nowrap text-ellipsis transition-colors"
-                style={{ color: "#cbd5e1" }}
-                title={row.name}
-              >
-                {row.name}
-              </div>
-              <div className="font-mono font-medium" style={{ fontSize: "10px", color: "#475569" }}>
-                {row.classroom || "—"} · {row.duration}W
-              </div>
-            </div>
-
-            <div className="flex-1 relative" style={{ height: "100%", marginRight: "32px" }}>
-              <div className="absolute inset-0 flex">
-                {Array.from({ length: TOTAL_WEEKS }, (_, i) => (
-                  <div
-                    key={i}
-                    className="flex-1"
-                    style={{
-                      borderLeft: i === 0 ? "none" : "1px solid rgba(255,255,255,0.04)",
-                    }}
-                  />
-                ))}
-              </div>
-
-              <div
-                className={`gantt-bar-status-${row.status}`}
-                style={{
-                  position: "absolute",
-                  left: `${leftPct}%`,
-                  width: `${widthPct}%`,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  height: `${BAR_HEIGHT}px`,
-                  borderRadius: "5px",
-                  display: "flex",
-                  alignItems: "center",
-                  paddingLeft: "10px",
-                  overflow: "hidden",
-                  zIndex: 2,
-                  background: `var(--color-status-${row.status}-bg)`,
-                  border: `1px solid var(--color-status-${row.status}-border)`,
-                }}
-              >
-                <span
-                  className="font-mono font-semibold whitespace-nowrap"
-                  style={{
-                    fontSize: "10px",
-                    color: row.status === "completed" ? "var(--color-status-completed-text)" : row.status === "ready" ? "var(--color-blue-soft)" : "var(--color-status-blocked-text)",
-                    letterSpacing: "0.04em",
-                  }}
-                >
-                  {getBarLabel(row.status)}
-                </span>
-              </div>
-
-              {deadlineMarks
-                .filter(d => assignedDeadlinesMap.get(d.id) === row.name)
-                .map((d, di) => {
-                  const isFirstWeek = d.week === row.startWeek + 1
-                  const targetWeek = isFirstWeek ? d.week : d.week - 0.5
-                  const markerLeftPct = ((targetWeek / TOTAL_WEEKS) * 100).toFixed(2)
-                  const markerDimmed = isMarkerDimmed(d)
-
-                  return (
-                    <div
-                      key={di}
-                      className="gantt-deadline-marker"
-                      title={d.label}
-                      style={{
-                        position: "absolute",
-                        left: `${markerLeftPct}%`,
-                        top: "50%",
-                        transform: "translate(-50%, -18px) rotate(45deg)",
-                        width: "11px",
-                        height: "11px",
-                        background: d.color,
-                        borderRadius: "1px",
-                        border: "2px solid #ffffff",
-                        boxShadow: "0 0 5px rgba(0, 0, 0, 0.6)",
-                        zIndex: 3,
-                        opacity: markerDimmed ? 0.15 : 1
-                      }}
-                    />
-                  )
-                })}
-            </div>
-          </div>
-        )
-      })}
+            row={row}
+            deadlineMarks={deadlineMarks}
+            assignedDeadlinesMap={assignedDeadlinesMap}
+            isDimmed={isRowDimmed(row)}
+            isMarkerDimmed={isMarkerDimmed}
+            getBarLabel={getBarLabel}
+            currentWeek={currentWeek}
+          />
+        ))}
+      </div>
     </div>
   )
 }
