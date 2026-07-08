@@ -127,7 +127,10 @@ export function GanttPanel() {
         )}
 
         <div className="p-3 sm:p-4">
-          <GanttChart hoveredLegendStatus={hoveredLegendStatus} />
+          <GanttChart 
+            hoveredLegendStatus={hoveredLegendStatus} 
+            isFullscreen={isFullscreen}
+          />
         </div>
       </div>
     </section>

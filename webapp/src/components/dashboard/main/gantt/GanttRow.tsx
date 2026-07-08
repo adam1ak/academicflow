@@ -33,6 +33,7 @@ interface GanttRowProps {
   rowIdx: number
   hoveredLegendStatus: LegendStatus
   hoveredCardDeadlineId: number | null
+  isFullscreen: boolean
 }
 
 export default function GanttRow({
@@ -47,7 +48,8 @@ export default function GanttRow({
   currentWeek,
   rowIdx,
   hoveredLegendStatus,
-  hoveredCardDeadlineId
+  hoveredCardDeadlineId,
+  isFullscreen
 }: GanttRowProps) {
   const [hoveredWeek, setHoveredWeek] = useState<number | null>(null)
   const [barWidth, setBarWidth] = useState("0%")
@@ -73,6 +75,11 @@ export default function GanttRow({
     return Array.from(deadlinesByWeek.entries())
   }, [deadlinesByWeek])
 
+  const rowHeight = isFullscreen ? 60 : ROW_HEIGHT
+  const barHeight = isFullscreen ? 36 : BAR_HEIGHT
+  const markerSize = isFullscreen ? 13 : 11
+  const borderSize = isFullscreen ? "2.5px" : "2px"
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setBarWidth(`${widthPct}%`)
@@ -88,7 +95,7 @@ export default function GanttRow({
       }}
       className={`gantt-row flex items-center mb-2 rounded-lg ${isSelected ? "selected" : ""}`}
       style={{
-        height: `${ROW_HEIGHT}px`,
+        height: `${rowHeight}px`,
         cursor: "pointer",
         opacity: isDimmed ? 0.15 : 1
       }}
@@ -132,7 +139,7 @@ export default function GanttRow({
             width: barWidth,
             top: "50%",
             transform: "translateY(-50%)",
-            height: `${BAR_HEIGHT}px`,
+            height: `${barHeight}px`,
             borderRadius: "5px",
             display: "flex",
             alignItems: "center",
@@ -147,7 +154,7 @@ export default function GanttRow({
           <span
             className="font-mono font-semibold whitespace-nowrap"
             style={{
-              fontSize: "10px",
+              fontSize: isFullscreen ? "11px" : "10px",
               color: row.status === "completed" ? "var(--color-status-completed-text)" : row.status === "ready" ? "var(--color-blue-soft)" : "var(--color-status-blocked-text)",
               letterSpacing: "0.04em",
             }}
@@ -202,14 +209,12 @@ export default function GanttRow({
                     : isHovered
                       ? "translate(-50%, -50%) rotate(45deg) scale(1.3)"
                       : "translate(-50%, -50%) rotate(45deg)",
-                  width: "11px",
-                  height: "11px",
+                  width: `${markerSize}px`,
+                  height: `${markerSize}px`,
                   background: d.color,
                   borderRadius: "1px",
-                  border: "2px solid #ffffff",
-                  boxShadow: isHighlighted
-                    ? `0 0 12px ${d.color}, 0 0 5px rgba(0, 0, 0, 0.6)`
-                    : "0 0 5px rgba(0, 0, 0, 0.6)",
+                  border: `${borderSize} dashed #ffffff`.replace("dashed", "solid"),
+                  boxShadow: "0 0 5px rgba(0, 0, 0, 0.6)",
                   opacity: anyDimmed ? 0.15 : 1,
                   cursor: "pointer",
                 }}

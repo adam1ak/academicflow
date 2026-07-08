@@ -27,6 +27,7 @@ interface GanttDeadlineMark {
 
 interface GanttChartProps {
   hoveredLegendStatus: LegendStatus
+  isFullscreen: boolean
 }
 
 function buildRows(
@@ -104,7 +105,7 @@ function hashCode(str: string): number {
   return Math.abs(hash)
 }
 
-export default function GanttChart({ hoveredLegendStatus }: GanttChartProps) {
+export default function GanttChart({ hoveredLegendStatus, isFullscreen }: GanttChartProps) {
   const { activePlan, subjects, deadlines } = usePlan()
   const schedule = activePlan?.schedule ?? []
   const [selectedRowName, setSelectedRowName] = useState<string | null>(null)
@@ -294,6 +295,7 @@ export default function GanttChart({ hoveredLegendStatus }: GanttChartProps) {
             rowIdx={idx}
             hoveredLegendStatus={hoveredLegendStatus}
             hoveredCardDeadlineId={hoveredCardDeadlineId}
+            isFullscreen={isFullscreen}
           />
         ))}
       </div>
@@ -301,7 +303,7 @@ export default function GanttChart({ hoveredLegendStatus }: GanttChartProps) {
       <div 
         ref={cardRef}
         onClick={(e) => e.stopPropagation()}
-        className="rounded-xl border border-dim bg-surface/60 backdrop-blur-md shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all duration-300 ease-in-out overflow-hidden"
+        className={`rounded-xl border border-dim bg-surface/60 backdrop-blur-md shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all duration-300 ease-in-out overflow-hidden ${isFullscreen ? "max-w-5xl mx-auto w-full" : ""}`}
         style={{
           maxHeight: selectedRowName ? "200px" : "0px",
           opacity: selectedRowName ? 1 : 0,
