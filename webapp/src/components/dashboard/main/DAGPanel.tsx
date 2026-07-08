@@ -12,6 +12,7 @@ export function DAGPanel() {
 
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
   const [hoveredLegendStatus, setHoveredLegendStatus] = useState<"completed" | "ready" | "blocked" | null>(null)
+  const [showHint, setShowHint] = useState(true)
 
   const { getStyles } = useStatusStyles()
 
@@ -96,13 +97,16 @@ export function DAGPanel() {
           </div>
         </header>
         <div className="flex-1 min-h-0 flex flex-col">
-          <div className="sm:hidden mx-4 mt-2 px-3 py-2 rounded-lg flex items-center gap-2.5 cursor-pointer bg-hint-bg border border-hint-border">
-            <span>↺</span>
-
-            <span className="text-xs flex-1 leading-snug text-hint-text ">Best viewed in fullscreen landscape. Tap ⛶ or rotate your phone.</span>
-
-            <span className="text-xs text-sec">✕</span>
-          </div>
+          {showHint && (
+            <div 
+              onClick={() => setShowHint(false)}
+              className="sm:hidden mx-4 mt-2 px-3 py-2 rounded-lg flex items-center gap-2.5 cursor-pointer bg-hint-bg border border-hint-border hover:bg-hint-bg/80 transition-colors"
+            >
+              <span>↺</span>
+              <span className="text-xs flex-1 leading-snug text-hint-text">Best viewed in fullscreen landscape. Tap ⛶ or rotate your phone.</span>
+              <span className="text-xs text-sec">✕</span>
+            </div>
+          )}
 
           <DAGRender 
             ref={rendererRef}
