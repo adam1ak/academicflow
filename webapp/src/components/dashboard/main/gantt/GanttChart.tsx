@@ -1,108 +1,21 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { usePlan } from "../../../../context/PlanContext"
-import { SubjectScheduleItem, SubjectDetailResponse } from "../../../../types/plan"
-import { DeadlineResponse } from "../../../../types/deadline"
 import { LegendStatus } from "../GanttPanel"
 import GanttRow from "./GanttRow"
-
-const TOTAL_WEEKS = 12
-const LABEL_WIDTH = 170
-
-interface GanttRowData {
-  name: string
-  classroom: string | null
-  status: "ready" | "blocked" | "completed"
-  startWeek: number
-  endWeek: number
-  duration: number
-}
-
-interface GanttDeadlineMark {
-  id: number
-  week: number
-  label: string
-  type: string
-  color: string
-}
+import GanttDetailsCard from "./GanttDetailsCard"
+import { 
+  TOTAL_WEEKS, 
+  LABEL_WIDTH, 
+  GanttRowData, 
+  GanttDeadlineMark, 
+  buildRows, 
+  mapDeadlines, 
+  hashCode 
+} from "./ganttUtils"
 
 interface GanttChartProps {
   hoveredLegendStatus: LegendStatus
   isFullscreen: boolean
-}
-
-function buildRows(
-  schedule: SubjectScheduleItem[],
-  subjects: SubjectDetailResponse[]
-): GanttRowData[] {
-  const subjectMap = new Map(subjects.map(s => [s.name, s]))
-
-  return schedule
-    .map(item => {
-      const subject = subjectMap.get(item.name)
-      return {
-        name: item.name,
-        classroom: subject?.classroom ?? null,
-        status: (subject?.status ?? "blocked") as GanttRowData["status"],
-        startWeek: item.start_time,
-        endWeek: Math.min(item.end_time, TOTAL_WEEKS),
-        duration: Math.min(item.end_time, TOTAL_WEEKS) - item.start_time,
-      }
-    })
-    .sort((a, b) => a.startWeek - b.startWeek || a.name.localeCompare(b.name))
-}
-
-function getBarLabel(status: string) {
-  switch (status) {
-    case "completed": return "✓ Done"
-    case "ready": return "▶ Active"
-    default: return "⊘ Locked"
-  }
-}
-
-function getDeadlineColor(type: string): string {
-  switch (type.toLowerCase()) {
-    case "exam":
-      return "var(--color-accent-red)"
-    case "assignment":
-      return "var(--color-accent-amber)"
-    case "project":
-      return "var(--color-accent-purple)"
-    case "task":
-      return "var(--color-accent-pink)"
-    default:
-      return "var(--color-accent-teal)"
-  }
-}
-
-function mapDeadlines(
-  deadlines: DeadlineResponse[],
-  startDateStr?: string | null
-): GanttDeadlineMark[] {
-  if (!startDateStr || deadlines.length === 0) return []
-  const startDate = new Date(startDateStr)
-
-  return deadlines.map(d => {
-    const dueDate = new Date(d.due_date)
-    const diffMs = dueDate.getTime() - startDate.getTime()
-    const diffDays = Math.max(0, Math.floor(diffMs / (24 * 60 * 60 * 1000)))
-    const week = Math.max(1, Math.min(TOTAL_WEEKS, Math.floor(diffDays / 7) + 1))
-
-    return {
-      id: d.id,
-      week,
-      label: d.title,
-      type: d.type.toLowerCase().trim(),
-      color: getDeadlineColor(d.type)
-    }
-  })
-}
-
-function hashCode(str: string): number {
-  let hash = 0
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash)
-  }
-  return Math.abs(hash)
 }
 
 export default function GanttChart({ hoveredLegendStatus, isFullscreen }: GanttChartProps) {
@@ -204,6 +117,19 @@ export default function GanttChart({ hoveredLegendStatus, isFullscreen }: GanttC
     }
   }, [selectedRowName])
 
+  const getBarLabel = (status: string): string => {
+    switch (status) {
+      case "completed":
+        return "✓ Completed"
+      case "blocked":
+        return "✕ Blocked"
+      case "ready":
+        return "▶ Active"
+      default:
+        return ""
+    }
+  }
+
   if (rows.length === 0) {
     return (
       <div className="flex items-center justify-center text-sec font-mono text-xs min-h-[120px]">
@@ -218,54 +144,13 @@ export default function GanttChart({ hoveredLegendStatus, isFullscreen }: GanttC
       style={{ minWidth: "1050px" }} 
       className={`gantt-container min-w-[850px] md:min-w-[1050px] lg:min-w-[1200px] xl:min-w-[1350px] ${selectedRowName !== null ? "gantt-has-selection" : ""}`}
     >
-      <style>{`
-        .gantt-row {
-          transition: opacity 0.15s ease, background-color 0.15s ease;
-          padding-left: 8px;
-          padding-right: 8px;
-          -webkit-font-smoothing: antialiased;
-          -moz-osx-font-smoothing: grayscale;
-        }
-        .gantt-container:not(.gantt-has-selection) .gantt-row:hover {
-          background-color: rgba(255, 255, 255, 0.02);
-        }
-        .gantt-container:not(.gantt-has-selection) .gantt-row:hover .gantt-row-name {
-          color: #ffffff !important;
-        }
-        .gantt-row.selected {
-          background-color: rgba(255, 255, 255, 0.035);
-          box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-        }
-        .gantt-row.selected .gantt-row-name {
-          color: #ffffff !important;
-        }
-        .gantt-container:not(.gantt-has-selection) .gantt-row:hover .gantt-bar-status-ready {
-          border-color: rgba(96, 165, 250, 0.6) !important;
-          box-shadow: 0 0 10px rgba(59, 130, 246, 0.25);
-        }
-        .gantt-container:not(.gantt-has-selection) .gantt-row:hover .gantt-bar-status-completed {
-          border-color: rgba(74, 222, 128, 0.6) !important;
-          box-shadow: 0 0 10px rgba(34, 197, 94, 0.25);
-        }
-        .gantt-container:not(.gantt-has-selection) .gantt-row:hover .gantt-bar-status-blocked {
-          border-color: rgba(161, 161, 170, 0.4) !important;
-        }
-        .gantt-deadline-marker {
-          transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
-        }
-        .gantt-deadline-marker:hover {
-          transform: translate(-50%, -18px) rotate(45deg) scale(1.3);
-          box-shadow: 0 0 8px currentColor;
-        }
-      `}</style>
-
       <div className="flex mb-3" style={{ marginLeft: `${LABEL_WIDTH + 8}px`, marginRight: "40px" }}>
         {Array.from({ length: TOTAL_WEEKS }, (_, i) => {
           const weekNum = i + 1
           return (
             <div
               key={i}
-              className="flex-1 text-center font-mono font-medium tracking-wider"
+              className="flex-1 text-center font-mono font-bold"
               style={{
                 fontSize: "10px",
                 color: "#475569"
@@ -300,69 +185,16 @@ export default function GanttChart({ hoveredLegendStatus, isFullscreen }: GanttC
         ))}
       </div>
 
-      <div 
-        ref={cardRef}
-        onClick={(e) => e.stopPropagation()}
-        className={`rounded-xl border border-dim bg-surface/60 backdrop-blur-md shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all duration-300 ease-in-out overflow-hidden ${isFullscreen ? "max-w-5xl mx-auto w-full" : ""}`}
-        style={{
-          maxHeight: selectedRowName ? "200px" : "0px",
-          opacity: selectedRowName ? 1 : 0,
-          marginTop: selectedRowName ? "16px" : "0px",
-          padding: selectedRowName ? "16px" : "0px",
-          borderWidth: selectedRowName ? "1px" : "0px",
-          WebkitFontSmoothing: "antialiased",
-          MozOsxFontSmoothing: "grayscale"
-        }}
-      >
-        {displayedRow && (
-          <>
-            <div>
-              <div className="flex items-center gap-2 mb-1.5">
-                <span className="font-sans font-bold text-sm text-pri">{displayedRow.name}</span>
-                <span 
-                  className="font-mono text-[9px] rounded-full px-2 py-0.5 font-bold border"
-                  style={{
-                    background: `var(--color-status-${displayedRow.status}-bg)`,
-                    borderColor: `var(--color-status-${displayedRow.status}-border)`,
-                    color: displayedRow.status === "completed" ? "var(--color-status-completed-text)" : displayedRow.status === "ready" ? "var(--color-blue-soft)" : "var(--color-status-blocked-text)",
-                  }}
-                >
-                  {getBarLabel(displayedRow.status)}
-                </span>
-              </div>
-              <div className="flex flex-wrap items-center gap-4 text-sec font-mono text-[10px]">
-                <div>Classroom: <span className="text-pri font-sans font-medium">{displayedRow.classroom || "—"}</span></div>
-                <div>Weeks: <span className="text-pri font-sans font-medium">W{displayedRow.startWeek + 1}–W{displayedRow.endWeek}</span></div>
-                <div>Duration: <span className="text-pri font-sans font-medium">{displayedRow.duration} Weeks</span></div>
-              </div>
-            </div>
-
-            <div className="flex-1 md:max-w-[50%] flex flex-col gap-1.5 md:items-end">
-              <span className="font-mono text-[9px] text-sec uppercase tracking-widest font-bold">Deadlines</span>
-              <div className="flex flex-wrap gap-2 md:justify-end max-h-[90px] overflow-y-auto w-full pr-1 scrollbar-thin">
-                {deadlineMarks.filter(d => assignedDeadlinesMap.get(d.id) === displayedRow.name).length === 0 ? (
-                  <span className="font-mono text-[9px] text-mut">No deadlines for this subject</span>
-                ) : (
-                  deadlineMarks
-                    .filter(d => assignedDeadlinesMap.get(d.id) === displayedRow.name)
-                    .map((d, i) => (
-                      <div 
-                        key={i} 
-                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-dim bg-surface/50 text-[10px] font-mono font-semibold cursor-pointer hover:bg-white/5 transition-all select-none"
-                        style={{ color: d.color }}
-                        onMouseEnter={() => setHoveredCardDeadlineId(d.id)}
-                        onMouseLeave={() => setHoveredCardDeadlineId(null)}
-                      >
-                        <div className="w-1.5 h-1.5 rounded-xs" style={{ background: d.color }} />
-                        <span>{d.label} (W{d.week})</span>
-                      </div>
-                    ))
-                )}
-              </div>
-            </div>
-          </>
-        )}
-      </div>
+      <GanttDetailsCard
+        cardRef={cardRef}
+        selectedRowName={selectedRowName}
+        displayedRow={displayedRow}
+        getBarLabel={getBarLabel}
+        deadlineMarks={deadlineMarks}
+        assignedDeadlinesMap={assignedDeadlinesMap}
+        setHoveredCardDeadlineId={setHoveredCardDeadlineId}
+        isFullscreen={isFullscreen}
+      />
     </div>
   )
 }

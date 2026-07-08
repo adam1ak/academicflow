@@ -1,33 +1,23 @@
 import { useState, useEffect, useMemo } from "react"
 import { LegendStatus } from "../GanttPanel"
 import GanttTooltip, { GanttTooltipItem } from "./GanttTooltip"
-
-const TOTAL_WEEKS = 12
-const LABEL_WIDTH = 170
-const ROW_HEIGHT = 48
-const BAR_HEIGHT = 28
+import { 
+  TOTAL_WEEKS, 
+  LABEL_WIDTH, 
+  ROW_HEIGHT, 
+  BAR_HEIGHT, 
+  GanttRowData, 
+  GanttDeadlineMark 
+} from "./ganttUtils"
 
 interface GanttRowProps {
-  row: {
-    name: string
-    classroom: string | null
-    status: "ready" | "blocked" | "completed"
-    startWeek: number
-    endWeek: number
-    duration: number
-  }
-  deadlineMarks: Array<{
-    id: number
-    week: number
-    label: string
-    type: string
-    color: string
-  }>
+  row: GanttRowData
+  deadlineMarks: GanttDeadlineMark[]
   assignedDeadlinesMap: Map<number, string>
   isDimmed: boolean
   isSelected: boolean
   onRowClick: () => void
-  isMarkerDimmed: (d: { id: number; week: number; label: string; type: string; color: string }) => boolean
+  isMarkerDimmed: (d: GanttDeadlineMark) => boolean
   getBarLabel: (status: string) => string
   currentWeek: number | null
   rowIdx: number
