@@ -2,6 +2,7 @@ import { useMemo } from "react"
 import { usePlan } from "../../../../context/PlanContext"
 import { SubjectScheduleItem, SubjectDetailResponse } from "../../../../types/plan"
 import { DeadlineResponse } from "../../../../types/deadline"
+import { LegendStatus } from "../GanttPanel"
 
 const TOTAL_WEEKS = 12
 const LABEL_WIDTH = 170
@@ -23,6 +24,10 @@ interface GanttDeadlineMark {
   label: string
   type: string
   color: string
+}
+
+interface GanttChartProps {
+  hoveredLegendStatus: LegendStatus
 }
 
 function buildRows(
@@ -100,7 +105,7 @@ function hashCode(str: string): number {
   return Math.abs(hash)
 }
 
-export default function GanttChart() {
+export default function GanttChart({ hoveredLegendStatus }: GanttChartProps) {
   const { activePlan, subjects, deadlines } = usePlan()
   const schedule = activePlan?.schedule ?? []
 
@@ -125,6 +130,21 @@ export default function GanttChart() {
     return map
   }, [deadlineMarks, rows])
 
+  const isRowDimmed = (row: GanttRow) => {
+    if (!hoveredLegendStatus) return false
+    if (hoveredLegendStatus === "active") return row.status !== "ready"
+    if (hoveredLegendStatus === "upcoming") return row.status !== "blocked"
+    
+    const rowDeadlines = deadlineMarks.filter(d => assignedDeadlinesMap.get(d.id) === row.name)
+    return !rowDeadlines.some(d => d.type.toLowerCase() === hoveredLegendStatus)
+  }
+
+  const isMarkerDimmed = (d: GanttDeadlineMark) => {
+    if (!hoveredLegendStatus) return false
+    if (["active", "upcoming"].includes(hoveredLegendStatus)) return false
+    return d.type.toLowerCase() !== hoveredLegendStatus
+  }
+
   if (rows.length === 0) {
     return (
       <div className="flex items-center justify-center text-sec font-mono text-xs min-h-[120px]">
@@ -135,6 +155,36 @@ export default function GanttChart() {
 
   return (
     <div style={{ minWidth: "1050px" }} className="min-w-[850px] md:min-w-[1050px] lg:min-w-[1200px] xl:min-w-[1350px]">
+      <style>{`
+        .gantt-row {
+          transition: opacity 0.15s ease, background-color 0.15s ease;
+        }
+        .gantt-row:hover {
+          background-color: rgba(255, 255, 255, 0.02);
+        }
+        .gantt-row:hover .gantt-row-name {
+          color: #ffffff !important;
+        }
+        .gantt-row:hover .gantt-bar-status-ready {
+          border-color: rgba(96, 165, 250, 0.6) !important;
+          box-shadow: 0 0 10px rgba(59, 130, 246, 0.25);
+        }
+        .gantt-row:hover .gantt-bar-status-completed {
+          border-color: rgba(74, 222, 128, 0.6) !important;
+          box-shadow: 0 0 10px rgba(34, 197, 94, 0.25);
+        }
+        .gantt-row:hover .gantt-bar-status-blocked {
+          border-color: rgba(161, 161, 170, 0.4) !important;
+        }
+        .gantt-deadline-marker {
+          transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+        }
+        .gantt-deadline-marker:hover {
+          transform: translate(-50%, -18px) rotate(45deg) scale(1.3) !important;
+          box-shadow: 0 0 8px currentColor;
+        }
+      `}</style>
+
       <div className="flex mb-3" style={{ marginLeft: `${LABEL_WIDTH}px`, marginRight: "32px" }}>
         {Array.from({ length: TOTAL_WEEKS }, (_, i) => {
           const weekNum = i + 1
@@ -156,16 +206,21 @@ export default function GanttChart() {
       {rows.map((row, idx) => {
         const leftPct = ((row.startWeek / TOTAL_WEEKS) * 100).toFixed(2)
         const widthPct = ((row.duration / TOTAL_WEEKS) * 100).toFixed(2)
+        const dimmed = isRowDimmed(row)
 
         return (
           <div
             key={idx}
-            className="flex items-center mb-2"
-            style={{ height: `${ROW_HEIGHT}px`, cursor: "default" }}
+            className="gantt-row flex items-center mb-2"
+            style={{ 
+              height: `${ROW_HEIGHT}px`, 
+              cursor: "default",
+              opacity: dimmed ? 0.2 : 1
+            }}
           >
             <div style={{ width: `${LABEL_WIDTH}px`, flexShrink: 0, paddingRight: "12px" }}>
               <div
-                className="font-sans text-[12px] font-semibold overflow-hidden whitespace-nowrap text-ellipsis"
+                className="gantt-row-name font-sans text-[12px] font-semibold overflow-hidden whitespace-nowrap text-ellipsis transition-colors"
                 style={{ color: "#cbd5e1" }}
                 title={row.name}
               >
@@ -226,6 +281,8 @@ export default function GanttChart() {
                   const isFirstWeek = d.week === row.startWeek + 1
                   const targetWeek = isFirstWeek ? d.week : d.week - 0.5
                   const markerLeftPct = ((targetWeek / TOTAL_WEEKS) * 100).toFixed(2)
+                  const markerDimmed = isMarkerDimmed(d)
+
                   return (
                     <div
                       key={di}
@@ -243,6 +300,7 @@ export default function GanttChart() {
                         border: "2px solid #ffffff",
                         boxShadow: "0 0 5px rgba(0, 0, 0, 0.6)",
                         zIndex: 3,
+                        opacity: markerDimmed ? 0.15 : 1
                       }}
                     />
                   )

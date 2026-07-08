@@ -4,11 +4,14 @@ import { FullscreenIcon, ExitFullscreenIcon } from "../../ui/FullscreenIcons";
 import { usePlan } from "../../../context/PlanContext";
 import GanttChart from "./gantt/GanttChart";
 
+export type LegendStatus = "active" | "upcoming" | "assignment" | "exam" | "project" | "task" | null;
+
 export function GanttPanel() {
   const ganttRef = useRef<HTMLElement>(null)
   const { isFullscreen, toggle } = useFullscreen(ganttRef)
   const { activePlan, subjects } = usePlan()
   const [showHint, setShowHint] = useState(true)
+  const [hoveredLegendStatus, setHoveredLegendStatus] = useState<LegendStatus>(null)
 
   const formatSemester = (sem?: string) => {
     if (!sem) return "Current Semester"
@@ -47,32 +50,56 @@ export function GanttPanel() {
 
         <div className="flex flex-wrap items-center gap-3.5 w-full min-[888px]:w-auto min-[888px]:justify-end">
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-1.5">
+            <div 
+              className="flex items-center gap-1.5 cursor-pointer hover:brightness-125 transition-all select-none"
+              onMouseEnter={() => setHoveredLegendStatus("active")}
+              onMouseLeave={() => setHoveredLegendStatus(null)}
+            >
               <div className="w-2 h-2 rounded-xs bg-accent-blue" />
               <span className="font-mono text-[10px] text-sec">Active</span>
             </div>
 
-            <div className="flex items-center gap-1.5">
+            <div 
+              className="flex items-center gap-1.5 cursor-pointer hover:brightness-125 transition-all select-none"
+              onMouseEnter={() => setHoveredLegendStatus("upcoming")}
+              onMouseLeave={() => setHoveredLegendStatus(null)}
+            >
               <div className="w-2 h-2 rounded-xs bg-[#3f3f46]" />
               <span className="font-mono text-[10px] text-sec">Upcoming</span>
             </div>
 
-            <div className="flex items-center gap-1.5">
+            <div 
+              className="flex items-center gap-1.5 cursor-pointer hover:brightness-125 transition-all select-none"
+              onMouseEnter={() => setHoveredLegendStatus("assignment")}
+              onMouseLeave={() => setHoveredLegendStatus(null)}
+            >
               <div className="w-2 h-2 rounded-xs bg-accent-amber" />
               <span className="font-mono text-[10px] text-sec">Assignment</span>
             </div>
 
-            <div className="flex items-center gap-1.5">
+            <div 
+              className="flex items-center gap-1.5 cursor-pointer hover:brightness-125 transition-all select-none"
+              onMouseEnter={() => setHoveredLegendStatus("exam")}
+              onMouseLeave={() => setHoveredLegendStatus(null)}
+            >
               <div className="w-2 h-2 rounded-xs bg-accent-red" />
               <span className="font-mono text-[10px] text-sec">Exam</span>
             </div>
 
-            <div className="flex items-center gap-1.5">
+            <div 
+              className="flex items-center gap-1.5 cursor-pointer hover:brightness-125 transition-all select-none"
+              onMouseEnter={() => setHoveredLegendStatus("project")}
+              onMouseLeave={() => setHoveredLegendStatus(null)}
+            >
               <div className="w-2 h-2 rounded-xs bg-accent-purple" />
               <span className="font-mono text-[10px] text-sec">Project</span>
             </div>
 
-            <div className="flex items-center gap-1.5">
+            <div 
+              className="flex items-center gap-1.5 cursor-pointer hover:brightness-125 transition-all select-none"
+              onMouseEnter={() => setHoveredLegendStatus("task")}
+              onMouseLeave={() => setHoveredLegendStatus(null)}
+            >
               <div className="w-2 h-2 rounded-xs bg-accent-pink" />
               <span className="font-mono text-[10px] text-sec">Task</span>
             </div>
@@ -100,7 +127,7 @@ export function GanttPanel() {
         )}
 
         <div className="p-3 sm:p-4">
-          <GanttChart />
+          <GanttChart hoveredLegendStatus={hoveredLegendStatus} />
         </div>
       </div>
     </section>
