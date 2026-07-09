@@ -52,6 +52,7 @@ class DeadlineResponse(BaseModel):
 class UserCreate(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8, description="Password must be at least 8 characters long")
+    name: Optional[str] = Field(default=None, min_length=1, max_length=100, description="Optional full name or display name")
 
     @field_validator("password")
     @classmethod
@@ -68,6 +69,7 @@ class UserResponse(BaseModel):
     id: int
     email: str
     is_active: bool
+    name: Optional[str] = None
 
 class Token(BaseModel):
     access_token: str
