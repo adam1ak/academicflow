@@ -27,7 +27,12 @@ def register_user(user: UserCreate, request: Request, db: Session = Depends(get_
         raise HTTPException(status_code=400, detail="Email already registered")
 
     hashed_password = get_password_hash(user.password)
-    new_user = models.User(email=user.email, hashed_password=hashed_password)
+    new_user = models.User(
+        email=user.email,
+        hashed_password=hashed_password,
+        name=user.name or ""
+    )
+
 
     db.add(new_user)
     db.commit()
@@ -96,7 +101,8 @@ def read_users_me(current_user: models.User = Depends(get_current_user)):
     return {
         "message": "Session verified",
         "user": current_user.email,
-        "github_id": current_user.github_id
+        "github_id": current_user.github_id,
+        "name": current_user.name
     }
 
 @router.post("/refresh")

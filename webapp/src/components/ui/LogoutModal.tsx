@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useAuth } from "../../context/AuthContext";
 
 interface LogoutModalProps {
     isOpen: boolean;
@@ -8,6 +9,8 @@ interface LogoutModalProps {
 
 function LogoutModal({ isOpen, onClose, onConfirm }: LogoutModalProps) {
 
+    const { user } = useAuth()
+
     useEffect(() => {
         if (!isOpen) return
 
@@ -16,11 +19,16 @@ function LogoutModal({ isOpen, onClose, onConfirm }: LogoutModalProps) {
         }
 
         document.addEventListener('keydown', handleKey)
-        
+
         return () => document.removeEventListener('keydown', handleKey)
     }, [isOpen, onClose])
 
     if (!isOpen) return null;
+
+    const modalInitials = user?.name
+        ? user.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()
+        : user?.email?.slice(0, 2).toUpperCase() || "??";
+
     return (
         <div
             role="dialog"
@@ -34,12 +42,12 @@ function LogoutModal({ isOpen, onClose, onConfirm }: LogoutModalProps) {
 
                 <div className="flex items-center gap-3 mb-5">
                     <div className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-avatar cursor-pointer">
-                        AT
+                        {modalInitials}
                     </div>
 
                     <div>
-                        <p className="text-sm font-semibold text-pri">Dr. Alan Turing</p>
-                        <p className="text-xs font-mono text-sec">a.turing@flow.edu</p>
+                        <p className="text-sm font-semibold text-pri">{user?.name || "John Doe"}</p>
+                        <p className="text-xs font-mono text-sec">{user?.email || "email@email.com"}</p>
                     </div>
                 </div>
 
@@ -51,13 +59,13 @@ function LogoutModal({ isOpen, onClose, onConfirm }: LogoutModalProps) {
                 </p>
 
                 <div className="flex gap-2">
-                    <button 
-                    onClick={onClose}
-                    className="flex-1 py-2.5 rounded-lg border border-dim text-sec text-sm hover:border-white/20 transition-colors">Cancel</button>
+                    <button
+                        onClick={onClose}
+                        className="flex-1 py-2.5 rounded-lg border border-dim text-sec text-sm hover:border-white/20 transition-colors">Cancel</button>
 
-                    <button 
-                    onClick={onConfirm}
-                    className="flex-1 py-2.5 rounded-lg border border-accent-red/35 bg-accent-red/5 text-pri text-sm font-medium hover:bg-accent-red/10 transition-colors">Sign out</button>
+                    <button
+                        onClick={onConfirm}
+                        className="flex-1 py-2.5 rounded-lg border border-accent-red/35 bg-accent-red/5 text-pri text-sm font-medium hover:bg-accent-red/10 transition-colors">Sign out</button>
                 </div>
             </div>
         </div>

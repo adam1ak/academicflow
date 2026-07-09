@@ -16,8 +16,9 @@ export interface SubjectDetailResponse {
 }
 
 export interface PlanData {
-id: number
+    id: number
     name: string
+    max_concurrent?: number
     semester?: string
     start_date?: string
     accent_color?: string

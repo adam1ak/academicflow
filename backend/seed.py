@@ -7,16 +7,14 @@ def seed_database():
     db = SessionLocal()
 
     try:
-        # Zapewnia ze tabele istnieja
-        models.Base.metadata.create_all(bind=engine)
-        
+
         email = "test@example.com"
         password = "Password123!"
 
         user = db.query(models.User).filter(models.User.email == email).first()
         if not user:
             hashed_password = get_password_hash(password)
-            user = models.User(email=email, hashed_password=hashed_password, is_active=True)
+            user = models.User(email=email, hashed_password=hashed_password, is_active=True, name="John Doe")
             db.add(user)
             db.commit()
             db.refresh(user)

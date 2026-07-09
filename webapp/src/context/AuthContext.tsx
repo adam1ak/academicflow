@@ -2,10 +2,16 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import { verifySession } from "../api/auth";
 import { tokenStorage } from "../services/tokenStorage";
 
+export interface AuthUser {
+  name: string
+  email: string
+}
+
 export interface AuthContextType {
-    isLogged: boolean;
-    setIsLogged: (value: boolean) => void;
-    isChecking: boolean;
+    isLogged: boolean
+    setIsLogged: (value: boolean) => void
+    isChecking: boolean
+    user: AuthUser | null
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
@@ -13,6 +19,7 @@ const AuthContext = createContext<AuthContextType | null>(null)
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const [isLogged, setIsLogged] = useState<boolean>(false)
       const [isChecking, setIsChecking] = useState<boolean>(true)
+      const [user, setUser] = useState<AuthUser | null>(null)
     
       useEffect(() => {
         const checkAuth = async () => {
@@ -24,7 +31,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           }
     
           try {
-            await verifySession()
+            const data = await verifySession()
+            
+            setUser({
+              name: data.name || "",
+              email: data.user
+            })
             setIsLogged(true)
           } catch (error) {
             console.error("Token invalid or expired: ", error)
@@ -36,14 +48,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
     
         checkAuth()
-      }, [])
+      }, [isLogged])
 
       return (
         <AuthContext.Provider
             value={{
                 isLogged,
                 setIsLogged,
-                isChecking
+                isChecking,
+                user
             }}>
             {children}
         </AuthContext.Provider>

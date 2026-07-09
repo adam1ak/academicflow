@@ -7,12 +7,14 @@ import { tokenStorage } from "../../services/tokenStorage";
 import api from "../../api/client"
 
 import { usePlan } from "../../context/PlanContext";
+import { PlanData } from "../../types/plan";
 import PlanSelector from "../plan/PlanSelector";
 import CreatePlanModal from "../plan/CreatePlanModal";
+import EditPlanModal from "../plan/EditPlanModal";
 
 function AppNavbar() {
 
-  const { setIsLogged } = useAuth()
+  const { setIsLogged, user } = useAuth()
 
   const { activePlan, setActivePlanId, refreshPlans } = usePlan()
 
@@ -26,6 +28,7 @@ function AppNavbar() {
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   const [isCreatePlanModalOpen, setIsCreatePlanModalOpen] = useState(false)
+  const [editingPlan, setEditingPlan] = useState<PlanData | null>(null)
 
   const navItems = [
     { label: "Dashboard", path: "/dashboard" },
@@ -34,6 +37,10 @@ function AppNavbar() {
     { label: "Analytics", path: "/analytics" },
     { label: "Explore", path: "/explore" },
   ];
+
+  const userInitials = user?.name
+    ? user.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()
+    : user?.email?.slice(0, 2).toUpperCase() || "??";
 
   useEffect(() => {
     setOpenMenu(false)
@@ -97,6 +104,7 @@ function AppNavbar() {
           setIsCreatePlanModalOpen(true)
           setIsSelectorOpen(false)
         }}
+        onEditPlan={(plan) => setEditingPlan(plan)}
         position={selectorPos}
         innerRef={dropdownRef}
       />
@@ -104,11 +112,18 @@ function AppNavbar() {
       {isCreatePlanModalOpen && (
         <CreatePlanModal
           onClose={() => setIsCreatePlanModalOpen(false)}
-          onSuccess={ async (newPlanId) => {
+          onSuccess={async (newPlanId) => {
             await refreshPlans()
-
             setActivePlanId(newPlanId)
           }}
+        />
+      )}
+
+      {editingPlan && (
+        <EditPlanModal
+          key={editingPlan.id}
+          plan={editingPlan}
+          onClose={() => setEditingPlan(null)}
         />
       )}
 
@@ -150,12 +165,12 @@ function AppNavbar() {
                 ref={triggerRef}
                 onClick={handleToggleSelector}
                 className="flex gap-3 items-center bg-surface-hi text-sec border border-dim px-3 py-1 mr-3 rounded-md cursor-pointer select-none">
-                <div 
-                  className="w-2 h-2 rounded-full transition-colors duration-200 bg-current"
+                <div
+                  className="w-2 h-2 rounded-full transition-colors duration-200"
                   style={{
-                      backgroundColor: activePlan?.accent_color
-                        ? `var(--color-accent-${activePlan.accent_color})`
-                        : "currentColor"
+                    backgroundColor: activePlan?.accent_color
+                      ? `var(--color-accent-${activePlan.accent_color})`
+                      : "currentColor"
                   }}
                 />
                 <p className="font-mono text-xs">{activePlan ? activePlan.name : "Select Plan"}</p>
@@ -172,12 +187,12 @@ function AppNavbar() {
               className="flex items-center gap-2 lg:hover:bg-white/5 lg:px-1.5 lg:py-1 lg:rounded-lg"
             >
               <div className="hidden lg:flex flex-col items-end font-sf">
-                <span className="text-xs font-medium text-slate-200">Dr. Alan Turing</span>
-                <span className="text-[9px] font-mono text-mut">a.turing@flow.edu</span>
+                <span className="text-xs font-medium text-slate-200">{user?.name || "John Doe"}</span>
+                <span className="text-[9px] font-mono text-mut">{user?.email || "email@email.com"}</span>
               </div>
 
               <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-avatar cursor-pointer">
-                AT
+                {userInitials}
               </div>
             </button>
 

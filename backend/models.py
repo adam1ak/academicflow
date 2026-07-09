@@ -76,6 +76,7 @@ class User(Base):
     hashed_password = Column(String, nullable=True)
     github_id = Column(String, unique=True, index=True, nullable=True)
     is_active = Column(Boolean, default=True)
+    name = Column(String, nullable=True)
 
     plans = relationship("Plan", back_populates="owner")
     deadlines = relationship("Deadline", back_populates="owner")

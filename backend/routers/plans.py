@@ -214,6 +214,7 @@ def get_my_plan(db: Session = Depends(get_db),
             single_plan_data = {
                 "id": single_plan.id,
                 "name": single_plan.name,
+                "max_concurrent": single_plan.max_concurrent,
                 "semester": single_plan.semester,
                 "start_date": single_plan.start_date.isoformat() if single_plan.start_date else None,
                 "accent_color": single_plan.accent_color,
