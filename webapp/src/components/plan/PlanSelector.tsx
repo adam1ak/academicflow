@@ -1,25 +1,27 @@
 import React from "react"
 import PlanSelectorItem from "./PlanSelectorItem"
 import { usePlan } from "../../context/PlanContext"
+import { PlanData } from "../../types/plan"
 
 interface PlanSelectorProps {
     isOpen: boolean
     onClose: () => void
     createPlanModal: () => void
+    onEditPlan: (plan: PlanData) => void
     position: { top: number, right: number }
     innerRef: React.RefObject<HTMLDivElement | null>
 }
 
-function PlanSelector({ isOpen, onClose, createPlanModal, position, innerRef }: PlanSelectorProps) {
+function PlanSelector({ isOpen, onClose, createPlanModal, onEditPlan, position, innerRef }: PlanSelectorProps) {
 
     const { plans, activePlanId, setActivePlanId } = usePlan()
 
     if (!isOpen) return null;
     return (
-        <div 
+        <div
             ref={innerRef}
             style={{ top: position.top, right: position.right }}
-            className="fixed z-999 w-[275px] bg-surface-hi border border-hi overflow-hidden rounded-lg">
+            className="fixed z-999 w-[285px] bg-surface-hi border border-hi overflow-hidden rounded-lg shadow-lg">
             {plans.map((plan) => (
                 <PlanSelectorItem
                     key={plan.id}
@@ -27,6 +29,10 @@ function PlanSelector({ isOpen, onClose, createPlanModal, position, innerRef }: 
                     isActive={plan.id === activePlanId}
                     onSelect={() => {
                         setActivePlanId(plan.id)
+                        onClose()
+                    }}
+                    onEdit={() => {
+                        onEditPlan(plan)
                         onClose()
                     }}
                 />

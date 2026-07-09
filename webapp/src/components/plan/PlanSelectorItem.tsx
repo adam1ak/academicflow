@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { usePlanHealth } from "../../hooks/usePlanHealth"
 import { PlanData } from "../../types/plan"
 
@@ -5,18 +6,22 @@ interface PlanItemInterface {
     isActive?: boolean
     plan: PlanData
     onSelect: () => void
+    onEdit: () => void
 }
 
-function PlanSelectorItem({ isActive, plan, onSelect }: PlanItemInterface) {
-
+function PlanSelectorItem({ isActive, plan, onSelect, onEdit }: PlanItemInterface) {
     const { score, color } = usePlanHealth(plan)
+    const [hovered, setHovered] = useState(false)
 
     return (
         <div
             onClick={onSelect}
-            className={`flex items-center gap-3 px-2 py-3 cursor-pointer border-b border-hi/30 transition-colors ${isActive ? "bg-blue-glow/50" : "hover:bg-dim/55"}`}>
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+            className={`relative flex items-center gap-3 px-3 py-3.5 cursor-pointer border-b border-hi/30 transition-all duration-150 select-none ${isActive ? "bg-blue-glow/50" : "hover:bg-dim/55"}`}>
+
             <div
-                className="w-2 h-2 rounded-full transition-colors duration-200"
+                className="w-2 h-2 rounded-full shrink-0 transition-colors duration-200"
                 style={{
                     backgroundColor: plan.accent_color
                         ? `var(--color-accent-${plan.accent_color})`
@@ -25,15 +30,36 @@ function PlanSelectorItem({ isActive, plan, onSelect }: PlanItemInterface) {
             />
 
             <div className="flex-1 min-w-0">
-                <p className="font-sf text-sm font-medium overflow-hidden whitespace-nowrap text-ellipsis text-pri">{plan.name}</p>
-                <p className="font-mono text-[12px] text-sec">Subjects: {plan.schedule.length}</p>
+                <p className="font-sf text-sm font-medium overflow-hidden whitespace-nowrap text-ellipsis text-pri leading-snug">
+                    {plan.name}
+                </p>
+                <p className="font-mono text-[11px] text-sec mt-0.5">
+                    {plan.schedule.length} subject{plan.schedule.length !== 1 ? "s" : ""} · {plan.semester ?? "—"}
+                </p>
             </div>
 
-            <p className={`font-mono text-sm font-semibold shrink-0 ${color.valueColor}`}>{score}</p>
+            <div className="relative flex items-center justify-end gap-2 shrink-0 w-10 h-6">
+                <p className={`font-mono text-sm font-semibold absolute transition-all duration-150 ${color.valueColor} ${hovered ? "opacity-0 scale-75" : "opacity-100 scale-100"}`}>
+                    {score}
+                </p>
+
+                <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); onEdit() }}
+                    className={`absolute flex items-center justify-center w-7 h-7 rounded-md text-sec hover:text-pri hover:bg-white/10 transition-all duration-150 cursor-pointer ${hovered ? "opacity-100 scale-100" : "opacity-0 scale-75 pointer-events-none"}`}
+                    title="Edit plan"
+                >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                </button>
+            </div>
+
             <div
                 className="w-1.5 h-1.5 rounded-full shrink-0 transition-all duration-200"
                 style={{
-                    backgroundColor: isActive && plan.accent_color
+                    backgroundColor: isActive && plan.accent_color && !hovered
                         ? `var(--color-accent-${plan.accent_color})`
                         : 'transparent'
                 }}
