@@ -110,3 +110,6 @@ class PlanResponse(BaseModel):
 class PlanUpdate(BaseModel):
     name: Optional[str] = Field(default=None, min_length=1, max_length=100, description="Optional new name")
     max_concurrent: Optional[int] = Field(default=None, gt=0, le=10, description="Optional new concurrency limit")
+    semester: Optional[str] = Field(default=None, description="Semester identity (e.g., fall26)")
+    start_date: Optional[date] = Field(default=None, description="Plan baseline start date")
+    accent_color: Optional[str] = Field(default=None, description="Accent color theme configuration")
