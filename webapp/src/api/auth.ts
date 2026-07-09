@@ -15,9 +15,9 @@ export const login = async (username : string, password : string) : Promise<Toke
     return response.data
 }
 
-export const register = async (email : string, password : string) : Promise<RegisterResponse> => {
+export const register = async (email : string, password : string, name : string) : Promise<RegisterResponse> => {
     const response = await api.post<RegisterResponse>('/api/v1/register',
-        { email, password }
+        { email, password, name }
     )
 
     return response.data

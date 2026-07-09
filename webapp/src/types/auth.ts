@@ -8,10 +8,12 @@ export interface UserMeResponse {
     message: string
     user: string
     github_id: string | null
+    name: string | null
 }
 
 export interface RegisterResponse {
     id: number
     email: string
     is_active: boolean
+    name: string | null
 }

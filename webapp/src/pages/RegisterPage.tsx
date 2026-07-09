@@ -16,7 +16,10 @@ const registerSchema = z.object({
     password: z.string()
         .min(8, "Password must be at least 8 characters long")
         .regex(/\d/, "Password must contain at least one digit (0-9)")
-        .regex(/[!@#$%^&*(),.?":{}|<>_+-]/, "Password must contain at least one special character")
+        .regex(/[!@#$%^&*(),.?":{}|<>_+-]/, "Password must contain at least one special character"),
+    name: z.string()
+        .min(1, "Full name is required")
+        .max(100, "Name is too long")
 })
 
 type RegisterFormData = z.infer<typeof registerSchema>
@@ -30,10 +33,10 @@ function RegisterPage() {
     })
 
     const handleRegister = async (data: RegisterFormData) => {
-        const { email, password } = data
+        const { email, password, name } = data
 
         try {
-            await registerUserApi(email, password)
+            await registerUserApi(email, password, name)
             await login(email, password)
             setIsLogged(true)
 
@@ -59,7 +62,7 @@ function RegisterPage() {
             <main
                 className="
                     flex-1 flex flex-col justify-center items-center
-                    w-full py-8 md:py-12  
+                    w-full py-8 md:py-6  
                 "
             >
                 <div
@@ -107,6 +110,16 @@ function RegisterPage() {
                             {...register("email")}
                         />
                         {errors.email && <span className="text-red-500 text-xs mb-3 -mt-1 font-mono">{errors.email.message}</span>}
+
+                        <InputField
+                            id="register-name"
+                            label="Username"
+                            type="text"
+                            placeholder="Alan turing"
+                            {...register("name")}
+                        />
+                        {errors.name && <span className="text-red-500 text-xs mb-3 -mt-1 font-mono">{errors.name.message}</span>}
+
 
                         <InputField
                             id="register-password"
