@@ -75,3 +75,28 @@ def test_register_weak_password_validation(client):
 
     assert response.status_code == 422
     assert "one digit" in response.json()["detail"][0]["msg"]
+
+def test_refresh_token_flow(client, db_session):
+    client.post("/api/v1/register", json={"email": TEST_EMAIL, "password": TEST_PASSWORD})
+    login_response = client.post("/api/v1/token", data={"username": TEST_EMAIL, "password": TEST_PASSWORD})
+    refresh_token = login_response.json()["refresh_token"]
+
+    response = client.post("/api/v1/refresh", json={"refresh_token": refresh_token})
+
+    assert response.status_code == 200
+    data = response.json()
+    assert "access_token" in data
+    assert data["token_type"] == "bearer"
+
+def test_logout_and_revoke_token_flow(client, db_session):
+    client.post("/api/v1/register", json={"email": TEST_EMAIL, "password": TEST_PASSWORD})
+    login_response = client.post("/api/v1/token", data={"username": TEST_EMAIL, "password": TEST_PASSWORD})
+    refresh_token = login_response.json()["refresh_token"]
+
+    logout_response = client.post("/api/v1/logout", json={"refresh_token": refresh_token})
+    assert logout_response.status_code == 200
+    assert logout_response.json()["message"] == "Successfully logged out"
+
+    retry_response = client.post("/api/v1/refresh", json={"refresh_token": refresh_token})
+    assert retry_response.status_code == 401
+    assert "invalid, revoked, or expired" in retry_response.json()["detail"].lower()

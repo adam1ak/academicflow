@@ -1,3 +1,5 @@
+from urllib import response
+
 import pytest
 from fastapi.testclient import TestClient
 from api import app, get_current_user, get_db
@@ -194,3 +196,89 @@ def test_update_plan_details(client, db_session):
     assert data["name"] == "New Name"
     assert data["max_concurrent"] == 3
     assert "schedule" in data
+
+def test_get_plans_list(client, db_session):
+    plan1 = models.Plan(name="Engineering Plan", max_concurrent=2, owner_id=1)
+    plan2 = models.Plan(name="Master Plan", max_concurrent=3, owner_id=1)
+    db_session.add_all([plan1, plan2])
+    db_session.commit()
+
+    response = client.get("/api/v1/my-plans")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    assert any(p["name"] == "Engineering Plan" for p in data)
+    assert any(p["name"] == "Master Plan" for p in data)
+
+def test_create_empty_plan(client):
+    payload = {
+        "name": "New Test Plan",
+        "max_concurrent": 3,
+        "semester": "fall26",
+        "start_date": "2026-10-01",
+        "accent_color": "purple"
+    }
+
+    response = client.post("/api/v1/plans", json=payload)
+
+    assert response.status_code == 201
+    data = response.json()
+    assert data["name"] == "New Test Plan"
+    assert data["max_concurrent"] == 3
+    assert data["semester"] == "fall26"
+
+def test_delete_plan(client, db_session):
+    plan = models.Plan(name="Plan231", max_concurrent=2, owner_id=1)
+    db_session.add(plan)
+    db_session.commit()
+    db_session.refresh(plan)
+
+    response = client.delete(f"/api/v1/plans/{plan.id}")
+    assert response.status_code in [200, 204]
+
+    delete_plan = db_session.query(models.Plan).filter(models.Plan.id == plan.id).first()
+    assert delete_plan is None
+
+def test_add_subject(client, db_session):
+    plan = models.Plan(name="Plan for subjects", max_concurrent=2, owner_id=1)
+    db_session.add(plan)
+    db_session.commit()
+    db_session.refresh(plan)
+
+    subject_payload = {
+        "name": "Computer Architecture",
+        "field": "CS",
+        "duration": 5,
+        "classroom": "Lab 203",
+        "dependents": []
+    }
+
+    response = client.post(f"/api/v1/plans/{plan.id}/subjects", json=subject_payload)
+    assert response.status_code == 201
+    assert response.json()["name"] == "Computer Architecture"
+
+    response_duplicate = client.post(f"/api/v1/plans/{plan.id}/subjects", json=subject_payload)
+    assert response_duplicate.status_code == 400
+    assert response_duplicate.json()["detail"] == "Subject 'Computer Architecture' already exists in this plan."
+
+def test_delete_subject_with_dependents_error(client, db_session):
+    plan = models.Plan(name="Deletion Plan", max_concurrent=2, owner_id=1)
+    db_session.add(plan)
+    db_session.commit()
+    db_session.refresh(plan)
+
+    parent = models.Subject(name="Introduction to Electronics", field="Engineering", duration=4, plan_id=plan.id)
+    child = models.Subject(name="Microcontrollers", field="Engineering", duration=4, plan_id=plan.id)
+    db_session.add_all([parent, child])
+    db_session.commit()
+    db_session.refresh(parent)
+    db_session.refresh(child)
+
+    parent.dependent_subjects.append(child)
+    db_session.commit()
+
+    response = client.delete(f"/api/v1/plans/{plan.id}/subjects/{parent.id}")
+
+    assert response.status_code == 400
+    assert "dependent" in response.json()["detail"].lower() or "cannot delete" in response.json()["detail"].lower()
