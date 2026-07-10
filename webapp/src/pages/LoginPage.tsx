@@ -44,8 +44,8 @@ function LoginPage() {
     return (
         <div
             className="
-                min-h-screen flex flex-col justify-between
-                bg-card-bg md:bg-bg transition-colors
+                h-screen flex flex-col
+                bg-card-bg md:bg-bg transition-colors overflow-hidden
             "
         >
 
@@ -55,8 +55,8 @@ function LoginPage() {
 
             <main
                 className="
-                    flex-1 flex flex-col justify-center items-center
-                    w-full py-8 md:py-12  
+                    flex-1 min-h-0 overflow-y-auto flex flex-col justify-center items-center
+                    w-full py-6 md:py-8
                 "
             >
                 <div
@@ -65,7 +65,7 @@ function LoginPage() {
                         md:bg-card-bg md:border md:border-card-border md:rounded-xl md:shadow-lg
                     "
                 >
-                    <div className="mb-8">
+                    <div className="mb-6">
                         <h1
                             className="
                                 text-xl md:text-2xl font-semibold tracking-tight text-text-primary mb-1
