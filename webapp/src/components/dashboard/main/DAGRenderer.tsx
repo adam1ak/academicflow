@@ -4,6 +4,12 @@ import { PillVariant } from "../../../hooks/useStatusStyles";
 import { calculateLevels } from "./dag/dagUtils";
 import ZoomControls from "./dag/ZoomControls";
 import DAGCanvas from "./dag/DAGCanvas";
+import ContextMenu from "../../ui/ContextMenu";
+import { deleteSubject } from "../../../api/plans";
+import { useError } from "../../../context/ErrorContext";
+import { useDAGCanvasInteraction } from "./dag/useDAGCanvasInteraction";
+import EditSubjectModal from "../../plan/EditSubjectModal";
+import { SubjectDetailResponse } from "../../../types/plan";
 
 export interface DAGRendererRef {
   exportPNG: () => void;
@@ -16,12 +22,55 @@ interface DAGRendererProps {
 
 const DAGRenderer = forwardRef<DAGRendererRef, DAGRendererProps>(
   ({ isFullscreen = false, hoveredLegendStatus = null }, ref) => {
-    const { subjects } = usePlan();
+    const { subjects, activePlanId, refreshPlans, refreshDetails } = usePlan();
+    const { showError } = useError();
     const [containerNode, setContainerNode] = useState<HTMLDivElement | null>(null);
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [hoveredId, setHoveredId] = useState<string | null>(null);
-    const [zoom, setZoom] = useState<number>(1);
-    const isDragging = useRef(false);
+    const [contextMenu, setContextMenu] = useState<{ x: number, y: number, subjectId: string } | null>(null);
+    const [editingSubject, setEditingSubject] = useState<SubjectDetailResponse | null>(null);
+
+    const { zoom, setZoom, handleMouseDown, isDragging } = useDAGCanvasInteraction(
+      containerNode,
+      () => setContextMenu(null)
+    );
+
+    useEffect(() => {
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape") {
+          setContextMenu(null);
+        }
+      };
+      window.addEventListener("keydown", handleKeyDown);
+      return () => window.removeEventListener("keydown", handleKeyDown);
+    }, []);
+
+    useEffect(() => {
+      if (!containerNode) return;
+      const handleScroll = () => {
+        setContextMenu(null);
+      };
+      containerNode.addEventListener("scroll", handleScroll);
+      return () => {
+        containerNode.removeEventListener("scroll", handleScroll);
+      };
+    }, [containerNode]);
+
+    useEffect(() => {
+      const handleGlobalClick = () => {
+        setContextMenu(null);
+      };
+      window.addEventListener("mousedown", handleGlobalClick);
+      window.addEventListener("contextmenu", handleGlobalClick);
+      return () => {
+        window.removeEventListener("mousedown", handleGlobalClick);
+        window.removeEventListener("contextmenu", handleGlobalClick);
+      };
+    }, []);
+
+    useEffect(() => {
+      setContextMenu(null);
+    }, [isFullscreen]);
 
     const nodeWidth = isFullscreen ? 260 : 180;
     const nodeHeight = isFullscreen ? 76 : 52;
@@ -30,67 +79,12 @@ const DAGRenderer = forwardRef<DAGRendererRef, DAGRendererProps>(
 
     const displaySubjects = subjects;
 
-    useEffect(() => {
-      if (!containerNode) return;
-
-      const handleWheelRaw = (e: WheelEvent) => {
-        if (e.ctrlKey) {
-          e.preventDefault();
-          const zoomFactor = 0.05;
-          const direction = e.deltaY < 0 ? 1 : -1;
-          setZoom((prevZoom) => {
-            const newZoom = prevZoom + direction * zoomFactor;
-            return Math.max(0.5, Math.min(1.75, newZoom));
-          });
-        }
-      };
-
-      containerNode.addEventListener("wheel", handleWheelRaw, { passive: false });
-      return () => {
-        containerNode.removeEventListener("wheel", handleWheelRaw);
-      };
-    }, [containerNode]);
-
-    const handleMouseDown = (e: React.MouseEvent) => {
-      const container = containerNode;
-      if (!container) return;
-      if (e.button !== 0) return;
-
-      isDragging.current = false;
-      container.style.cursor = "grabbing";
-      container.style.userSelect = "none";
-
-      const startX = e.pageX;
-      const startY = e.pageY;
-      const scrollLeft = container.scrollLeft;
-      const scrollTop = container.scrollTop;
-
-      const handleMouseMove = (moveEvent: MouseEvent) => {
-        const dx = moveEvent.pageX - startX;
-        const dy = moveEvent.pageY - startY;
-        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
-          isDragging.current = true;
-        }
-        container.scrollLeft = scrollLeft - dx * 1.5;
-        container.scrollTop = scrollTop - dy * 1.5;
-      };
-
-      const handleMouseUp = () => {
-        container.style.cursor = "grab";
-        container.style.removeProperty("user-select");
-        document.removeEventListener("mousemove", handleMouseMove);
-        document.removeEventListener("mouseup", handleMouseUp);
-      };
-
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
-    };
-
     const handleContainerClick = useCallback(() => {
       if (!isDragging.current) {
         setSelectedId(null);
+        setContextMenu(null);
       }
-    }, []);
+    }, [isDragging]);
 
     const statusColors = {
       completed: {
@@ -262,6 +256,10 @@ const DAGRenderer = forwardRef<DAGRendererRef, DAGRendererProps>(
           ref={setContainerNode}
           onMouseDown={handleMouseDown}
           onClick={handleContainerClick}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            setContextMenu(null);
+          }}
           className="flex-1 w-full h-full overflow-auto select-none p-2"
           style={{ cursor: "grab" }}
         >
@@ -276,10 +274,19 @@ const DAGRenderer = forwardRef<DAGRendererRef, DAGRendererProps>(
             activeId={activeId}
             selectedId={selectedId}
             connectedIds={connectedIds}
-            onNodeClick={(id) => setSelectedId(selectedId === id ? null : id)}
+            onNodeClick={(id) => {
+              setSelectedId(selectedId === id ? null : id);
+              setContextMenu(null);
+            }}
             onNodeMouseEnter={(id) => setHoveredId(id)}
             onNodeMouseLeave={() => setHoveredId(null)}
-            onBackgroundClick={() => setSelectedId(null)}
+            onBackgroundClick={() => {
+              setSelectedId(null);
+              setContextMenu(null);
+            }}
+            onNodeContextMenu={(id, x, y) => {
+              setContextMenu({ subjectId: id, x, y });
+            }}
             hoveredLegendStatus={hoveredLegendStatus}
             statusColors={statusColors}
             isFullscreen={isFullscreen}
@@ -290,10 +297,61 @@ const DAGRenderer = forwardRef<DAGRendererRef, DAGRendererProps>(
 
         <ZoomControls
           zoom={zoom}
-          onZoomIn={() => setZoom(z => Math.min(1.75, z + 0.1))}
-          onZoomOut={() => setZoom(z => Math.max(0.5, z - 0.1))}
-          onReset={() => setZoom(1)}
+          onZoomIn={() => {
+            setZoom(z => Math.min(1.75, z + 0.1));
+            setContextMenu(null);
+          }}
+          onZoomOut={() => {
+            setZoom(z => Math.max(0.5, z - 0.1));
+            setContextMenu(null);
+          }}
+          onReset={() => {
+            setZoom(1);
+            setContextMenu(null);
+          }}
         />
+
+        {contextMenu && (
+          <ContextMenu
+            x={contextMenu.x}
+            y={contextMenu.y}
+            onClose={() => setContextMenu(null)}
+            items={[
+              {
+                label: "Edit",
+                onClick: () => {
+                  const sub = subjects.find(s => String(s.id) === contextMenu.subjectId);
+                  if (sub) {
+                    setEditingSubject(sub);
+                  }
+                }
+              },
+              {
+                label: "Delete",
+                variant: "danger",
+                onClick: async () => {
+                  if (!activePlanId) return;
+                  const subjectId = Number(contextMenu.subjectId);
+                  try {
+                    await deleteSubject(activePlanId, subjectId);
+                    await refreshPlans();
+                    await refreshDetails();
+                  } catch (error: any) {
+                    const backendError = error.response?.data?.detail;
+                    showError(backendError || "Failed to delete subject.");
+                  }
+                }
+              }
+            ]}
+          />
+        )}
+
+        {editingSubject && (
+          <EditSubjectModal
+            subject={editingSubject}
+            onClose={() => setEditingSubject(null)}
+          />
+        )}
       </div>
     );
   }
