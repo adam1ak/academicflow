@@ -1,7 +1,7 @@
 import re
 from datetime import date
-from typing import List, Optional, Literal
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from typing import List, Optional, Literal, Any
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
 class SingleSubjectCreate(BaseModel):
     name: str = Field(min_length=1, max_length=100)
@@ -27,6 +27,24 @@ class SubjectResponse(BaseModel):
     status: Literal["completed", "ready", "blocked"]
     dependents: List[str]
 
+    model_config = {"from_attributes": True}
+
+    @model_validator(mode="before")
+    @classmethod
+    def serialize_orm_relations(cls, data: Any) -> Any:
+        if hasattr(data, "id"):
+            return {
+                "id": data.id,
+                "name": data.name,
+                "field": data.field,
+                "duration": data.duration,
+                "classroom": data.classroom,
+                "is_completed": data.is_completed,
+                "status": data.computed_status,
+                "dependents": [str(dep.name) for dep in data.dependent_subjects]
+            }
+        return data
+
 class DeadlineCreate(BaseModel):
     title: str = Field(min_length=1, max_length=100, description="Title of deadline")
     type: Literal["exam", "assignment", "project", "task"]
@@ -48,6 +66,8 @@ class DeadlineResponse(BaseModel):
     due_date: date
     classroom: Optional[str]
     plan_id: Optional[int]
+
+    model_config = {"from_attributes": True}
 
 class UserCreate(BaseModel):
     email: EmailStr
@@ -100,12 +120,11 @@ class PlanResponse(BaseModel):
     id: int
     name: str
     max_concurrent: int
-    semester: str
-    start_date: date
-    accent_color: str
+    semester: Optional[str] = None
+    start_date: Optional[date] = None
+    accent_color: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 class PlanUpdate(BaseModel):
     name: Optional[str] = Field(default=None, min_length=1, max_length=100, description="Optional new name")

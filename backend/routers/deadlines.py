@@ -24,17 +24,7 @@ def get_deadlines(
 
     deadlines = query.order_by(models.Deadline.due_date.asc()).all()
 
-    return [
-        {
-            "id": deadline.id,
-            "title": deadline.title,
-            "type": deadline.type,
-            "due_date": deadline.due_date,
-            "classroom": deadline.classroom,
-            "plan_id": deadline.plan_id
-        }
-        for deadline in deadlines
-    ]
+    return deadlines
 
 @router.delete("/deadlines/{deadline_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_deadline(
@@ -75,14 +65,7 @@ def create_deadline(
     db.commit()
     db.refresh(new_deadline)
 
-    return {
-        "id": new_deadline.id,
-        "title": new_deadline.title,
-        "type": new_deadline.type,
-        "due_date": new_deadline.due_date,
-        "classroom": new_deadline.classroom,
-        "plan_id": new_deadline.plan_id
-    }
+    return new_deadline
 
 @router.put("/deadlines/{deadline_id}", response_model=DeadlineResponse, status_code=status.HTTP_200_OK)
 def update_deadline(
@@ -119,11 +102,4 @@ def update_deadline(
         db.rollback()
         raise HTTPException(status_code=400, detail="Database integrity error during update")
 
-    return {
-        "id": existing_deadline.id,
-        "title": existing_deadline.title,
-        "type": existing_deadline.type,
-        "due_date": existing_deadline.due_date,
-        "classroom": existing_deadline.classroom,
-        "plan_id": existing_deadline.plan_id
-    }
+    return existing_deadline

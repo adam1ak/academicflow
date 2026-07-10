@@ -1,8 +1,11 @@
 import logging
+from datetime import date
 from typing import List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session, joinedload, selectinload
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import IntegrityError
+from pydantic import BaseModel, model_validator
 
 import models
 from schemas import PlanCreate, PlanResponse, PlanUpdate, GraphInput
@@ -11,6 +14,54 @@ from core import Subject, CourseGraph
 
 logger = logging.getLogger("academicflow.plans")
 router = APIRouter(prefix="/api/v1", tags=["plans"])
+
+class ScheduleItem(BaseModel):
+    name: str
+    start_time: int
+    end_time: int
+    model_config = {"from_attributes": True}
+
+class PlanWithScheduleResponse(BaseModel):
+    id: int
+    name: str
+    max_concurrent: int
+    semester: Optional[str] = None
+    start_date: Optional[date] = None
+    accent_color: Optional[str] = None
+    schedule: List[ScheduleItem] = []
+    error: Optional[str] = None
+
+    model_config = {"from_attributes": True}
+
+    @model_validator(mode="before")
+    @classmethod
+    def build_schedule_from_orm(cls, data: any) -> any:
+        if hasattr(data, "id"):
+            try:
+                calculated_schedule = reconstruct_and_calculate_plan(data)
+                return {
+                    "id": data.id,
+                    "name": data.name,
+                    "max_concurrent": data.max_concurrent,
+                    "semester": data.semester,
+                    "start_date": data.start_date,
+                    "accent_color": data.accent_color,
+                    "schedule": calculated_schedule,
+                    "error": None
+                }
+            except ValueError as exc:
+                logger.error(f"Computation failed for plan id: {data.id}: {str(exc)}")
+                return {
+                    "id": data.id,
+                    "name": f"{data.name} (Computation Error)",
+                    "max_concurrent": data.max_concurrent if data.max_concurrent else 1,
+                    "semester": data.semester,
+                    "start_date": data.start_date,
+                    "accent_color": data.accent_color,
+                    "schedule": [],
+                    "error": "Corrupted prerequisite structure"
+                }
+        return data
 
 def reconstruct_and_calculate_plan(db_plan: models.Plan):
     graph = CourseGraph()
@@ -29,7 +80,7 @@ def reconstruct_and_calculate_plan(db_plan: models.Plan):
     result = graph.get_constrained_study_plan(db_plan.max_concurrent)
     return result
 
-@router.post("/generate-plan", status_code=status.HTTP_201_CREATED)
+@router.post("/generate-plan", response_model=List[ScheduleItem], status_code=status.HTTP_201_CREATED)
 def generate_plan(payload: GraphInput,
                   db: Session = Depends(get_db),
                   current_user: models.User = Depends(get_current_user)):
@@ -129,7 +180,7 @@ def create_empty_plan(
 
     return new_plan
 
-@router.get("/plans/{plan_id}")
+@router.get("/plans/{plan_id}", response_model=List[ScheduleItem])
 def get_plan(
         plan_id: int,
         db: Session = Depends(get_db),
@@ -148,7 +199,7 @@ def get_plan(
             detail=f"Plan computation failed: {str(exception)}"
         )
 
-@router.patch("/plans/{plan_id}", status_code=status.HTTP_200_OK)
+@router.patch("/plans/{plan_id}", response_model=PlanWithScheduleResponse, status_code=status.HTTP_200_OK)
 def update_plan(
         plan_id: int,
         payload: PlanUpdate,
@@ -173,69 +224,30 @@ def update_plan(
         raise HTTPException(status_code=400, detail="Database integrity error during patch")
 
     try:
-        calculated_schedule = reconstruct_and_calculate_plan(db_plan)
+        reconstruct_and_calculate_plan(db_plan)
     except ValueError as exception:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Recalculation failed after patch: {str(exception)}"
         )
 
-    return {
-        "id": db_plan.id,
-        "name": db_plan.name,
-        "max_concurrent": db_plan.max_concurrent,
-        "semester": db_plan.semester,
-        "start_date": db_plan.start_date.isoformat() if db_plan.start_date else None,
-        "accent_color": db_plan.accent_color,
-        "schedule": calculated_schedule
-    }
+    return db_plan
 
-@router.get("/my-plans")
+@router.get("/my-plans", response_model=List[PlanWithScheduleResponse])
 def get_my_plan(db: Session = Depends(get_db),
                 current_user: models.User = Depends(get_current_user),
                 skip: int = 0,
                 limit: int = 10):
     user_plans = (
         db.query(models.Plan)
-        .options(joinedload(models.Plan.subjects).
-                 selectinload(models.Subject.dependent_subjects))
+        .options(joinedload(models.Plan.subjects))
         .filter(models.Plan.owner_id == int(current_user.id))
         .offset(skip)
         .limit(limit)
         .all()
     )
 
-    all_plans = []
-
-    for single_plan in user_plans:
-        try:
-            calculated_schedule = reconstruct_and_calculate_plan(single_plan)
-
-            single_plan_data = {
-                "id": single_plan.id,
-                "name": single_plan.name,
-                "max_concurrent": single_plan.max_concurrent,
-                "semester": single_plan.semester,
-                "start_date": single_plan.start_date.isoformat() if single_plan.start_date else None,
-                "accent_color": single_plan.accent_color,
-                "schedule": calculated_schedule
-            }
-
-            all_plans.append(single_plan_data)
-        except ValueError as exception:
-            logger.error(f"Skipping corrupted plan ID {single_plan.id} for User ID {current_user.id}: {str(exception)}")
-
-            all_plans.append({
-                "id": single_plan.id,
-                "name": f"{single_plan.name} (Computation Error)",
-                "semester": single_plan.semester,
-                "start_date": single_plan.start_date.isoformat() if single_plan.start_date else None,
-                "accent_color": single_plan.accent_color,
-                "schedule": [],
-                "error": "Corrupted prerequisite structure"
-            })
-
-    return all_plans
+    return user_plans
 
 @router.delete("/plans/{plan_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_plan(plan_id: int, db: Session = Depends(get_db),
