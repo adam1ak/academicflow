@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useState } from "react";
 import { usePlan } from "../../../context/PlanContext";
 import { PillVariant } from "../../../hooks/useStatusStyles";
 import { calculateLevels } from "./dag/dagUtils";
