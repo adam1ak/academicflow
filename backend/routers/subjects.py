@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
 import models
+from core import Subject as GraphSubject, CourseGraph
 from schemas import SingleSubjectCreate, SubjectUpdate, SubjectResponse
 from dependencies import get_db, get_current_user, get_user_plan_or_404, get_subject_or_404
 
@@ -57,6 +58,33 @@ def add_subject_to_plan(
 
     for dependent_subject in dependent_db_subjects:
         new_subject.dependent_subjects.append(dependent_subject)
+
+    db_plan = db.query(models.Plan).filter(models.Plan.id == plan_id).first()
+    if db_plan:
+        try:
+            check_graph = CourseGraph()
+
+            for sub in db_plan.subjects:
+                check_graph.add_subject(GraphSubject(sub.name, sub.field, sub.duration))
+            check_graph.add_subject(GraphSubject(new_subject.name, new_subject.field, new_subject.duration))
+
+            for sub in db_plan.subjects:
+                for dep in sub.dependent_subjects:
+                    check_graph.add_dependent(sub.name, dep.name)
+            for dep in new_subject.dependent_subjects:
+                check_graph.add_dependent(new_subject.name, dep.name)
+
+            check_graph.get_constrained_study_plan(db_plan.max_concurrent)
+
+        except ValueError as ex:
+            if "Cycle detected" in str(ex):
+                db.rollback()
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Cycle detected in prerequisites. This modification would introduce a circular deadlock."
+                )
+            db.rollback()
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(ex))
 
     try:
         db.add(new_subject)
@@ -128,6 +156,30 @@ def update_subject(
         existing_subject.duration = payload.duration
     if payload.classroom is not None:
         existing_subject.classroom = payload.classroom
+
+    db_plan = existing_subject.plan
+    if db_plan:
+        try:
+            check_graph = CourseGraph()
+
+            for sub in db_plan.subjects:
+                check_graph.add_subject(GraphSubject(sub.name, sub.field, sub.duration))
+
+            for sub in db_plan.subjects:
+                for dep in sub.dependent_subjects:
+                    check_graph.add_dependent(sub.name, dep.name)
+
+            check_graph.get_constrained_study_plan(db_plan.max_concurrent)
+
+        except ValueError as ex:
+            if "Cycle detected" in str(ex):
+                db.rollback()
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Cycle detected in prerequisites. This modification would introduce a circular deadlock."
+                )
+            db.rollback()
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(ex))
 
     try:
         db.commit()

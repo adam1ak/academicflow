@@ -17,6 +17,7 @@ interface DAGCanvasProps {
   onNodeMouseEnter: (id: string) => void;
   onNodeMouseLeave: () => void;
   onBackgroundClick: () => void;
+  onNodeContextMenu: (id: string, x: number, y: number) => void;
   hoveredLegendStatus: "completed" | "ready" | "blocked" | null;
   statusColors: any;
   isFullscreen: boolean;
@@ -39,6 +40,7 @@ export default function DAGCanvas({
   onNodeMouseEnter,
   onNodeMouseLeave,
   onBackgroundClick,
+  onNodeContextMenu,
   hoveredLegendStatus,
   statusColors,
   isFullscreen,
@@ -49,8 +51,8 @@ export default function DAGCanvas({
   const selectedSubject = selectedId ? displaySubjects.find((s) => String(s.id) === selectedId) : null;
   const selectedColors = selectedSubject ? (statusColors[selectedSubject.status as keyof typeof statusColors] || statusColors.ready) : null;
 
-  const cardWidth = isFullscreen ? 240 : 180;
-  const cardHeight = isFullscreen ? 64 : 52;
+  const cardWidth = isFullscreen ? 260 : 210;
+  const cardHeight = isFullscreen ? 68 : 58;
   const tx = selectedNode
     ? Math.max(8, Math.min(svgWidth - cardWidth - 8, selectedNode.x + nodeWidth / 2 - cardWidth / 2))
     : 0;
@@ -219,6 +221,11 @@ export default function DAGCanvas({
                   e.stopPropagation();
                   onNodeClick(node.id);
                 }}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onNodeContextMenu(node.id, e.clientX, e.clientY);
+                }}
                 onMouseEnter={() => onNodeMouseEnter(node.id)}
                 onMouseLeave={onNodeMouseLeave}
                 className="cursor-pointer transition-all duration-200"
@@ -315,9 +322,9 @@ export default function DAGCanvas({
                 ✕
               </button>
 
-              <div className="pr-3 flex flex-col justify-center gap-0.5">
-                <div className="font-bold truncate text-[11px] sm:text-[12px] leading-tight text-pri">{selectedSubject.name}</div>
-                <div className="text-[9px] font-mono text-sec mt-1 uppercase tracking-wider flex items-center gap-1">
+              <div className="pr-4 flex flex-col justify-center gap-0.5">
+                <div className="font-bold truncate text-[11.5px] sm:text-[12.5px] leading-snug text-pri" title={selectedSubject.name}>{selectedSubject.name}</div>
+                <div className="text-[9.5px] font-mono text-sec mt-0.5 uppercase tracking-wider flex items-center gap-1">
                   <span style={{ color: selectedColors.text }}>{selectedSubject.status}</span>
                   <span>·</span>
                   <span>{connectedIds.size} {connectedIds.size === 1 ? "connection" : "connections"}</span>
