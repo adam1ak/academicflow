@@ -15,6 +15,15 @@ def get_deadlines(
         db: Session = Depends(get_db),
         current_user: models.User = Depends(get_current_user)
 ):
+    from datetime import datetime, UTC, timedelta
+
+    expiration_limit = datetime.now(UTC).replace(tzinfo=None) - timedelta(hours=24)
+    db.query(models.Deadline).filter(
+        models.Deadline.owner_id == current_user.id,
+        models.Deadline.due_date < expiration_limit
+    ).delete(synchronize_session=False)
+    db.commit()
+
     query = db.query(models.Deadline).filter(
         models.Deadline.owner_id == current_user.id
     )

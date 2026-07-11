@@ -1,5 +1,7 @@
+from urllib import response
+
 import pytest
-from datetime import date, timedelta
+from datetime import date, timedelta, UTC, datetime
 from api import app, get_current_user
 import models
 
@@ -103,3 +105,30 @@ def test_delete_deadline(client, db_session):
 
     deleted_dl = db_session.query(models.Deadline).filter(models.Deadline.id == deadline.id).first()
     assert deleted_dl is None
+
+def test_deadline_auto_deletion(client, db_session):
+    expired_date = datetime.now(UTC).replace(tzinfo=None) - timedelta(hours=25)
+    expired_deadline = models.Deadline(
+        title="Expired Assignment",
+        type="Assignment",
+        due_date=expired_date,
+        owner_id=1
+    )
+
+    recent_data = datetime.now(UTC).replace(tzinfo=None) - timedelta(hours=25)
+    recent_deadline = models.Deadline(
+        title="Recent Overdue Assignment",
+        type="Assignment",
+        due_date=recent_data,
+        owner_id=1
+    )
+
+    db_session.add_all([expired_deadline, recent_deadline])
+    db_session.commit()
+
+    response = client.get("/api/v1/deadlines")
+    assert response.status_code == 200
+    data = response.json()
+
+    assert not any(d["title"] == "Expired Assignment" for d in data)
+    assert any(d["title"] == "Recent Overdue Assignment" for d in data)

@@ -1,5 +1,5 @@
 import re
-from datetime import date
+from datetime import date, datetime
 from typing import List, Optional, Literal, Any
 from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
@@ -48,14 +48,14 @@ class SubjectResponse(BaseModel):
 class DeadlineCreate(BaseModel):
     title: str = Field(min_length=1, max_length=100, description="Title of deadline")
     type: Literal["exam", "assignment", "project", "task"]
-    due_date: date
+    due_date: Optional[datetime] = Field(default=None, description="Optional deadline due time")
     classroom: Optional[str] = Field(default=None, description="Optional classroom number")
     plan_id: Optional[int] = Field(default=None, description="Optional relationship with plan")
 
 class DeadlineUpdate(BaseModel):
     title: Optional[str] = Field(default=None, min_length=1, max_length=100)
     type: Optional[Literal["exam", "assignment", "project", "task"]] = Field(default=None)
-    due_date: Optional[date] = Field(default=None)
+    due_date: Optional[datetime] = Field(default=None)
     classroom: Optional[str] = Field(default=None)
     plan_id: Optional[int] = Field(default=None)
 
@@ -63,7 +63,7 @@ class DeadlineResponse(BaseModel):
     id: int
     title: str
     type: str
-    due_date: date
+    due_date: datetime
     classroom: Optional[str]
     plan_id: Optional[int]
 

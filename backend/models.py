@@ -101,7 +101,7 @@ class Deadline(Base):
     owner_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     title = Column(String)
     type = Column(String)
-    due_date = Column(Date)
+    due_date = Column(DateTime)
     classroom = Column(String, nullable=True)
 
     plan_id = Column(Integer, ForeignKey("plans.id", ondelete="CASCADE"), nullable=True)
