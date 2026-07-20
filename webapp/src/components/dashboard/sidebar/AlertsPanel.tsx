@@ -162,6 +162,7 @@ function AlertsPanel() {
         }
 
         // Rule 4: Generates alerts for exams occurring within the next 2-3 days.
+
         const examsWithDistance = deadlines.filter(d => d.type.toLowerCase() === "exam")
             .map(d => {
                 const examDate = new Date(d.due_date);
@@ -204,12 +205,104 @@ function AlertsPanel() {
             }
         })
 
-        // TODO: Reguła 5: Ciężki Tydzień (>= 4 terminów w jednym tygodniu semestru)
+        // Rule 5: Warns if a single week has 4 or more deadlines.
 
-        // TODO: Reguła 6: Brak Bufora (oddanie projektu/zadania dzień przed egzaminem)
+        if (activePlan?.start_date) {
+            const planStartMs = new Date(activePlan.start_date).getTime()
 
-        // TODO: Reguła 7: Weekendowy Deadline (zadanie w sobotę lub niedzielę)
+            const deadlinesWithWeeks = deadlines.map(d => {
+                const deadlineMs = new Date(d.due_date).getTime()
 
+                const diffDays = Math.floor((deadlineMs - planStartMs) / (1000 * 60 * 60 * 24));
+
+                const weekNumber = Math.floor(diffDays / 7) + 1;
+
+                return {
+                    title: d.title,
+                    weekNumber
+                };
+            })
+
+            const countByWeek: Record<number, number> = {}
+
+            deadlinesWithWeeks.forEach(item => {
+                if (!countByWeek[item.weekNumber]) countByWeek[item.weekNumber] = 0
+
+                countByWeek[item.weekNumber]++
+            })
+
+            Object.entries(countByWeek).forEach(([weekStr, count]) => {
+                if (count >= 4) {
+                    const weekNumber = Number(weekStr)
+
+                    alerts.push({
+                        type: "warning",
+                        title: "Heavy Week Detected",
+                        description: `Week ${weekNumber} has ${count} deadlines scheduled. High risk of overload.`
+                    })
+                }
+            })
+        }
+
+        // Rule 6: Warns if a project/assignment is due exactly one day before an exam.
+
+        const examMidnights = new Map<number, string>()
+        const nonExamTasks: { title: string; type: string; midnight: number }[] = []
+
+        deadlines.forEach(d => {
+            const date = new Date(d.due_date)
+            const midnightTimestamp = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
+
+            if (d.type.toLowerCase() === "exam") {
+                examMidnights.set(midnightTimestamp, d.title)
+            } else {
+                nonExamTasks.push({
+                    title: d.title,
+                    type: d.type,
+                    midnight: midnightTimestamp
+                })
+            }
+        })
+
+        nonExamTasks.forEach(task => {
+            const dayAfterTask = task.midnight + ONE_DAY_MS
+            const examTitle = examMidnights.get(dayAfterTask)
+
+            if (examTitle) {
+                const dateStr = new Date(task.midnight).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric"
+                })
+
+                alerts.push({
+                    type: "warning",
+                    title: "No Study Buffer",
+                    description: `${dateStr} - ${task.title} (${task.type}) is due the day before ${examTitle}.`
+                })
+            }
+        })
+
+        // Rule 7: Detects deadlines scheduled on Saturdays or Sundays.
+
+        deadlines.forEach(d => {
+            const date = new Date(d.due_date)
+            const dayOfWeek = date.getDay()
+
+            if (dayOfWeek === 0 || dayOfWeek === 6) {
+                const dateStr = date.toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric"
+                })
+
+                const dayName = dayOfWeek === 0 ? "Sunday" : "Saturday"
+
+                alerts.push({
+                    type: "info",
+                    title: "Weekend Deadline",
+                    description: `${dateStr} (${dayName}) - ${d.title} (${d.type}) is due on a weekend.`
+                })
+            }
+        })
 
         // ==========================================
         // 🕸️ GRUPA B: ZATORY W GRAFIE PRZEDMIOTÓW (Graph Bottlenecks)
