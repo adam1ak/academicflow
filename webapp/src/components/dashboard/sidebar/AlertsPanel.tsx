@@ -14,16 +14,20 @@ function AlertsPanel() {
         const alerts: AlertItem[] = []
 
         const now = new Date()
-        const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+        const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
 
 
         const activeSchedule = activePlan?.schedule ?? []
         const maxConcurrent = activePlan?.max_concurrent ?? 3
 
-        // Rule 1: Detects clusters of 3 or more exams within a 5-day window.
-
         const ONE_DAY_MS = 24 * 60 * 60 * 1000
         const FIVE_DAYS_MS = 5 * ONE_DAY_MS
+
+        const incompleteSubjects = subjects.filter(s => !s.is_completed)
+
+        // Rule 1: Detects clusters of 3 or more exams within a 5-day window.
+
+
 
         const exams = deadlines.filter(d => d.type.toLowerCase() === "exam")
             .map(d => {
@@ -53,12 +57,12 @@ function AlertsPanel() {
                 const startDateStr = new Date(currentExam.timestamp).toLocaleDateString("en-US", {
                     month: "short",
                     day: "numeric"
-                });
+                })
 
                 const endDateStr = new Date(examsInWindow[examsInWindow.length - 1].timestamp).toLocaleDateString("en-US", {
                     month: "short",
                     day: "numeric"
-                });
+                })
 
                 alerts.push({
                     type: "danger",
@@ -99,9 +103,9 @@ function AlertsPanel() {
                 const dateStr = new Date(dateKey).toLocaleDateString("en-US", {
                     month: "short",
                     day: "numeric"
-                });
+                })
 
-                let dynamicDescription = "";
+                let dynamicDescription = ""
 
                 if (examCount > 0 && projectCount > 0) {
                     dynamicDescription = `${dateStr} • Critical: ${examCount} exam(s) & ${projectCount} project(s) scheduled simultaneously.`
@@ -166,8 +170,8 @@ function AlertsPanel() {
         const examsWithDistance = deadlines.filter(d => d.type.toLowerCase() === "exam")
             .map(d => {
                 const examDate = new Date(d.due_date);
-                const examMidnight = new Date(examDate.getFullYear(), examDate.getMonth(), examDate.getDate()).getTime();
-                const diffDays = Math.round((examMidnight - todayMidnight) / (1000 * 60 * 60 * 24));
+                const examMidnight = new Date(examDate.getFullYear(), examDate.getMonth(), examDate.getDate()).getTime()
+                const diffDays = Math.round((examMidnight - todayMidnight) / (1000 * 60 * 60 * 24))
 
                 return {
                     title: d.title,
@@ -188,7 +192,7 @@ function AlertsPanel() {
                 ? "is today"
                 : exam.diffDays === 1
                     ? "is tomorrow"
-                    : `is in ${exam.diffDays} days`;
+                    : `is in ${exam.diffDays} days`
 
             if (exam.diffDays <= 2) {
                 alerts.push({
@@ -201,7 +205,7 @@ function AlertsPanel() {
                     type: "warning",
                     title: "Exam Approaching",
                     description: `${dateStr} • ${exam.title} ${timePhrase}. Review your material.`
-                });
+                })
             }
         })
 
@@ -213,14 +217,14 @@ function AlertsPanel() {
             const deadlinesWithWeeks = deadlines.map(d => {
                 const deadlineMs = new Date(d.due_date).getTime()
 
-                const diffDays = Math.floor((deadlineMs - planStartMs) / (1000 * 60 * 60 * 24));
+                const diffDays = Math.floor((deadlineMs - planStartMs) / (1000 * 60 * 60 * 24))
 
-                const weekNumber = Math.floor(diffDays / 7) + 1;
+                const weekNumber = Math.floor(diffDays / 7) + 1
 
                 return {
                     title: d.title,
                     weekNumber
-                };
+                }
             })
 
             const countByWeek: Record<number, number> = {}
@@ -308,14 +312,123 @@ function AlertsPanel() {
         // 🕸️ GRUPA B: ZATORY W GRAFIE PRZEDMIOTÓW (Graph Bottlenecks)
         // ==========================================
 
-        // TODO: Reguła 8: Krytyczne Wąskie Gardło (nieukończony przedmiot blokuje >= 4 inne)
+        // Rule 8: Detects critical bottleneck subjects blocking downstream courses.
 
-        // TODO: Reguła 9: Martwy Punkt / Deadlock (wszystkie przedmioty blocked, brak ready)
+        const incompleteNames = new Set(incompleteSubjects.map(s => s.name))
+        const adjacencyMap = new Map<string, string[]>()
 
-        // TODO: Reguła 10: Długi Łańcuch Zależności (łańcuch dependencies >= 4 przedmioty)
+        subjects.forEach(s => {
+            adjacencyMap.set(s.name, s.dependents || [])
+        })
 
-        // TODO: Reguła 11: Przedmiot-Fundament (nieukończony przedmiot bezpośrednio blokuje >= 3)
+        incompleteSubjects.forEach(subject => {
+            const blockedNodes = new Set<string>()
 
+            const queue: string[] = [...(adjacencyMap.get(subject.name) || [])]
+
+            while (queue.length > 0) {
+                const current = queue.shift()!
+
+                if (!blockedNodes.has(current)) {
+                    if (incompleteNames.has(current)) {
+                        blockedNodes.add(current)
+                    }
+
+                    const neighbors = adjacencyMap.get(current) || []
+                    queue.push(...neighbors)
+                }
+            }
+
+            if (blockedNodes.size >= 4) {
+                alerts.push({
+                    type: "danger",
+                    title: "Critical Bottleneck",
+                    description: `${subject.name} is incomplete and blocks ${blockedNodes.size} downstream subjects.`
+                })
+            }
+        })
+
+        // Rule 9: Detects prerequisite deadlocks where no subject is ready.
+
+        const hasIncompletePrereqs = new Map<string, boolean>()
+
+        incompleteSubjects.forEach(s => {
+            hasIncompletePrereqs.set(s.name, false)
+        })
+
+        incompleteSubjects.forEach(parent => {
+            const dependents = parent.dependents || []
+            dependents.forEach(childName => {
+                if (incompleteNames.has(childName)) {
+                    hasIncompletePrereqs.set(childName, true)
+                }
+            })
+        })
+
+        if (incompleteSubjects.length > 0) {
+            const hasReadySubject = Array.from(hasIncompletePrereqs.values()).some(isBlocked => !isBlocked)
+
+
+            if (!hasReadySubject) {
+                alerts.push({
+                    type: "danger",
+                    title: "Deadlock Detected",
+                    description: "All remaining subjects are blocked by unsatisfied prerequisites. No subjects are available to take."
+                })
+            }
+        }
+
+        // Rule 10: Warns about long linear sequences of prerequisites.
+
+        const chainMemo = new Map<string, number>()
+
+        const getChainDepth = (nodeName: string): number => {
+            if (chainMemo.has(nodeName)) return chainMemo.get(nodeName)!
+
+            const neighbors = (adjacencyMap.get(nodeName) || []).filter(name => incompleteNames.has(name))
+
+            if (neighbors.length === 0) {
+                chainMemo.set(nodeName, 1)
+                return 1
+            }
+
+            let maxChildDepth = 0
+            neighbors.forEach(neighbor => {
+                maxChildDepth = Math.max(maxChildDepth, getChainDepth(neighbor))
+            })
+
+            const currentDepth = 1 + maxChildDepth
+            chainMemo.set(nodeName, currentDepth)
+            return currentDepth
+        }
+
+        incompleteSubjects.forEach(subject => {
+            const chainLength = getChainDepth(subject.name)
+
+            if (chainLength >= 4) {
+                alerts.push({
+                    type: "warning",
+                    title: "Long Dependency Chain",
+                    description: `${subject.name} starts a chain of ${chainLength} dependent subjects.`
+                })
+            }
+        })
+
+        // Rule 11: Highlights foundation subjects that directly block multiple courses.
+
+
+        incompleteSubjects.forEach(subject => {
+            const directDependents = subject.dependents || []
+            const directCount = directDependents.filter(name => incompleteNames.has(name)).length
+
+            if (directCount >= 3) {
+                alerts.push({
+                    type: "warning",
+                    title: "Foundation Subject Risk",
+                    description: `${subject.name} is incomplete and directly blocks ${directCount} subjects.`
+                })
+            }
+        })
 
         // ==========================================
         // ⚖️ GRUPA C: LIMITI I OBCIĄŻENIE HARMONOGRAMU (Concurrency & ECTS)
@@ -324,7 +437,8 @@ function AlertsPanel() {
         // TODO: Reguła 12: Przekroczone Limity Równoległości (grupowane tygodnie > max_concurrent)
 
         // Rule 13: Triggers if remaining incomplete subjects exceed 30 ECTS.
-        const incompleteSubjects = subjects.filter(s => !s.is_completed)
+
+
         const totalEcts = incompleteSubjects.length * 3
         if (totalEcts > 30) {
             alerts.push({
