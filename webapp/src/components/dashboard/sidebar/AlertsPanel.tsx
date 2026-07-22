@@ -27,8 +27,6 @@ function AlertsPanel() {
 
         // Rule 1: Detects clusters of 3 or more exams within a 5-day window.
 
-
-
         const exams = deadlines.filter(d => d.type.toLowerCase() === "exam")
             .map(d => {
                 const date = new Date(d.due_date)
@@ -434,10 +432,39 @@ function AlertsPanel() {
         // ⚖️ GRUPA C: LIMITI I OBCIĄŻENIE HARMONOGRAMU (Concurrency & ECTS)
         // ==========================================
 
-        // TODO: Reguła 12: Przekroczone Limity Równoległości (grupowane tygodnie > max_concurrent)
+        // Rule 12: Warns if any week exceeds the plan's concurrency limit.
+
+        const subjectsPerWeek: Record<number, number> = {}
+        for (let w = 1; w <= 12; w++) subjectsPerWeek[w] = 0
+
+        activeSchedule.forEach(item => {
+            if (!incompleteNames.has(item.name)) return
+
+            for (let w = item.start_time; w < item.end_time; w++) {
+                if (w >= 0 && w <= 12) {
+                    const uiWeekNumber = w + 1
+                    subjectsPerWeek[uiWeekNumber]++
+                }
+            }
+        })
+
+        const overloadedWeeks = Object.entries(subjectsPerWeek)
+            .filter(([_, count]) => count > maxConcurrent)
+            .map(([weekStr]) => Number(weekStr))
+            .sort((a, b) => a - b)
+
+        if (overloadedWeeks.length > 0) {
+            const label = overloadedWeeks.length === 1 ? "Week" : "Weeks"
+            const weeksList = overloadedWeeks.join(", ")
+
+            alerts.push({
+                type: "warning",
+                title: "Concurrency Limit Exceeded",
+                description: `${label} ${weeksList}: You have more active subjects running concurrently than your plan limit (${maxConcurrent}).`
+            })
+        }
 
         // Rule 13: Triggers if remaining incomplete subjects exceed 30 ECTS.
-
 
         const totalEcts = incompleteSubjects.length * 3
         if (totalEcts > 30) {
@@ -448,13 +475,64 @@ function AlertsPanel() {
             })
         }
 
-        // TODO: Reguła 14: Tygodnie Wolnego (grupowane tygodnie z obciążeniem 0 w środku semestru)
+        // Rule 14: Identifies empty weeks (zero load) in the middle of the semester.
 
-        // TODO: Reguła 15: Niezbalansowany Semestr (max_load - min_load >= 4)
+        let freeWeeks: number[] = []
 
+        if (incompleteSubjects.length > 0) {
+            for (let w = 2; w <= 11; w++) {
+                const count = subjectsPerWeek[w] || 0
 
+                if (count === 0) freeWeeks.push(w)
+            }
+        }
+
+        if (freeWeeks.length > 0) {
+            const weekLabel = freeWeeks.length === 1 ? "week" : "weeks"
+            const weeksList = freeWeeks.join(", ")
+
+            alerts.push({
+                type: "info",
+                title: "Free Weeks",
+                description: `In ${weekLabel} ${weeksList} you have no subjects scheduled. Use this time to rest or catch up.`
+            })
+        }
+
+        // Rule 15: Warns if there is a severe load imbalance between weeks.
+
+        const activeLoads = Object.values(subjectsPerWeek).filter(count => count > 0)
+
+        if (activeLoads.length > 0) {
+            const maxLoad = Math.max(...activeLoads)
+            const minLoad = Math.min(...activeLoads)
+            const loadDifference = maxLoad - minLoad
+
+            if (loadDifference >= 4) {
+                const busiestWeeks = Object.entries(subjectsPerWeek)
+                    .filter(([_, count]) => count === maxLoad)
+                    .map(([weekStr]) => Number(weekStr))
+                    .sort((a, b) => a - b)
+                    .join(", ")
+
+                const lightestWeeks = Object.entries(subjectsPerWeek)
+                    .filter(([_, count]) => count === minLoad && count > 0)
+                    .map(([weekStr]) => Number(weekStr))
+                    .sort((a, b) => a - b)
+                    .join(", ")
+
+                const busyLabel = busiestWeeks.includes(",") ? "Weeks" : "Week"
+                const lightLabel = lightestWeeks.includes(",") ? "Weeks" : "Week"
+
+                alerts.push({
+                    type: "warning",
+                    title: "Unbalanced Semester",
+                    description: `Unbalanced schedule: ${busyLabel} ${busiestWeeks} (${maxLoad} subjects) vs ${lightLabel} ${lightestWeeks} (${minLoad} subject${minLoad > 1 ? "s" : ""}). Consider leveling your timeline.`
+                })
+            }
+        }
 
         // Rule 16: Displays a success message if there are no critical danger or warning alerts.
+
         const hasCriticalAlerts = alerts.some(a => a.type === "danger" || a.type === "warning")
         if (!hasCriticalAlerts) {
             alerts.unshift({
