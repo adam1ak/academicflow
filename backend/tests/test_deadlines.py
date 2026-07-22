@@ -115,7 +115,7 @@ def test_deadline_auto_deletion(client, db_session):
         owner_id=1
     )
 
-    recent_data = datetime.now(UTC).replace(tzinfo=None) - timedelta(hours=25)
+    recent_data = datetime.now(UTC).replace(tzinfo=None) - timedelta(hours=5)
     recent_deadline = models.Deadline(
         title="Recent Overdue Assignment",
         type="Assignment",
