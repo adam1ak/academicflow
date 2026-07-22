@@ -379,13 +379,17 @@ function AlertsPanel() {
         // Rule 10: Warns about long linear sequences of prerequisites.
 
         const chainMemo = new Map<string, number>()
+        const chainVisiting = new Set<string>()
 
         const getChainDepth = (nodeName: string): number => {
             if (chainMemo.has(nodeName)) return chainMemo.get(nodeName)!
+            if (chainVisiting.has(nodeName)) return 1
 
+            chainVisiting.add(nodeName)
             const neighbors = (adjacencyMap.get(nodeName) || []).filter(name => incompleteNames.has(name))
 
             if (neighbors.length === 0) {
+                chainVisiting.delete(nodeName)
                 chainMemo.set(nodeName, 1)
                 return 1
             }
@@ -396,6 +400,7 @@ function AlertsPanel() {
             })
 
             const currentDepth = 1 + maxChildDepth
+            chainVisiting.delete(nodeName)
             chainMemo.set(nodeName, currentDepth)
             return currentDepth
         }
@@ -551,7 +556,7 @@ function AlertsPanel() {
         <section className="bg-surface border border-dim rounded-xl p-3.5">
             <p className="font-mono text-[10px] uppercase tracking-widest text-sec mb-3">Alerts</p>
 
-            <div className="space-y-2.5">
+            <div className="space-y-2.5 max-h-[280px] overflow-y-auto pr-1 pb-0.5">
                 {activeAlerts.map((alert, index) => (
                     <AlertCard
                         key={index}

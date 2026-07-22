@@ -20,15 +20,24 @@ export function calculateLevels(displaySubjects: SubjectDetailResponse[]) {
     }
   });
 
+  const visiting = new Set<number>();
+
   function getSubjectColumn(id: number): number {
     if (levels[id] !== undefined) return levels[id];
+    if (visiting.has(id)) {
+      return 0;
+    }
+
+    visiting.add(id);
     const parentIds = dependenciesRecord[id] || [];
     if (parentIds.length === 0) {
+      visiting.delete(id);
       levels[id] = 0;
       return 0;
     }
     const depsColumns = parentIds.map((parentId) => getSubjectColumn(parentId));
     levels[id] = Math.max(...depsColumns) + 1;
+    visiting.delete(id);
     return levels[id];
   }
 

@@ -33,7 +33,7 @@ function Deadlines() {
           <p className="font-mono text-[10px] text-mut">No deadlines yet</p>
         </div>
       ) : (
-        <div className="space-y-0">
+        <div className="space-y-0 max-h-[280px] overflow-y-auto pr-1 pb-0.5">
           {deadlines.map((deadline, index) => (
             <DeadlineCard
               key={deadline.id}
