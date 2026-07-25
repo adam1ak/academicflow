@@ -2,6 +2,11 @@
 
 AcademicFlow is a web application for academic planning and schedule optimization. It enables students to visualize course prerequisites as a directed acyclic graph (DAG), view their semester schedule on a Gantt chart, and detect potential study bottlenecks and deadline conflicts automatically.
 
+## Live Demo
+
+- Frontend Application: https://adam1ak.github.io/academicflow/
+- Backend API Docs: https://academicflow-api.onrender.com/docs
+
 ## Project Structure
 
 ```text

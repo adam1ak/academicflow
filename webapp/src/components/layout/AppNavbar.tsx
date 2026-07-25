@@ -166,14 +166,25 @@ function AppNavbar() {
                 onClick={handleToggleSelector}
                 className="flex gap-3 items-center bg-surface-hi text-sec border border-dim px-3 py-1 mr-3 rounded-md cursor-pointer select-none">
                 <div
-                  className="w-2 h-2 rounded-full transition-colors duration-200"
+                  className="w-2 h-2 rounded-full transition-colors duration-200 shrink-0"
                   style={{
                     backgroundColor: activePlan?.accent_color
                       ? `var(--color-accent-${activePlan.accent_color})`
                       : "currentColor"
                   }}
                 />
-                <p className="font-mono text-xs">{activePlan ? activePlan.name : "Select Plan"}</p>
+                {activePlan ? (
+                  <>
+                    <p className="font-mono text-xs sm:hidden">
+                      {activePlan.name.length > 6 ? `${activePlan.name.slice(0, 2)}...` : activePlan.name}
+                    </p>
+                    <p className="font-mono text-xs hidden sm:block max-w-[160px] md:max-w-none truncate">
+                      {activePlan.name}
+                    </p>
+                  </>
+                ) : (
+                  <p className="font-mono text-xs">Select Plan</p>
+                )}
                 <div className="text-[9px]">▾</div>
               </div>
 
