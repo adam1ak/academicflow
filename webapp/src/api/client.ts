@@ -31,7 +31,8 @@ api.interceptors.response.use((response: AxiosResponse) => {
 
         if (refreshToken) {
             try {
-                const response = await axios.post<TokenResponse>('http://localhost:8000/api/v1/refresh', {
+                const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+                const response = await axios.post<TokenResponse>(`${baseURL}/api/v1/refresh`, {
                     refresh_token: refreshToken
                 })
 
