@@ -1,9 +1,10 @@
 import { usePlan } from "../../../context/PlanContext"
 import WeekCard from "./WeekCard"
+import Skeleton from "../../ui/Skeleton"
 
 function WeeklyLoad() {
 
-  const { activePlan, subjects } = usePlan()
+  const { activePlan, subjects, isLoadingDetails } = usePlan()
   const schedule = activePlan?.schedule ?? []
   const load = Array(12).fill(0)
 
@@ -33,16 +34,24 @@ function WeeklyLoad() {
     <section className="md:col-span-3 lg:col-span-1 bg-surface border border-dim rounded-xl p-3.5">
       <p className="font-mono text-[10px] uppercase tracking-widest text-sec mb-3">Weekly load</p>
 
-      <div className="grid grid-cols-6 gap-1">
-        {load.map((val, index) => (
-          <WeekCard
-            key={index}
-            week={index + 1}
-            load={val}
-            type={getLoadType(val)}
-          />
-        ))}
-      </div>
+      {isLoadingDetails ? (
+        <div className="grid grid-cols-6 gap-1">
+          {Array.from({ length: 12 }).map((_, index) => (
+            <Skeleton key={index} className="h-[42px] w-full" />
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-6 gap-1">
+          {load.map((val, index) => (
+            <WeekCard
+              key={index}
+              week={index + 1}
+              load={val}
+              type={getLoadType(val)}
+            />
+          ))}
+        </div>
+      )}
 
       <div className="flex justify-between mt-2">
         <div className="flex items-center gap-1">

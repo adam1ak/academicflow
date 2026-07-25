@@ -3,13 +3,14 @@ import { useFullscreen } from "../../../hooks/useFullscreen";
 import { FullscreenIcon, ExitFullscreenIcon } from "../../ui/FullscreenIcons";
 import { usePlan } from "../../../context/PlanContext";
 import GanttChart from "./gantt/GanttChart";
+import Skeleton from "../../ui/Skeleton";
 
 export type LegendStatus = "active" | "upcoming" | "assignment" | "exam" | "project" | "task" | null;
 
 export function GanttPanel() {
   const ganttRef = useRef<HTMLElement>(null)
   const { isFullscreen, toggle } = useFullscreen(ganttRef)
-  const { activePlan, subjects } = usePlan()
+  const { activePlan, subjects, isLoadingDetails } = usePlan()
   const [showHint, setShowHint] = useState(true)
   const [hoveredLegendStatus, setHoveredLegendStatus] = useState<LegendStatus>(null)
 
@@ -115,23 +116,31 @@ export function GanttPanel() {
       </header>
 
       <div className={`${isFullscreen ? "flex-1 min-h-0" : ""} overflow-auto`}>
-        {showHint && (
-          <div 
-            onClick={() => setShowHint(false)}
-            className="sm:hidden mx-4 mt-2 px-3 py-2 rounded-lg flex items-center gap-2.5 cursor-pointer bg-hint-bg border border-hint-border hover:bg-hint-bg/80 transition-colors"
-          >
-            <span>↺</span>
-            <span className="text-xs flex-1 leading-snug text-hint-text">Scroll horizontally to see all 12 weeks.</span>
-            <span className="text-xs text-sec">✕</span>
+        {isLoadingDetails ? (
+          <div className="p-3 sm:p-4">
+            <Skeleton className="w-full h-[200px]" />
           </div>
-        )}
+        ) : (
+          <>
+            {showHint && (
+              <div 
+                onClick={() => setShowHint(false)}
+                className="sm:hidden mx-4 mt-2 px-3 py-2 rounded-lg flex items-center gap-2.5 cursor-pointer bg-hint-bg border border-hint-border hover:bg-hint-bg/80 transition-colors"
+              >
+                <span>↺</span>
+                <span className="text-xs flex-1 leading-snug text-hint-text">Scroll horizontally to see all 12 weeks.</span>
+                <span className="text-xs text-sec">✕</span>
+              </div>
+            )}
 
-        <div className="p-3 sm:p-4">
-          <GanttChart 
-            hoveredLegendStatus={hoveredLegendStatus} 
-            isFullscreen={isFullscreen}
-          />
-        </div>
+            <div className="p-3 sm:p-4">
+              <GanttChart 
+                hoveredLegendStatus={hoveredLegendStatus} 
+                isFullscreen={isFullscreen}
+              />
+            </div>
+          </>
+        )}
       </div>
     </section>
   );

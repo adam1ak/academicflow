@@ -2,7 +2,7 @@ import { useState } from "react"
 import { usePlan } from "../../../context/PlanContext"
 import DeadlineCard from "./DeadlineCard"
 import AddDeadlineModal from "../../plan/AddDeadlineModal"
-
+import Skeleton from "../../ui/Skeleton"
 
 function Deadlines() {
   const { deadlines, isLoadingDetails, refreshDetails } = usePlan()
@@ -25,8 +25,10 @@ function Deadlines() {
       </div>
 
       {isLoadingDetails ? (
-        <div className="py-6 text-center">
-          <p className="font-mono text-[10px] text-mut animate-pulse">Loading operational metrics...</p>
+        <div className="space-y-2">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <Skeleton key={index} className="h-10 w-full" />
+          ))}
         </div>
       ) : deadlines.length === 0 ? (
         <div className="py-8 text-center border border-dashed border-dim/60 rounded-xl bg-dim/5">
