@@ -90,6 +90,7 @@ class UserResponse(BaseModel):
     email: str
     is_active: bool
     name: Optional[str] = None
+    model_config = {"from_attributes": True}
 
 class Token(BaseModel):
     access_token: str

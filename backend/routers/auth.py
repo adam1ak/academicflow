@@ -96,16 +96,11 @@ def login_for_access_token(request: Request, form_data: OAuth2PasswordRequestFor
         "token_type": "bearer"
     }
 
-@router.get("/users/me")
+@router.get("/users/me", response_model=UserResponse)
 def read_users_me(current_user: models.User = Depends(get_current_user)):
-    return {
-        "message": "Session verified",
-        "user": current_user.email,
-        "github_id": current_user.github_id,
-        "name": current_user.name
-    }
+    return current_user
 
-@router.post("/refresh")
+@router.post("/refresh", response_model=Token)
 def refresh_acces_token(request: RefreshTokenRequest, db: Session = Depends(get_db)):
     try:
         jwt_decode = jwt.decode(request.refresh_token, SECRET_KEY, [ALGORITHM])
@@ -137,5 +132,6 @@ def refresh_acces_token(request: RefreshTokenRequest, db: Session = Depends(get_
     )
     return {
         "access_token": new_access_token,
+        "refresh_token": request.refresh_token,
         "token_type": "bearer"
     }
