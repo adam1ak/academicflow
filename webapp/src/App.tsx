@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AxiosError } from 'axios'
 import api from './api/client'
 
@@ -50,7 +50,7 @@ function App() {
   }
 
   return (
-    <BrowserRouter basename={import.meta.env.BASE_URL}>
+    <HashRouter>
       <ErrorPopup />
 
       <Routes>
@@ -63,7 +63,7 @@ function App() {
 
         <Route path="*" element={<Navigate to={isLogged ? "/dashboard" : "/login"} />} />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   )
 }
 
