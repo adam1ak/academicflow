@@ -118,4 +118,8 @@ npm run build
 
 ## License
 
-All Rights Reserved. Created as a personal portfolio project.
+All Rights Reserved. Created as a personal portfolio project by Filip Adamiak.
+
+## Contact
+
+Filip Adamiak - [f.admiakk@gmail.com](mailto:f.admiakk@gmail.com) - [GitHub Profile](https://github.com/adam1ak)
