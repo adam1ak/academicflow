@@ -282,3 +282,19 @@ def test_delete_subject_with_dependents_error(client, db_session):
 
     assert response.status_code == 400
     assert "dependent" in response.json()["detail"].lower() or "cannot delete" in response.json()["detail"].lower()
+
+    def test_created_plan_has_timestamps(client):
+        payload = {
+            "name": "Timestamp Test Plan",
+            "max_concurrent": 3,
+            "semester": "fall26",
+            "start_date": "2026-10-01",
+            "accent_color": "purple"
+        }
+
+        response = client.post("/api/v1/plans", json=payload)
+        assert response.status_code == 201
+        data = response.json()
+
+        assert data["created_at"] is not None
+        assert data["updated_at"] is not None

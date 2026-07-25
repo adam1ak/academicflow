@@ -26,6 +26,8 @@ class SubjectResponse(BaseModel):
     is_completed: bool
     status: Literal["completed", "ready", "blocked"]
     dependents: List[str]
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
     model_config = {"from_attributes": True}
 
@@ -41,7 +43,9 @@ class SubjectResponse(BaseModel):
                 "classroom": data.classroom,
                 "is_completed": data.is_completed,
                 "status": data.computed_status,
-                "dependents": [str(dep.name) for dep in data.dependent_subjects]
+                "dependents": [str(dep.name) for dep in data.dependent_subjects],
+                "created_at": getattr(data, "created_at", None),
+                "updated_at": getattr(data, "updated_at", None),
             }
         return data
 
@@ -66,6 +70,8 @@ class DeadlineResponse(BaseModel):
     due_date: datetime
     classroom: Optional[str]
     plan_id: Optional[int]
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
     model_config = {"from_attributes": True}
 
@@ -90,6 +96,8 @@ class UserResponse(BaseModel):
     email: str
     is_active: bool
     name: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
     model_config = {"from_attributes": True}
 
 class Token(BaseModel):
@@ -124,6 +132,8 @@ class PlanResponse(BaseModel):
     semester: Optional[str] = None
     start_date: Optional[date] = None
     accent_color: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
     model_config = {"from_attributes": True}
 
