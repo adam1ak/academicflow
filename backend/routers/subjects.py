@@ -1,5 +1,6 @@
-from typing import List
+from typing import List, Any
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import model_validator
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
@@ -10,7 +11,7 @@ from dependencies import get_db, get_current_user, get_user_plan_or_404, get_sub
 
 router = APIRouter(prefix="/api/v1", tags=["subjects"])
 
-@router.post("/plans/{plan_id}/subjects", status_code=status.HTTP_201_CREATED)
+@router.post("/plans/{plan_id}/subjects", response_model=SubjectResponse, status_code=status.HTTP_201_CREATED)
 def add_subject_to_plan(
         plan_id: int,
         payload: SingleSubjectCreate,
@@ -94,16 +95,9 @@ def add_subject_to_plan(
         db.rollback()
         raise HTTPException(status_code=400, detail="Database integrity error")
 
-    return {
-        "id": new_subject.id,
-        "name": new_subject.name,
-        "field": new_subject.field,
-        "duration": new_subject.duration,
-        "classroom": new_subject.classroom,
-        "dependents": [str(dep.name) for dep in new_subject.dependent_subjects]
-    }
+    return new_subject
 
-@router.put("/plans/{plan_id}/subjects/{subject_id}", status_code=status.HTTP_200_OK)
+@router.put("/plans/{plan_id}/subjects/{subject_id}", response_model=SubjectResponse, status_code=status.HTTP_200_OK)
 def update_subject(
         plan_id: int,
         subject_id: int,
@@ -188,14 +182,7 @@ def update_subject(
         db.rollback()
         raise HTTPException(status_code=400, detail="Database integrity error")
 
-    return {
-        "id": existing_subject.id,
-        "name": existing_subject.name,
-        "field": existing_subject.field,
-        "duration": existing_subject.duration,
-        "classroom": existing_subject.classroom,
-        "dependents": [str(dep.name) for dep in existing_subject.dependent_subjects]
-    }
+    return existing_subject
 
 @router.delete("/plans/{plan_id}/subjects/{subject_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_subject(
@@ -229,19 +216,7 @@ def get_plan_subjects(
 ):
     db_plan = get_user_plan_or_404(plan_id, current_user.id, db)
 
-    return [
-        {
-            "id": subject.id,
-            "name": subject.name,
-            "field": subject.field,
-            "duration": subject.duration,
-            "classroom": subject.classroom,
-            "is_completed": subject.is_completed,
-            "status": subject.computed_status,
-            "dependents": [str(dep.name) for dep in subject.dependent_subjects]
-        }
-        for subject in db_plan.subjects
-    ]
+    return db_plan.subjects
 
 @router.patch("/plans/{plan_id}/subjects/{subject_id}/complete", response_model=SubjectResponse)
 def toggle_subject_completion(
@@ -261,13 +236,4 @@ def toggle_subject_completion(
         db.rollback()
         raise HTTPException(status_code=400, detail="Database integrity error during completion toggle")
 
-    return {
-        "id": db_subject.id,
-        "name": db_subject.name,
-        "field": db_subject.field,
-        "duration": db_subject.duration,
-        "classroom": db_subject.classroom,
-        "is_completed": db_subject.is_completed,
-        "status": db_subject.computed_status,
-        "dependents": [str(dep.name) for dep in db_subject.dependent_subjects]
-    }
+    return db_subject

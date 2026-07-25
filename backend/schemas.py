@@ -1,7 +1,7 @@
 import re
-from datetime import date
-from typing import List, Optional, Literal
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from datetime import date, datetime
+from typing import List, Optional, Literal, Any
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
 class SingleSubjectCreate(BaseModel):
     name: str = Field(min_length=1, max_length=100)
@@ -26,18 +26,40 @@ class SubjectResponse(BaseModel):
     is_completed: bool
     status: Literal["completed", "ready", "blocked"]
     dependents: List[str]
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+    model_config = {"from_attributes": True}
+
+    @model_validator(mode="before")
+    @classmethod
+    def serialize_orm_relations(cls, data: Any) -> Any:
+        if hasattr(data, "id"):
+            return {
+                "id": data.id,
+                "name": data.name,
+                "field": data.field,
+                "duration": data.duration,
+                "classroom": data.classroom,
+                "is_completed": data.is_completed,
+                "status": data.computed_status,
+                "dependents": [str(dep.name) for dep in data.dependent_subjects],
+                "created_at": getattr(data, "created_at", None),
+                "updated_at": getattr(data, "updated_at", None),
+            }
+        return data
 
 class DeadlineCreate(BaseModel):
     title: str = Field(min_length=1, max_length=100, description="Title of deadline")
     type: Literal["exam", "assignment", "project", "task"]
-    due_date: date
+    due_date: Optional[datetime] = Field(default=None, description="Optional deadline due time")
     classroom: Optional[str] = Field(default=None, description="Optional classroom number")
     plan_id: Optional[int] = Field(default=None, description="Optional relationship with plan")
 
 class DeadlineUpdate(BaseModel):
     title: Optional[str] = Field(default=None, min_length=1, max_length=100)
     type: Optional[Literal["exam", "assignment", "project", "task"]] = Field(default=None)
-    due_date: Optional[date] = Field(default=None)
+    due_date: Optional[datetime] = Field(default=None)
     classroom: Optional[str] = Field(default=None)
     plan_id: Optional[int] = Field(default=None)
 
@@ -45,9 +67,13 @@ class DeadlineResponse(BaseModel):
     id: int
     title: str
     type: str
-    due_date: date
+    due_date: datetime
     classroom: Optional[str]
     plan_id: Optional[int]
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+    model_config = {"from_attributes": True}
 
 class UserCreate(BaseModel):
     email: EmailStr
@@ -70,6 +96,9 @@ class UserResponse(BaseModel):
     email: str
     is_active: bool
     name: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    model_config = {"from_attributes": True}
 
 class Token(BaseModel):
     access_token: str
@@ -100,12 +129,13 @@ class PlanResponse(BaseModel):
     id: int
     name: str
     max_concurrent: int
-    semester: str
-    start_date: date
-    accent_color: str
+    semester: Optional[str] = None
+    start_date: Optional[date] = None
+    accent_color: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 class PlanUpdate(BaseModel):
     name: Optional[str] = Field(default=None, min_length=1, max_length=100, description="Optional new name")

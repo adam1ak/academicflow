@@ -19,10 +19,8 @@ function DeadlineCard({ type, title, due_date, classroom, isFirst }: DeadlineCar
     const dayNum = isNaN(dateObj.getTime()) ?  new Date().getDate() + 5  : dateObj.getDate()
 
     const today = new Date()
-    today.setHours(0, 0, 0, 0)
 
     const targetDate = new Date(dateObj)
-    targetDate.setHours(0, 0, 0, 0)
 
     const diffTime = targetDate.getTime() - today.getTime()
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
@@ -31,7 +29,16 @@ function DeadlineCard({ type, title, due_date, classroom, isFirst }: DeadlineCar
     if (isNaN(diffDays)) daysLeftText = "5 days left"
     if (diffDays === 0) daysLeftText = "Today"
     if (diffDays === 1) daysLeftText = "Tomorrow"
-    if (diffDays < 0) daysLeftText = "Overdue"
+    if (diffTime < 0) daysLeftText = "Overdue"
+
+    if (diffTime > 0 && diffTime <= 48 * 60 * 60 * 1000) {
+        const totalMinutes = Math.ceil(diffTime / (60 * 1000))
+        
+        const hours = Math.floor(totalMinutes / 60)
+        const minutes = totalMinutes % 60
+
+        daysLeftText = `${hours}h and ${minutes}min left`
+    }
 
     return (
         <div className={`flex items-center gap-2.5 ${separatorClasses}`}>

@@ -7,3 +7,4 @@ venv/
 todo
 AcademicFlowDashboard.html
 development_roadmap.md
+node_modules/

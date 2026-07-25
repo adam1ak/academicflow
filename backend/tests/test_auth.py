@@ -49,7 +49,7 @@ def test_access_protected_endpoint_with_token(client, db_session):
     )
 
     assert response.status_code == 200
-    assert response.json()["user"] == TEST_EMAIL
+    assert response.json()["email"] == TEST_EMAIL
 
 
 def test_login_wrong_password(client, db_session):

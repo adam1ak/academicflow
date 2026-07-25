@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Table, Boolean, UniqueConstraint, Date, DateTime
+from sqlalchemy import Column, Integer, String, ForeignKey, Table, Boolean, UniqueConstraint, Date, DateTime, func
 from sqlalchemy.orm import relationship
 from datetime import datetime, UTC
 
@@ -22,6 +22,8 @@ class Plan(Base):
     semester = Column(String)
     start_date = Column(Date)
     accent_color = Column(String)
+    created_at = Column(DateTime, server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
 
     owner = relationship("User", back_populates="plans")
     subjects = relationship("Subject", back_populates="plan")
@@ -37,6 +39,8 @@ class Subject(Base):
     classroom = Column(String)
     is_completed = Column(Boolean, default=False)
     plan_id = Column(Integer, ForeignKey('plans.id', ondelete="CASCADE"), index=True)
+    created_at = Column(DateTime, server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
 
     __table_args__ = (
         UniqueConstraint('plan_id', 'name', name='uq_subject_plan_name'),
@@ -77,6 +81,8 @@ class User(Base):
     github_id = Column(String, unique=True, index=True, nullable=True)
     is_active = Column(Boolean, default=True)
     name = Column(String, nullable=True)
+    created_at = Column(DateTime, server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
 
     plans = relationship("Plan", back_populates="owner")
     deadlines = relationship("Deadline", back_populates="owner")
@@ -101,8 +107,10 @@ class Deadline(Base):
     owner_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     title = Column(String)
     type = Column(String)
-    due_date = Column(Date)
+    due_date = Column(DateTime)
     classroom = Column(String, nullable=True)
+    created_at = Column(DateTime, server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
 
     plan_id = Column(Integer, ForeignKey("plans.id", ondelete="CASCADE"), nullable=True)
 

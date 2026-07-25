@@ -26,7 +26,8 @@ const deadlineSchema = z.object({
     classroom: z.string(),
     type: z.enum(["assignment", "exam", "project", "task"]),
     monthIndex: z.number(),
-    day: z.number().gte(1, "Day must be at least 1")
+    day: z.number().gte(1, "Day must be at least 1"),
+    time: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format")
 }).refine((data) => {
     const maxDays = new Date(currentYear, data.monthIndex + 1, 0).getDate()
     return data.day <= maxDays
@@ -49,7 +50,8 @@ function AddDeadlineModal({ onClose, onSuccess }: AddDeadlineModalProps) {
             classroom: "",
             type: "assignment",
             monthIndex: new Date().getMonth(),
-            day: new Date().getDate()
+            day: new Date().getDate(),
+            time: "12:00"
         }
     })
 
@@ -58,6 +60,7 @@ function AddDeadlineModal({ onClose, onSuccess }: AddDeadlineModalProps) {
     const watchedDay = watch("day")
     const watchedTitle = watch("title")
     const watchedClassroom = watch("classroom")
+    const watchedTime = watch("time")
 
     useEffect(() => {
         reset()
@@ -73,6 +76,8 @@ function AddDeadlineModal({ onClose, onSuccess }: AddDeadlineModalProps) {
     }, [onClose])
 
     const assembledIsoDate = useMemo(() => {
+        const [ hours, minutes ] = (watchedTime || "12:00").split(":")
+
         const today = new Date()
         let targetDate = new Date(currentYear, watchedMonth, watchedDay || 1)
 
@@ -84,8 +89,8 @@ function AddDeadlineModal({ onClose, onSuccess }: AddDeadlineModalProps) {
         const monthStr = String(targetDate.getMonth() + 1).padStart(2, "0")
         const dayStr = String(targetDate.getDate()).padStart(2, "0")
 
-        return `${year}-${monthStr}-${dayStr}`
-    }, [watchedMonth, watchedDay])
+        return `${year}-${monthStr}-${dayStr}T${hours}:${minutes}:00`
+    }, [watchedMonth, watchedDay, watchedTime])
 
     const onSubmitForm = async (data: DeadlineFormData) => {
         if (!activePlanId) {
@@ -197,6 +202,15 @@ function AddDeadlineModal({ onClose, onSuccess }: AddDeadlineModalProps) {
                                 placeholder="e.g. 15"
                                 hasError={!!errors.day}
                                 {...register("day", { valueAsNumber: true })}
+                            />
+                        </div>
+                        <div className="flex-1">
+                            <InputField
+                                id="deadline-time"
+                                label="time"
+                                type="time"
+                                hasError={!!errors.time}
+                                {...register("time")}
                             />
                         </div>
                     </div>
