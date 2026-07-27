@@ -51,3 +51,32 @@ export const toggleComplete = async (planId: number, subjectId: number): Promise
 
     return response.data
 }
+
+export const exportPlanICS = async (planId: number): Promise<Blob> => {
+    const response = await api.get<Blob>(`/api/v1/plans/${planId}/export/ics`, {
+        responseType: 'blob'
+    })
+
+    return response.data
+}
+
+export const exportPlanPDF = async (planId: number): Promise<Blob> => {
+    const response = await api.get<Blob>(`/api/v1/plans/${planId}/export/pdf`, {
+        responseType: 'blob'
+    })
+
+    return response.data
+}
+
+export const downloadBlob = (blob: Blob, filename: string): void => {
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement("a")
+
+    link.href = url
+    link.download = filename
+    
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+}

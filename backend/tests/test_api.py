@@ -283,7 +283,7 @@ def test_delete_subject_with_dependents_error(client, db_session):
     assert response.status_code == 400
     assert "dependent" in response.json()["detail"].lower() or "cannot delete" in response.json()["detail"].lower()
 
-    def test_created_plan_has_timestamps(client):
+def test_created_plan_has_timestamps(client):
         payload = {
             "name": "Timestamp Test Plan",
             "max_concurrent": 3,
@@ -298,3 +298,45 @@ def test_delete_subject_with_dependents_error(client, db_session):
 
         assert data["created_at"] is not None
         assert data["updated_at"] is not None
+
+def test_export_plan_ics(client):
+    payload = {
+        "name": "ICS Export Plan",
+        "max_concurrent": 3,
+        "semester": "fall26",
+        "start_date": "2026-10-01",
+        "accent_color": "blue"
+    }
+
+    create_response = client.post("/api/v1/plans", json=payload)
+    assert create_response.status_code == 201
+    plan_id = create_response.json()["id"]
+
+    response = client.get(f"/api/v1/plans/{plan_id}/export/ics")
+    assert  response.status_code == 200
+    assert response.headers["content-type"] == "text/calendar; charset=utf-8"
+    assert "attachment; filename=" in response.headers["content-disposition"]
+
+    content = response.text
+    assert "BEGIN:VCALENDAR" in content
+    assert "VERSION:2.0" in content
+
+def test_export_plan_pdf(client):
+    payload = {
+        "name": "PDF Export Plan",
+        "max_concurrent": 2,
+        "semester": "fall26",
+        "start_date": "2026-10-01",
+        "accent_color": "purple"
+    }
+    create_response = client.post("/api/v1/plans", json=payload)
+    assert create_response.status_code == 201
+    plan_id = create_response.json()["id"]
+
+    response = client.get(f"/api/v1/plans/{plan_id}/export/pdf")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/pdf"
+    assert f'attachment; filename=plan_{plan_id}.pdf' in response.headers["content-disposition"]
+
+    assert response.content.startswith(b"%PDF")

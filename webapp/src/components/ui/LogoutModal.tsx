@@ -1,5 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
+import { usePlan } from "../../context/PlanContext";
+import { exportPlanICS, exportPlanPDF, downloadBlob } from "../../api/plans";
 
 interface LogoutModalProps {
     isOpen: boolean;
@@ -10,6 +12,8 @@ interface LogoutModalProps {
 function LogoutModal({ isOpen, onClose, onConfirm }: LogoutModalProps) {
 
     const { user } = useAuth()
+    const { activePlan } = usePlan()
+    const [isExporting, setIsExporting] = useState<boolean>(false)
 
     useEffect(() => {
         if (!isOpen) return
@@ -24,6 +28,32 @@ function LogoutModal({ isOpen, onClose, onConfirm }: LogoutModalProps) {
     }, [isOpen, onClose])
 
     if (!isOpen) return null;
+
+    const handleExportICS = async () => {
+        if (!activePlan) return
+        try {
+            setIsExporting(true)
+            const blob = await exportPlanICS(activePlan.id)
+            downloadBlob(blob, `plan_${activePlan.id}.ics`)
+        } catch (err) {
+            console.error("Export ICS failed:", err)
+        } finally {
+            setIsExporting(false)
+        }
+    }
+
+    const handleExportPDF = async () => {
+        if (!activePlan) return
+        try {
+            setIsExporting(true)
+            const blob = await exportPlanPDF(activePlan.id)
+            downloadBlob(blob, `plan_${activePlan.id}.pdf`)
+        } catch (err) {
+            console.error("Export PDF failed:", err)
+        } finally {
+            setIsExporting(false)
+        }
+    }
 
     const modalInitials = user?.name
         ? user.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()
@@ -50,6 +80,26 @@ function LogoutModal({ isOpen, onClose, onConfirm }: LogoutModalProps) {
                         <p className="text-xs font-mono text-sec">{user?.email || "email@email.com"}</p>
                     </div>
                 </div>
+
+                {activePlan && (
+                    <div className="mb-5 pt-4 border-t border-dim space-y-2">
+                        <p className="font-mono text-[9px] uppercase tracking-widest text-sec mb-2">Export Data</p>
+                        <button
+                            type="button"
+                            disabled={isExporting}
+                            onClick={handleExportICS}
+                            className="w-full py-2 px-3 rounded-lg border border-dim text-pri text-xs font-mono hover:bg-white/5 transition-colors flex items-center justify-between disabled:opacity-50">
+                            <span>Export to iCal (.ics)</span>
+                        </button>
+                        <button
+                            type="button"
+                            disabled={isExporting}
+                            onClick={handleExportPDF}
+                            className="w-full py-2 px-3 rounded-lg border border-dim text-pri text-xs font-mono hover:bg-white/5 transition-colors flex items-center justify-between disabled:opacity-50">
+                            <span>Download PDF Report</span>
+                        </button>
+                    </div>
+                )}
 
                 <p className="text-sm font-semibold text-pri mb-1.5">
                     Sign out of AcademicFlow?
