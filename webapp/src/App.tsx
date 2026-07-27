@@ -27,10 +27,21 @@ function App() {
       (response) => response,
       (error: AxiosError<ErrorResponseData>) => {
         if (error.response && error.response.status !== 401) {
-          const errorMessage = error.response.data?.detail || "Error from server"
-          showError(errorMessage)
+          if (error.response.data instanceof Blob) {
+            error.response.data.text().then(text => {
+              try {
+                const parsed = JSON.parse(text)
+                showError(parsed.detail || "Error from server")
+              } catch {
+                showError("Error from server")
+              }
+            })
+          } else {
+            const errorMessage = error.response.data?.detail || "Error from server"
+            showError(errorMessage)
+          }
         } else if (!error.response) {
-          showError("No connection wtih backend")
+          showError("No connection with backend")
         }
         return Promise.reject(error)
       }

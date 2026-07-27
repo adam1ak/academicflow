@@ -303,7 +303,12 @@ def export_plan_to_ics(
 ):
     db_plan = get_user_plan_or_404(plan_id, current_user.id, db)
 
-    schedule = reconstruct_and_calculate_plan(db_plan)
+    try:
+        schedule = reconstruct_and_calculate_plan(db_plan)
+    except ValueError as exc:
+        logger.warning(f"Export ICS: Schedule computation skipped due to graph error: {exc}")
+        schedule = []
+
     deadlines = db.query(models.Deadline).filter(models.Deadline.plan_id == plan_id).all()
 
     ics_content = generate_ics_for_plan(db_plan, schedule, deadlines)
@@ -324,7 +329,12 @@ def export_plan_to_pdf(
 ):
     db_plan = get_user_plan_or_404(plan_id, current_user.id, db)
 
-    schedule = reconstruct_and_calculate_plan(db_plan)
+    try:
+        schedule = reconstruct_and_calculate_plan(db_plan)
+    except ValueError as exc:
+        logger.warning(f"Export PDF: Schedule computation skipped due to graph error: {exc}")
+        schedule = []
+
     subjects = db_plan.subjects
 
     pdf_bytes = generate_plan_pdf(db_plan, schedule, subjects)
