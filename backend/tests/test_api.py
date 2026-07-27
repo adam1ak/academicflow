@@ -320,3 +320,23 @@ def test_export_plan_ics(client):
     content = response.text
     assert "BEGIN:VCALENDAR" in content
     assert "VERSION:2.0" in content
+
+def test_export_plan_pdf(client):
+    payload = {
+        "name": "PDF Export Plan",
+        "max_concurrent": 2,
+        "semester": "fall26",
+        "start_date": "2026-10-01",
+        "accent_color": "purple"
+    }
+    create_response = client.post("/api/v1/plans", json=payload)
+    assert create_response.status_code == 201
+    plan_id = create_response.json()["id"]
+
+    response = client.get(f"/api/v1/plans/{plan_id}/export/pdf")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/pdf"
+    assert f'attachment; filename=plan_{plan_id}.pdf' in response.headers["content-disposition"]
+
+    assert response.content.startswith(b"%PDF")

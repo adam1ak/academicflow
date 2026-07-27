@@ -15,6 +15,8 @@ from core import Subject, CourseGraph
 from datetime import datetime, timedelta
 from icalendar import  Calendar, Event
 
+from services.pdf_service import generate_plan_pdf
+
 logger = logging.getLogger("academicflow.plans")
 router = APIRouter(prefix="/api/v1", tags=["plans"])
 
@@ -311,5 +313,26 @@ def export_plan_to_ics(
         media_type="text/calendar",
         headers={
             "Content-Disposition": f"attachment; filename=plan_{plan_id}.ics"
+        }
+    )
+
+@router.get("/plans/{plan_id}/export/pdf")
+def export_plan_to_pdf(
+        plan_id: int,
+        db: Session = Depends(get_db),
+        current_user: models.User = Depends(get_current_user)
+):
+    db_plan = get_user_plan_or_404(plan_id, current_user.id, db)
+
+    schedule = reconstruct_and_calculate_plan(db_plan)
+    subjects = db_plan.subjects
+
+    pdf_bytes = generate_plan_pdf(db_plan, schedule, subjects)
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"attachment; filename=plan_{plan_id}.pdf"
         }
     )
