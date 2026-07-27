@@ -2,7 +2,7 @@ import logging
 from datetime import date
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import IntegrityError
 from pydantic import BaseModel, model_validator
@@ -11,6 +11,9 @@ import models
 from schemas import PlanCreate, PlanResponse, PlanUpdate, GraphInput
 from dependencies import get_db, get_current_user, get_user_plan_or_404
 from core import Subject, CourseGraph
+
+from datetime import datetime, timedelta
+from icalendar import  Calendar, Event
 
 logger = logging.getLogger("academicflow.plans")
 router = APIRouter(prefix="/api/v1", tags=["plans"])
@@ -256,3 +259,57 @@ def delete_plan(plan_id: int, db: Session = Depends(get_db),
 
     db.delete(plan)
     db.commit()
+
+def generate_ics_for_plan(plan: models.Plan, schedule: list, deadlines: list) -> bytes:
+    cal = Calendar()
+    cal.add('prodid', '-//AcademicFlow//EN')
+    cal.add('version', '2.0')
+
+    base_date = plan.start_date or datetime.now().date()
+
+    for item in schedule:
+        event = Event()
+        item_name = item["name"] if isinstance(item, dict) else item.name
+        item_start = item["start_time"] if isinstance(item, dict) else item.start_time
+        item_end = item["end_time"] if isinstance(item, dict) else item.end_time
+
+        event_start = base_date + timedelta(weeks=item_start)
+        event_end = base_date + timedelta(weeks=item_end)
+
+        event.add('summary', f"Class: {item_name}")
+        event.add('dtstart', event_start)
+        event.add('dtend', event_end)
+        event.add('uid', f"schedule-{plan.id}-{item_name}@academicflow")
+        cal.add_component(event)
+
+    for d in deadlines:
+        event = Event()
+        event.add('summary', f"[{d.type.upper()}] {d.title}")
+        event.add('dtstart', d.due_date)
+        event.add('uid', f"deadline-{d.id}@academicflow")
+        if d.classroom:
+            event.add('location', d.classroom)
+        cal.add_component(event)
+
+    return cal.to_ical()
+
+@router.get("/plans/{plan_id}/export/ics")
+def export_plan_to_ics(
+        plan_id: int,
+        db: Session = Depends(get_db),
+        current_user: models.User = Depends(get_current_user)
+):
+    db_plan = get_user_plan_or_404(plan_id, current_user.id, db)
+
+    schedule = reconstruct_and_calculate_plan(db_plan)
+    deadlines = db.query(models.Deadline).filter(models.Deadline.plan_id == plan_id).all()
+
+    ics_content = generate_ics_for_plan(db_plan, schedule, deadlines)
+
+    return Response(
+        content=ics_content,
+        media_type="text/calendar",
+        headers={
+            "Content-Disposition": f"attachment; filename=plan_{plan_id}.ics"
+        }
+    )
