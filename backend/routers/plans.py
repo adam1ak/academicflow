@@ -17,6 +17,9 @@ from icalendar import  Calendar, Event
 
 from services.pdf_service import generate_plan_pdf
 
+import json
+from redis_client import safe_get, safe_setex, safe_delete
+
 logger = logging.getLogger("academicflow.plans")
 router = APIRouter(prefix="/api/v1", tags=["plans"])
 
@@ -69,6 +72,12 @@ class PlanWithScheduleResponse(BaseModel):
         return data
 
 def reconstruct_and_calculate_plan(db_plan: models.Plan):
+    cache_key = f"plan:{db_plan.id}:calculated"
+
+    cached_schedule = safe_get(cache_key)
+    if cached_schedule:
+        return json.loads(cached_schedule)
+
     graph = CourseGraph()
 
     for db_subject in db_plan.subjects:
@@ -83,6 +92,9 @@ def reconstruct_and_calculate_plan(db_plan: models.Plan):
             graph.add_dependent(db_subject.name, dependent.name)
 
     result = graph.get_constrained_study_plan(db_plan.max_concurrent)
+
+    safe_setex(cache_key, 3600, json.dumps(result))
+
     return result
 
 @router.post("/generate-plan", response_model=List[ScheduleItem], status_code=status.HTTP_201_CREATED)
