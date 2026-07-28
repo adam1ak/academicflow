@@ -1,6 +1,5 @@
 from typing import List, Any
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import model_validator
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
@@ -9,7 +8,12 @@ from core import Subject as GraphSubject, CourseGraph
 from schemas import SingleSubjectCreate, SubjectUpdate, SubjectResponse
 from dependencies import get_db, get_current_user, get_user_plan_or_404, get_subject_or_404
 
+from redis_client import safe_delete
+
 router = APIRouter(prefix="/api/v1", tags=["subjects"])
+
+def invalidate_plan_cache(plan_id: int) -> None:
+    safe_delete(f"plan:{plan_id}:calculated")
 
 @router.post("/plans/{plan_id}/subjects", response_model=SubjectResponse, status_code=status.HTTP_201_CREATED)
 def add_subject_to_plan(
@@ -91,6 +95,9 @@ def add_subject_to_plan(
         db.add(new_subject)
         db.commit()
         db.refresh(new_subject)
+
+        invalidate_plan_cache(plan_id)
+
     except IntegrityError:
         db.rollback()
         raise HTTPException(status_code=400, detail="Database integrity error")
@@ -204,6 +211,8 @@ def delete_subject(
     try:
         db.delete(existing_subject)
         db.commit()
+
+        invalidate_plan_cache(plan_id)
     except IntegrityError:
         db.rollback()
         raise HTTPException(status_code=400, detail="Database integrity error during deletion")
