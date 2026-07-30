@@ -1,4 +1,4 @@
-import { useError } from "../context/ErrorContext"
+import { useError } from "../../context/ErrorContext"
 
 function ErrorPopup() {
     const { error, cleanError } = useError()
