@@ -1,5 +1,7 @@
 import { RefObject } from "react"
 import { GanttRowData, GanttDeadlineMark } from "./ganttUtils"
+import { usePlan } from "../../../../context/PlanContext"
+import { useToggleCompleteMutation } from "../../../../hooks/queries/useToggleCompleteMutation"
 
 interface GanttDetailsCardProps {
   cardRef: RefObject<HTMLDivElement | null>
@@ -22,6 +24,11 @@ export default function GanttDetailsCard({
   setHoveredCardDeadlineId,
   isFullscreen
 }: GanttDetailsCardProps) {
+  const { activePlanId, subjects } = usePlan()
+  const toggleMutation = useToggleCompleteMutation(activePlanId)
+
+  const targetSubject = subjects.find(s => s.name === displayedRow?.name)
+
   return (
     <div 
       ref={cardRef}
@@ -52,6 +59,17 @@ export default function GanttDetailsCard({
               >
                 {getBarLabel(displayedRow.status)}
               </span>
+
+              {targetSubject && (
+                <button
+                  type="button"
+                  disabled={toggleMutation.isPending}
+                  onClick={() => toggleMutation.mutate(targetSubject.id)}
+                  className="font-mono text-[9px] rounded-md px-2 py-0.5 font-semibold border border-dim bg-surface/50 text-pri hover:bg-white/10 transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {displayedRow.status === "completed" ? "✓ Done (Click to undo)" : "○ Mark Complete"}
+                </button>
+              )}
             </div>
             <div className="flex flex-wrap items-center gap-4 text-sec font-mono text-[10px]">
               <div>Classroom: <span className="text-pri font-sans font-medium">{displayedRow.classroom || "—"}</span></div>
@@ -69,8 +87,8 @@ export default function GanttDetailsCard({
                 deadlineMarks
                   .filter(d => assignedDeadlinesMap.get(d.id) === displayedRow.name)
                   .map((d, i) => (
-                    <div 
-                      key={i} 
+                    <div
+                      key={i}
                       className="flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-dim bg-surface/50 text-[10px] font-mono font-semibold cursor-pointer hover:bg-white/5 transition-all select-none"
                       style={{ color: d.color }}
                       onMouseEnter={() => setHoveredCardDeadlineId(d.id)}

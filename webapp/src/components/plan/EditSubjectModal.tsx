@@ -3,7 +3,7 @@ import DependentsSelect from "./DependentsSelect"
 import GanttPreviewBar from "../ui/GanttPreviewBar"
 import InputField from "../ui/InputField"
 import { usePlan } from "../../context/PlanContext";
-import { updateSubject } from "../../api/plans";
+import { useUpdateSubjectMutation } from "../../hooks/queries/useUpdateSubjectMutation";
 import { SubjectDetailResponse } from "../../types/plan";
 
 import { useForm, useFieldArray } from "react-hook-form"
@@ -29,9 +29,10 @@ interface EditSubjectModalProps {
 }
 
 function EditSubjectModal({ subject, onClose }: EditSubjectModalProps) {
-    const { activePlanId, subjects, refreshDetails, refreshPlans } = usePlan()
+    const { activePlanId, subjects } = usePlan()
     const [apiError, setApiError] = useState<string>("")
-    const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
+
+    const updateMutation = useUpdateSubjectMutation(activePlanId, subject.id)
 
     // Map dependent names from subject.dependents to their ID and Name objects
     const initialDependents = useMemo(() => {
@@ -73,7 +74,7 @@ function EditSubjectModal({ subject, onClose }: EditSubjectModalProps) {
             const visited = new Set<string>();
             const queue: string[] = [fromName];
             const adjMap = new Map<string, string[]>();
-            
+
             subjects.forEach(s => {
                 adjMap.set(s.name, s.dependents || []);
             });
@@ -134,29 +135,24 @@ function EditSubjectModal({ subject, onClose }: EditSubjectModalProps) {
             return
         }
 
-        setIsSubmitting(true)
         setApiError("")
-
         const selectedSubjectsNames = data.dependents.map(d => d.name)
 
-        try {
-            await updateSubject(activePlanId, subject.id, {
-                name: data.name.trim(),
-                field: data.field.trim() || "General",
-                duration: data.duration,
-                classroom: data.classroom.trim() || null,
-                dependents: selectedSubjectsNames
-            })
-
-            await refreshDetails()
-            await refreshPlans()
-            onClose()
-        } catch (error: any) {
-            const backendError = error.response?.data?.detail
-            setApiError(backendError || "Api error")
-        } finally {
-            setIsSubmitting(false)
-        }
+        updateMutation.mutate({
+            name: data.name.trim(),
+            field: data.field.trim() || "General",
+            duration: data.duration,
+            classroom: data.classroom.trim() || null,
+            dependents: selectedSubjectsNames
+        }, {
+            onSuccess: () => {
+                onClose()
+            },
+            onError: (error: any) => {
+                const backendError = error.response?.data?.detail
+                setApiError(backendError || "Api error")
+            }
+        })
     }
 
     return (
@@ -175,7 +171,7 @@ function EditSubjectModal({ subject, onClose }: EditSubjectModalProps) {
                     <button
                         type="button"
                         onClick={onClose}
-                        disabled={isSubmitting}
+                        disabled={updateMutation.isPending}
                         className="w-7 h-7 flex items-center justify-center text-sec hover:text-pri leading-none transition-colors cursor-pointer"
                     >✕</button>
                 </div>
@@ -243,20 +239,20 @@ function EditSubjectModal({ subject, onClose }: EditSubjectModalProps) {
                     <button
                         type="button"
                         onClick={onClose}
-                        disabled={isSubmitting}
+                        disabled={updateMutation.isPending}
                         className="flex-1 py-2.5 rounded-lg border border-dim text-sec text-sm outline-none hover:border-white/20 hover:text-pri transition-colors cursor-pointer">
                         Cancel
                     </button>
 
                     <button
                         type="submit"
-                        disabled={isSubmitting}
-                        className={`flex-1 py-2.5 rounded-lg border border-dim text-white text-sm font-semibold transition-colors outline-none ${isSubmitting
+                        disabled={updateMutation.isPending}
+                        className={`flex-1 py-2.5 rounded-lg border border-dim text-white text-sm font-semibold transition-colors outline-none ${updateMutation.isPending
                             ? "bg-btn-blue/50 text-white/50 cursor-not-allowed border-dim/50"
                             : "bg-btn-blue hover:bg-btn-blue-hover cursor-pointer"
                             }`}
                     >
-                        {isSubmitting ? "Saving..." : "Save changes"}
+                        {updateMutation.isPending ? "Saving..." : "Save changes"}
                     </button>
                 </div>
             </form>
