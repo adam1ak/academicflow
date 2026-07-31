@@ -1,10 +1,10 @@
 import { createContext, useContext, useState, useEffect, useMemo, ReactNode } from "react"
 
 import { PlanData, SubjectDetailResponse } from "../types/plan"
-import { getMyPlans, getSubjects } from "../api/plans"
-import { useAuth } from "./AuthContext"
 import { DeadlineResponse } from "../types/deadline"
-import { getDeadlines } from "../api/deadlines"
+import { usePlansQuery } from "../hooks/queries/usePlanQuery"
+import { useSubjectQuery } from "../hooks/queries/useSubjectQuery"
+import { useDeadlinesQuery } from "../hooks/queries/useDeadlinesQuery"
 
 interface PlanContextType {
     plans: PlanData[]
@@ -13,7 +13,6 @@ interface PlanContextType {
     activePlan: PlanData | undefined
     refreshPlans: () => Promise<void>
     isLoading: boolean
-    error: string | null
     subjects: SubjectDetailResponse[]
     deadlines: DeadlineResponse[]
     isLoadingDetails: boolean
@@ -23,96 +22,33 @@ interface PlanContextType {
 const PlanContext = createContext<PlanContextType | undefined>(undefined)
 
 export const PlanProvider = ({ children }: { children: ReactNode }) => {
-    const { isLogged } = useAuth()
-
-    const [plans, setPlans] = useState<PlanData[]>([])
     const [activePlanId, setActivePlanId] = useState<number | null>(null)
-    const [isLoading, setIsLoading] = useState<boolean>(true)
-    const [error, setError] = useState<string | null>(null)
 
-    const [subjects, setSubjects] = useState<SubjectDetailResponse[]>([])
-    const [deadlines, setDeadlines] = useState<DeadlineResponse[]>([])
-    const [isLoadingDetails, setIsLoadingDetails] = useState<boolean>(false)
+    const { plans, isLoading, refetch: refetchPlans } = usePlansQuery()
+    const { subjects, isLoading: isLoadingSubjects, refetch: refetchSubjects } = useSubjectQuery(activePlanId)
+    const { deadlines, refetch: refetchDeadlines } = useDeadlinesQuery(activePlanId)
 
-    const activePlan = useMemo(
-        () => plans.find(p => p.id === activePlanId),
-        [plans, activePlanId]
-    )
-
-    const refreshDetails = async () => {
-        if (!activePlanId) {
-            setSubjects([])
-            setDeadlines([])
-
-            return
+    useEffect(() => {
+        if (plans.length > 0) {
+            setActivePlanId(prev => {
+                const stillExists = plans.some(p => p.id === prev)
+                return (prev && stillExists) ? prev : plans[0].id
+            })
+        } else {
+            setActivePlanId(null)
         }
+    }, [plans])
 
-        setIsLoadingDetails(true)
-
-        try {
-            const [subjectsData, deadlinesData] = await Promise.all([
-                getSubjects(activePlanId),
-                getDeadlines(activePlanId)
-            ])
-            setSubjects(subjectsData)
-            setDeadlines(deadlinesData)
-        } catch (error) {
-            console.error("Failed to fetch plan details: ", error)
-            setSubjects([])
-            setDeadlines([])
-        } finally {
-            setIsLoadingDetails(false)
-        }
-    }
+    const activePlan = useMemo(() => plans.find(p => p.id === activePlanId), [plans, activePlanId])
 
     const refreshPlans = async () => {
-        setIsLoading(true)
-        setError(null)
-
-        try {
-            const data = await getMyPlans()
-            setPlans(data)
-
-            if (data.length > 0) {
-                const stillExists = data.some(p => p.id === activePlanId)
-
-                if (!activePlanId || !stillExists) {
-                    setActivePlanId(data[0].id)
-                }
-            } else {
-                setActivePlanId(null)
-            }
-
-        } catch (error) {
-            console.error("Failed to fetch plans: ", error)
-            setError("Failed to load your study plans")
-            setPlans([])
-            setActivePlanId(null)
-        } finally {
-            setIsLoading(false)
-        }
+        await refetchPlans()
     }
 
-    useEffect(() => {
-        if (isLogged) {
-            refreshPlans()
-        } else {
-            setPlans([])
-            setActivePlanId(null)
-            setSubjects([])
-            setDeadlines([])
-            setIsLoading(false)
-        }
-    }, [isLogged])
-
-    useEffect(() => {
-        if (activePlanId) {
-            refreshDetails()
-        } else {
-            setSubjects([])
-            setDeadlines([])
-        }
-    }, [activePlanId])
+    const refreshDetails = async () => {
+        await refetchSubjects()
+        await refetchDeadlines()
+    }
 
     return (
         <PlanContext.Provider
@@ -123,10 +59,9 @@ export const PlanProvider = ({ children }: { children: ReactNode }) => {
                 activePlan,
                 refreshPlans,
                 isLoading,
-                error,
                 subjects,
                 deadlines,
-                isLoadingDetails,
+                isLoadingDetails: isLoadingSubjects,
                 refreshDetails
             }}
         >
@@ -136,9 +71,9 @@ export const PlanProvider = ({ children }: { children: ReactNode }) => {
 }
 
 export const usePlan = (): PlanContextType => {
-    const context = useContext(PlanContext);
+    const context = useContext(PlanContext)
     if (context === undefined) {
-        throw new Error('usePlan must be used within a PlanProvider');
+        throw new Error('usePlan must be used within a PlanProvider')
     }
-    return context;
-};
+    return context
+}

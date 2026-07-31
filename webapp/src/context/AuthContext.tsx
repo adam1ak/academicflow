@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
     
         checkAuth()
-      }, [isLogged])
+      }, [])
 
       return (
         <AuthContext.Provider
