@@ -1,8 +1,11 @@
 import { useQuery } from "@tanstack/react-query"
 import { PlanData } from "../../types/plan"
 import { getMyPlans } from "../../api/plans"
+import { useAuth } from "../../context/AuthContext"
 
 export const usePlansQuery = () => {
+    const { isLogged } = useAuth()
+
     const {
         data: plans = [],
         isLoading,
@@ -10,7 +13,9 @@ export const usePlansQuery = () => {
         refetch,
     } = useQuery<PlanData[]>({
         queryKey: ['plans'],
-        queryFn: getMyPlans
+        queryFn: getMyPlans,
+        enabled: isLogged,
+        retry: false
     })
 
     return {

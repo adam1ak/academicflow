@@ -31,15 +31,14 @@ export const PlanProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         if (plans.length > 0) {
-            const stillExists = plans.some(p => p.id === activePlanId)
-
-            if (!activePlanId || !stillExists) {
-                setActivePlanId(plans[0].id)
-            }
+            setActivePlanId(prev => {
+                const stillExists = plans.some(p => p.id === prev)
+                return (prev && stillExists) ? prev : plans[0].id
+            })
         } else {
             setActivePlanId(null)
         }
-    }, [plans, activePlanId])
+    }, [plans])
 
     const activePlan = useMemo(() => plans.find(p => p.id === activePlanId), [plans, activePlanId])
 
