@@ -4,7 +4,7 @@ import { PlanData, SubjectDetailResponse } from "../types/plan"
 import { DeadlineResponse } from "../types/deadline"
 import { usePlansQuery } from "../hooks/queries/usePlanQuery"
 import { useSubjectQuery } from "../hooks/queries/useSubjectQuery"
-import { getDeadlines } from "../api/deadlines"
+import { useDeadlinesQuery } from "../hooks/queries/useDeadlinesQuery"
 
 interface PlanContextType {
     plans: PlanData[]
@@ -23,11 +23,10 @@ const PlanContext = createContext<PlanContextType | undefined>(undefined)
 
 export const PlanProvider = ({ children }: { children: ReactNode }) => {
     const [activePlanId, setActivePlanId] = useState<number | null>(null)
-    const [deadlines, setDeadlines] = useState<DeadlineResponse[]>([])
 
     const { plans, isLoading, refetch: refetchPlans } = usePlansQuery()
-
     const { subjects, isLoading: isLoadingSubjects, refetch: refetchSubjects } = useSubjectQuery(activePlanId)
+    const { deadlines, refetch: refetchDeadlines } = useDeadlinesQuery(activePlanId)
 
     useEffect(() => {
         if (plans.length > 0) {
@@ -48,15 +47,7 @@ export const PlanProvider = ({ children }: { children: ReactNode }) => {
 
     const refreshDetails = async () => {
         await refetchSubjects()
-
-        if (activePlanId) {
-            try {
-                const deadlinesData = await getDeadlines(activePlanId)
-                setDeadlines(deadlinesData)
-            } catch (error) {
-                console.error("Failed to fetch deadlines: ", error)
-            }
-        }
+        await refetchDeadlines()
     }
 
     return (
@@ -80,9 +71,9 @@ export const PlanProvider = ({ children }: { children: ReactNode }) => {
 }
 
 export const usePlan = (): PlanContextType => {
-    const context = useContext(PlanContext);
+    const context = useContext(PlanContext)
     if (context === undefined) {
-        throw new Error('usePlan must be used within a PlanProvider');
+        throw new Error('usePlan must be used within a PlanProvider')
     }
-    return context;
-};
+    return context
+}
