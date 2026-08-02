@@ -2,6 +2,7 @@ import { login } from '../api/auth'
 import { Link, useNavigate } from 'react-router-dom'
 
 import { useAuth } from '../context/AuthContext'
+import { useError } from '../context/ErrorContext'
 import Header from "../components/layout/Header"
 import InputField from "../components/ui/InputField"
 import Button from "../components/ui/Button"
@@ -22,6 +23,7 @@ function LoginPage() {
     const navigate = useNavigate()
 
     const { setIsLogged } = useAuth()
+    const { showError } = useError()
 
     const { register, handleSubmit, formState: {errors} } = useForm<LoginFormData>({
         resolver: zodResolver(loginSchema)
@@ -35,8 +37,9 @@ function LoginPage() {
             setIsLogged(true)
 
             navigate('/dashboard')
-        } catch (e) {
+        } catch (e: any) {
             console.log("Login error: ", e)
+            showError(e.response?.data?.detail || "Invalid credentials")
         }
     }
 

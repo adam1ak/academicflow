@@ -23,8 +23,9 @@ api.interceptors.response.use((response: AxiosResponse) => {
     return response
 }, async (error) => {
     const originalRequest = error.config as CustomRequestConfig
+    const isLoginRequest = originalRequest?.url?.includes('/token')
 
-    if (error.response && error.response.status == 401 && !originalRequest._retry) {
+    if (error.response && error.response.status == 401 && !originalRequest?._retry && !isLoginRequest) {
         originalRequest._retry = true
 
         const refreshToken = tokenStorage.getRefreshToken()
