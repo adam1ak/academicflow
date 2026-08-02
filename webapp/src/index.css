@@ -245,3 +245,55 @@
 .skeleton-pulse {
   animation: skeleton-pulse 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+@keyframes toastSlideFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.animate-toast-in {
+  animation: toastSlideFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes toastProgressBorder {
+  from {
+    stroke-dashoffset: 1000;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.toast-progress-rect {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation-name: toastProgressBorder;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+  will-change: stroke-dashoffset;
+}
+
+@keyframes toastSlideFadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+    filter: blur(4px);
+  }
+}
+
+.animate-toast-out {
+  animation: toastSlideFadeOut 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
