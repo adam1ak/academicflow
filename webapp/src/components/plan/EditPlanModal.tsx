@@ -131,6 +131,7 @@ function EditPlanModal({ plan, onClose }: EditPlanModalProps) {
                     </div>
                     <button
                         type="button"
+                        aria-label="Close modal"
                         onClick={onClose}
                         className="w-7 h-7 flex items-center justify-center text-sec hover:text-pri leading-none transition-colors cursor-pointer"
                     >✕</button>

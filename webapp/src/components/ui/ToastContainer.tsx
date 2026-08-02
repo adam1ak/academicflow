@@ -91,9 +91,17 @@ function ToastItem({ toast, onDismiss }: { toast: ToastMessage; onDismiss: () =>
             <p className={`text-xs font-sf ${styles.text} flex-1 leading-snug truncate z-10`}>
                 {toast.message}
             </p>
-            <span className="text-xs font-bold text-slate-400 hover:text-white transition-colors leading-none pl-1 z-10">
+            <button
+                type="button"
+                aria-label="Dismiss notification"
+                onClick={(e) => {
+                    e.stopPropagation()
+                    handleDismiss()
+                }}
+                className="text-xs font-bold text-slate-400 hover:text-white transition-colors leading-none pl-1 z-10 cursor-pointer"
+            >
                 ✕
-            </span>
+            </button>
         </div>
     )
 }

@@ -114,7 +114,7 @@ function AddDeadlineModal({ onClose, onSuccess }: AddDeadlineModalProps) {
     }
 
     return (
-        <ModalOverlay onClose={onClose}>
+        <ModalOverlay onClose={onClose} ariaLabel="Add deadline">
             <form onSubmit={handleSubmit(onSubmitForm)} className="flex flex-col h-full overflow-hidden">
                 <div className="flex items-start justify-between border-b border-dim shrink-0 px-6 p-4">
                     <div>
@@ -124,6 +124,7 @@ function AddDeadlineModal({ onClose, onSuccess }: AddDeadlineModalProps) {
                     </div>
                     <button
                         type="button"
+                        aria-label="Close modal"
                         onClick={onClose}
                         disabled={isSubmitting}
                         className="w-7 h-7 flex items-center justify-center text-sec hover:text-pri leading-none transition-colors cursor-pointer"

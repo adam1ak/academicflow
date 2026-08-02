@@ -4,9 +4,10 @@ interface ModalOverlayProps {
     onClose: () => void
     children: React.ReactNode
     className?: string
+    ariaLabel?: string
 }
 
-export default function ModalOverlay({ onClose, children, className = "" }: ModalOverlayProps) {
+export default function ModalOverlay({ onClose, children, className = "", ariaLabel }: ModalOverlayProps) {
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Escape") {
@@ -21,6 +22,7 @@ export default function ModalOverlay({ onClose, children, className = "" }: Moda
         <div
             role="dialog"
             aria-modal="true"
+            aria-label={ariaLabel}
             onClick={onClose}
             className="modal-overlay"
         >

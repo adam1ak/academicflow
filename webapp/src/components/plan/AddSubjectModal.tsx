@@ -91,7 +91,7 @@ function AddSubjectModal({ onClose }: { onClose: () => void }) {
     }
 
     return (
-        <ModalOverlay onClose={onClose} className="h-full max-h-[650px]">
+        <ModalOverlay onClose={onClose} className="h-full max-h-[650px]" ariaLabel="Add subject">
             <form onSubmit={handleSubmit(onSubmitForm)} className="flex flex-col h-full overflow-hidden">
                 <div className="flex items-start justify-between border-b border-dim shrink-0 px-6 p-4">
                     <div>
@@ -101,6 +101,7 @@ function AddSubjectModal({ onClose }: { onClose: () => void }) {
                     </div>
                     <button
                         type="button"
+                        aria-label="Close modal"
                         onClick={onClose}
                         disabled={addSubjectMutation.isPending}
                         className="w-7 h-7 flex items-center justify-center text-sec hover:text-pri leading-none transition-colors cursor-pointer"

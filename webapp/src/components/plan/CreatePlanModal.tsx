@@ -153,7 +153,7 @@ function CreatePlanModal({ onClose, onSuccess }: CreatePlanModalProps) {
     }
 
     return (
-        <ModalOverlay onClose={onClose} className={`h-full ${apiError ? "max-h-[520px]" : "max-h-[450px]"}`}>
+        <ModalOverlay onClose={onClose} className={`h-full ${apiError ? "max-h-[520px]" : "max-h-[450px]"}`} ariaLabel="Create plan">
             <form onSubmit={handleSubmit(onSubmitForm)} className="flex flex-col h-full overflow-hidden">
                 <div className="flex items-start justify-between border-b border-dim shrink-0 px-6 p-4">
                     <div>
@@ -163,6 +163,7 @@ function CreatePlanModal({ onClose, onSuccess }: CreatePlanModalProps) {
                     </div>
                     <button
                         type="button"
+                        aria-label="Close modal"
                         onClick={onClose}
                         className="w-7 h-7 flex items-center justify-center text-sec hover:text-pri leading-none transition-colors cursor-pointer"
                     >✕</button>
