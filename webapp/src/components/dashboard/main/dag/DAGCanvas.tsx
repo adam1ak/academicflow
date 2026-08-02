@@ -313,6 +313,7 @@ export default function DAGCanvas({
               style={{ borderColor: selectedColors.stroke }}
             >
               <button
+                aria-label="Close subject details"
                 onClick={(e) => {
                   e.stopPropagation();
                   onCloseCard();

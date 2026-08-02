@@ -54,7 +54,7 @@ def logout(request: RefreshTokenRequest, db: Session = Depends(get_db)):
     return {"message": "Successfully logged out"}
 
 @router.post("/token", response_model=Token, status_code=status.HTTP_201_CREATED)
-@limiter.limit("60/minute")
+@limiter.limit("300/minute")
 def login_for_access_token(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == form_data.username).first()
 

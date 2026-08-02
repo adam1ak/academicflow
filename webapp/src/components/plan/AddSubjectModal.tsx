@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import DependentsSelect from "./DependentsSelect"
 import GanttPreviewBar from "../ui/GanttPreviewBar"
 import InputField from "../ui/InputField"
+import ModalOverlay from "../ui/ModalOverlay"
 import { usePlan } from "../../context/PlanContext";
 import { useAddSubjectMutation } from "../../hooks/queries/useAddSubjectMutation";
 import { useForm, useFieldArray } from "react-hook-form"
@@ -55,14 +56,6 @@ function AddSubjectModal({ onClose }: { onClose: () => void }) {
         setApiError("")
     }, [reset])
 
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape") onClose();
-        };
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [onClose]);
-
     const handleDepsChange = (nextIds: number[]) => {
         const nextFields = nextIds.map(id => {
             const sub = subjects.find(s => s.id === id)
@@ -98,13 +91,8 @@ function AddSubjectModal({ onClose }: { onClose: () => void }) {
     }
 
     return (
-        <div
-            onClick={onClose}
-            className="modal-overlay">
-            <form
-                onSubmit={handleSubmit(onSubmitForm)}
-                onClick={(e) => e.stopPropagation()}
-                className="modal-container h-full max-h-[650px]">
+        <ModalOverlay onClose={onClose} className="h-full max-h-[650px]" ariaLabel="Add subject">
+            <form onSubmit={handleSubmit(onSubmitForm)} className="flex flex-col h-full overflow-hidden">
                 <div className="flex items-start justify-between border-b border-dim shrink-0 px-6 p-4">
                     <div>
                         <p className="text-sm tracking-tight text-slate-100 font-semibold">Add Subject</p>
@@ -113,6 +101,7 @@ function AddSubjectModal({ onClose }: { onClose: () => void }) {
                     </div>
                     <button
                         type="button"
+                        aria-label="Close modal"
                         onClick={onClose}
                         disabled={addSubjectMutation.isPending}
                         className="w-7 h-7 flex items-center justify-center text-sec hover:text-pri leading-none transition-colors cursor-pointer"
@@ -199,7 +188,7 @@ function AddSubjectModal({ onClose }: { onClose: () => void }) {
                     </button>
                 </div>
             </form>
-        </div>
+        </ModalOverlay>
     )
 }
 

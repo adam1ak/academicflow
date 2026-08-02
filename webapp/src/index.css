@@ -205,43 +205,122 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
 .gantt-container:not(.gantt-has-selection) .gantt-row:hover {
   background-color: rgba(255, 255, 255, 0.02);
 }
+
 .gantt-container:not(.gantt-has-selection) .gantt-row:hover .gantt-row-name {
   color: #ffffff !important;
 }
+
 .gantt-row.selected {
   background-color: rgba(255, 255, 255, 0.035);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
+
 .gantt-row.selected .gantt-row-name {
   color: #ffffff !important;
 }
+
 .gantt-container:not(.gantt-has-selection) .gantt-row:hover .gantt-bar-status-ready {
   border-color: rgba(96, 165, 250, 0.6) !important;
   box-shadow: 0 0 10px rgba(59, 130, 246, 0.25);
 }
+
 .gantt-container:not(.gantt-has-selection) .gantt-row:hover .gantt-bar-status-completed {
   border-color: rgba(74, 222, 128, 0.6) !important;
   box-shadow: 0 0 10px rgba(34, 197, 94, 0.25);
 }
+
 .gantt-container:not(.gantt-has-selection) .gantt-row:hover .gantt-bar-status-blocked {
   border-color: rgba(161, 161, 170, 0.4) !important;
 }
+
 .gantt-deadline-marker {
   transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
 }
+
 .gantt-deadline-marker:hover {
   transform: translate(-50%, -50%) rotate(45deg) scale(1.3);
   box-shadow: 0 0 8px currentColor;
 }
 
 @keyframes skeleton-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.35; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.35;
+  }
 }
 
 .skeleton-pulse {
   animation: skeleton-pulse 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes toastSlideFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+    filter: blur(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.animate-toast-in {
+  animation: toastSlideFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes toastProgressBorder {
+  from {
+    stroke-dashoffset: 1000;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.toast-progress-rect {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation-name: toastProgressBorder;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+  will-change: stroke-dashoffset;
+}
+
+@keyframes toastSlideFadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+    filter: blur(4px);
+  }
+}
+
+.animate-toast-out {
+  animation: toastSlideFadeOut 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* wcag tab focus ring */
+:focus-visible {
+  outline: 2px solid var(--color-blue-soft) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px rgba(74, 126, 255, 0.25) !important;
+  border-radius: 6px;
 }

@@ -4,6 +4,7 @@ import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import api from "../../api/client"
 import InputField from "../ui/InputField"
+import ModalOverlay from "../ui/ModalOverlay"
 
 interface CreatePlanModalProps {
     onClose: () => void
@@ -152,13 +153,8 @@ function CreatePlanModal({ onClose, onSuccess }: CreatePlanModalProps) {
     }
 
     return (
-        <div
-            onClick={onClose}
-            className="modal-overlay">
-            <form
-                onClick={(e) => e.stopPropagation()}
-                onSubmit={handleSubmit(onSubmitForm)}
-                className={`modal-container h-full ${apiError ? "max-h-[520px]" : "max-h-[450px]"}`}>
+        <ModalOverlay onClose={onClose} className={`h-full ${apiError ? "max-h-[520px]" : "max-h-[450px]"}`} ariaLabel="Create plan">
+            <form onSubmit={handleSubmit(onSubmitForm)} className="flex flex-col h-full overflow-hidden">
                 <div className="flex items-start justify-between border-b border-dim shrink-0 px-6 p-4">
                     <div>
                         <p className="text-sm tracking-tight text-slate-100 font-semibold">New Schedule</p>
@@ -167,6 +163,7 @@ function CreatePlanModal({ onClose, onSuccess }: CreatePlanModalProps) {
                     </div>
                     <button
                         type="button"
+                        aria-label="Close modal"
                         onClick={onClose}
                         className="w-7 h-7 flex items-center justify-center text-sec hover:text-pri leading-none transition-colors cursor-pointer"
                     >✕</button>
@@ -285,7 +282,7 @@ function CreatePlanModal({ onClose, onSuccess }: CreatePlanModalProps) {
                     </button>
                 </div>
             </form>
-        </div>
+        </ModalOverlay>
     )
 }
 

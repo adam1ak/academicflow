@@ -11,7 +11,7 @@ import { useAuth } from './context/AuthContext'
 import { useError } from './context/ErrorContext'
 
 import ProtectedRoute from './components/auth/ProtectedRoute'
-import ErrorPopup from './components/ui/ErrorPopup'
+import ToastContainer from './components/ui/ToastContainer'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 interface ErrorResponseData {
@@ -63,7 +63,7 @@ function App() {
 
   return (
     <HashRouter>
-      <ErrorPopup />
+      <ToastContainer />
 
       <Routes>
         <Route path="/login" element={isLogged ? <Navigate to="/dashboard" /> : <LoginPage />} />
