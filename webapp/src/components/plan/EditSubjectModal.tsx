@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import DependentsSelect from "./DependentsSelect"
 import GanttPreviewBar from "../ui/GanttPreviewBar"
 import InputField from "../ui/InputField"
+import ModalOverlay from "../ui/ModalOverlay"
 import { usePlan } from "../../context/PlanContext";
 import { useUpdateSubjectMutation } from "../../hooks/queries/useUpdateSubjectMutation";
 import { SubjectDetailResponse } from "../../types/plan";
@@ -156,13 +157,8 @@ function EditSubjectModal({ subject, onClose }: EditSubjectModalProps) {
     }
 
     return (
-        <div
-            onClick={onClose}
-            className="modal-overlay">
-            <form
-                onSubmit={handleSubmit(onSubmitForm)}
-                onClick={(e) => e.stopPropagation()}
-                className="modal-container h-full max-h-[650px]">
+        <ModalOverlay onClose={onClose} className="h-full max-h-[650px]">
+            <form onSubmit={handleSubmit(onSubmitForm)} className="flex flex-col h-full overflow-hidden">
                 <div className="flex items-start justify-between border-b border-dim shrink-0 px-6 p-4">
                     <div>
                         <p className="text-sm tracking-tight text-slate-100 font-semibold">Edit Subject</p>
@@ -256,7 +252,7 @@ function EditSubjectModal({ subject, onClose }: EditSubjectModalProps) {
                     </button>
                 </div>
             </form>
-        </div>
+        </ModalOverlay>
     )
 }
 

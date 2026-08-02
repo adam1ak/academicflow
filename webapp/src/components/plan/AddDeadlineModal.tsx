@@ -4,6 +4,7 @@ import { PillVariant } from "../../hooks/useStatusStyles"
 import PillTab from "../ui/PillTab"
 import InputField from "../ui/InputField"
 import DeadlineCard from "../dashboard/sidebar/DeadlineCard"
+import ModalOverlay from "../ui/ModalOverlay"
 import { createDeadline } from "../../api/deadlines"
 
 import { useForm } from "react-hook-form"
@@ -67,14 +68,6 @@ function AddDeadlineModal({ onClose, onSuccess }: AddDeadlineModalProps) {
         setApiError("")
     }, [reset])
 
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape") onClose()
-        }
-        window.addEventListener("keydown", handleKeyDown)
-        return () => window.removeEventListener("keydown", handleKeyDown)
-    }, [onClose])
-
     const assembledIsoDate = useMemo(() => {
         const [ hours, minutes ] = (watchedTime || "12:00").split(":")
 
@@ -121,13 +114,8 @@ function AddDeadlineModal({ onClose, onSuccess }: AddDeadlineModalProps) {
     }
 
     return (
-        <div
-            onClick={onClose}
-            className="modal-overlay">
-            <form
-                onSubmit={handleSubmit(onSubmitForm)}
-                onClick={(e) => e.stopPropagation()}
-                className="modal-container">
+        <ModalOverlay onClose={onClose}>
+            <form onSubmit={handleSubmit(onSubmitForm)} className="flex flex-col h-full overflow-hidden">
                 <div className="flex items-start justify-between border-b border-dim shrink-0 px-6 p-4">
                     <div>
                         <p className="text-sm tracking-tight text-slate-100 font-semibold">Add Deadline</p>
@@ -255,7 +243,7 @@ function AddDeadlineModal({ onClose, onSuccess }: AddDeadlineModalProps) {
                     </button>
                 </div>
             </form>
-        </div>
+        </ModalOverlay>
     )
 }
 
