@@ -12,7 +12,6 @@ import { useError } from './context/ErrorContext'
 
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import ToastContainer from './components/ui/ToastContainer'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 interface ErrorResponseData {
   detail: string
@@ -76,7 +75,6 @@ function App() {
         <Route path="*" element={<Navigate to={isLogged ? "/dashboard" : "/login"} />} />
       </Routes>
 
-      {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-right" />}
     </HashRouter>
   )
 }
