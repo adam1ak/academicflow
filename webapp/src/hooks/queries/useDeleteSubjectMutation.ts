@@ -8,7 +8,8 @@ export const useDeleteSubjectMutation = (planId: number | null) => {
         mutationFn: (subjectId: number) => deleteSubject(planId!, subjectId),
         onSuccess: () => {
             if (planId) {
-                queryClient.invalidateQueries({ queryKey: ['subject', planId] })
+                queryClient.invalidateQueries({ queryKey: ['subjects', planId] })
+                queryClient.invalidateQueries({ queryKey: ['plans'] })
             }
         }
     })

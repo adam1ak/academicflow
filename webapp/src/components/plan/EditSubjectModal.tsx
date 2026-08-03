@@ -15,7 +15,7 @@ const subjectSchema = z.object({
     name: z.string().min(1, "Subject name is required").max(100),
     classroom: z.string(),
     field: z.string(),
-    duration: z.number().gt(0, "Duration must be greater than 0"),
+    duration: z.number().min(1, "Duration must be at least 1 week").max(12, "Duration cannot exceed 12 weeks"),
     dependents: z.array(z.object({
         id: z.number(),
         name: z.string()
@@ -206,8 +206,10 @@ function EditSubjectModal({ subject, onClose }: EditSubjectModalProps) {
                         <p className="af-label">Semestr timeline</p>
                         <InputField
                             id="duration"
-                            label="Duration (weeks)"
+                            label="Duration (weeks, max 12)"
                             type="number"
+                            min={1}
+                            max={12}
                             placeholder="e.g. 1"
                             hasError={!!errors.duration}
                             labelClassName="font-mono text-mut text-[9px] mb-1.5 uppercase tracking-widest"

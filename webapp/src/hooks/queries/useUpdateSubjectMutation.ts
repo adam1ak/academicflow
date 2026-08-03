@@ -8,7 +8,10 @@ export const useUpdateSubjectMutation = (planId: number | null, subjectId: numbe
     return useMutation({
         mutationFn: (payload: SubjectUpdatePayload) => updateSubject(planId!, subjectId, payload),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['subject', planId] })
+            if (planId) {
+                queryClient.invalidateQueries({ queryKey: ['subjects', planId] })
+                queryClient.invalidateQueries({ queryKey: ['plans'] })
+            }
         }
     })
 }

@@ -30,6 +30,7 @@ export const useToggleCompleteMutation = (planId: number | null) => {
         onSettled: () => {
             if (planId) {
                 queryClient.invalidateQueries({ queryKey: ['subjects', planId] })
+                queryClient.invalidateQueries({ queryKey: ['plans'] })
             }
         }
     })

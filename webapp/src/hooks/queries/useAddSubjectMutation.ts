@@ -9,9 +9,8 @@ export const useAddSubjectMutation = (planId: number | null) => {
         mutationFn: (payload: SubjectCreatePayload) => addSubject(planId!, payload),
         onSuccess: () => {
             if (planId) {
-                queryClient.invalidateQueries({
-                    queryKey: ['subjects', planId]
-                })
+                queryClient.invalidateQueries({ queryKey: ['subjects', planId] })
+                queryClient.invalidateQueries({ queryKey: ['plans'] })
             }
         }
     })
