@@ -8,11 +8,12 @@ interface PlanSelectorProps {
     onClose: () => void
     createPlanModal: () => void
     onEditPlan: (plan: PlanData) => void
+    onDeletePlan: (plan: PlanData) => void
     position: { top: number, right: number }
     innerRef: React.RefObject<HTMLDivElement | null>
 }
 
-function PlanSelector({ isOpen, onClose, createPlanModal, onEditPlan, position, innerRef }: PlanSelectorProps) {
+function PlanSelector({ isOpen, onClose, createPlanModal, onEditPlan, onDeletePlan, position, innerRef }: PlanSelectorProps) {
 
     const { plans, activePlanId, setActivePlanId } = usePlan()
 
@@ -33,6 +34,10 @@ function PlanSelector({ isOpen, onClose, createPlanModal, onEditPlan, position, 
                     }}
                     onEdit={() => {
                         onEditPlan(plan)
+                        onClose()
+                    }}
+                    onDelete={() => {
+                        onDeletePlan(plan)
                         onClose()
                     }}
                 />
