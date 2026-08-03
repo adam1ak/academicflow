@@ -11,12 +11,16 @@ import { PlanData } from "../../types/plan";
 import PlanSelector from "../plan/PlanSelector";
 import CreatePlanModal from "../plan/CreatePlanModal";
 import EditPlanModal from "../plan/EditPlanModal";
+import { useDeletePlanMutation } from "../../hooks/queries/useDeletePlanMutation";
+
+import ConfirmDeleteModal from "../ui/ConfirmDeleteModal";
 
 function AppNavbar() {
 
   const { setIsLogged, user } = useAuth()
 
   const { activePlan, setActivePlanId, refreshPlans } = usePlan()
+  const deletePlanMutation = useDeletePlanMutation()
 
   const [openMenu, setOpenMenu] = useState(false)
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
@@ -29,6 +33,15 @@ function AppNavbar() {
 
   const [isCreatePlanModalOpen, setIsCreatePlanModalOpen] = useState(false)
   const [editingPlan, setEditingPlan] = useState<PlanData | null>(null)
+  const [deletingPlan, setDeletingPlan] = useState<PlanData | null>(null)
+
+  const handleConfirmDelete = () => {
+    if (deletingPlan) {
+      deletePlanMutation.mutate(deletingPlan.id, {
+        onSuccess: () => setDeletingPlan(null)
+      })
+    }
+  }
 
   const navItems = [
     { label: "Dashboard", path: "/dashboard" },
@@ -105,9 +118,22 @@ function AppNavbar() {
           setIsSelectorOpen(false)
         }}
         onEditPlan={(plan) => setEditingPlan(plan)}
+        onDeletePlan={(plan) => setDeletingPlan(plan)}
         position={selectorPos}
         innerRef={dropdownRef}
       />
+
+      {deletingPlan && (
+        <ConfirmDeleteModal
+          isOpen={!!deletingPlan}
+          title="Delete Schedule"
+          description="Are you sure you want to delete this study plan? All subjects, dependencies, and deadlines associated with this plan will be permanently removed."
+          itemName={deletingPlan.name}
+          isDeleting={deletePlanMutation.isPending}
+          onClose={() => setDeletingPlan(null)}
+          onConfirm={handleConfirmDelete}
+        />
+      )}
 
       {isCreatePlanModalOpen && (
         <CreatePlanModal
