@@ -1,5 +1,7 @@
 # AcademicFlow
 
+[demo.webm](https://github.com/user-attachments/assets/66e11e42-47f7-438f-bcc8-88ee069445c9)
+
 AcademicFlow is a web application for academic planning and schedule optimization. It enables students to visualize course prerequisites as a directed acyclic graph (DAG), view their semester schedule on a Gantt chart, and detect potential study bottlenecks and deadline conflicts automatically.
 
 ## Live Demo
