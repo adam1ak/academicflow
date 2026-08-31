@@ -8,3 +8,7 @@ todo
 AcademicFlowDashboard.html
 development_roadmap.md
 node_modules/
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
