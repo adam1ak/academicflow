@@ -1,0 +1,8 @@
+{
+  "emmet.includeLanguages": {
+    "typescriptreact": "html",
+    "javascriptreact": "html"
+  },
+  "emmet.triggerExpansionOnTab": true,
+  "typescript.tsdk": "webapp/node_modules/typescript/lib"
+}
