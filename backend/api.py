@@ -1,4 +1,7 @@
+import os
 from dotenv import load_dotenv
+from logger import setup_logging
+from middleware import LoggingMiddleware
 load_dotenv()
 
 from fastapi import FastAPI, Request
@@ -12,11 +15,13 @@ from routers.plans import router as plans_router
 from routers.subjects import router as subjects_router
 from routers.deadlines import router as deadlines_router
 
+setup_logging()
+
 app = FastAPI()
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-import os
+app.add_middleware(LoggingMiddleware)
 
 allowed_origins = os.getenv("ALLOWED_ORIGINS", "*").split(",")
 
