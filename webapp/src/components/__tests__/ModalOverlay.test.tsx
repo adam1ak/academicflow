@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react'
-import { describe, it, expoect, vi } from 'vitest'
-import ModalOverlay from './ModalOverlay'
+import { describe, it, expect, vi } from 'vitest'
+import ModalOverlay from '../ui/ModalOverlay'
 
 describe('ModalOverlay', () => {
     it('renders children and sets accessible ARIA attributes', () => {
