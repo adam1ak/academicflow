@@ -1,6 +1,10 @@
+import os
 from dotenv import load_dotenv
+from logger import setup_logging
+from middleware import LoggingMiddleware
 load_dotenv()
 
+import sentry_sdk
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
@@ -12,11 +16,22 @@ from routers.plans import router as plans_router
 from routers.subjects import router as subjects_router
 from routers.deadlines import router as deadlines_router
 
+setup_logging()
+
+sentry_dsn = os.getenv("SENTRY_DSN")
+if sentry_dsn:
+    sentry_sdk.init(
+        dsn=sentry_dsn,
+        traces_sample_rate=1.0,
+        send_default_pii=True,
+        environment=os.getenv("ENVIORNMENT", "development")
+    )
+
 app = FastAPI()
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-import os
+app.add_middleware(LoggingMiddleware)
 
 allowed_origins = os.getenv("ALLOWED_ORIGINS", "*").split(",")
 
