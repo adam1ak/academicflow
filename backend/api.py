@@ -24,10 +24,16 @@ if sentry_dsn:
         dsn=sentry_dsn,
         traces_sample_rate=1.0,
         send_default_pii=True,
-        environment=os.getenv("ENVIORNMENT", "development")
+        environment=os.getenv("ENVIRONMENT", "development")
     )
 
-app = FastAPI()
+is_production = os.getenv("ENVIRONMENT") == "production"
+
+app = FastAPI(
+    docs_url=None if is_production else "/docs",
+    redoc_url=None if is_production else "/redoc",
+    openapi_url=None if is_production else "/openapi.json"
+)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 

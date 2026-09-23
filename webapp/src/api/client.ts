@@ -7,7 +7,7 @@ interface CustomRequestConfig extends InternalAxiosRequestConfig {
 }
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000'
+    baseURL: import.meta.env.VITE_API_URL ?? (import.meta.env.DEV ? 'http://localhost:8000' : '')
 })
 
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
@@ -32,7 +32,7 @@ api.interceptors.response.use((response: AxiosResponse) => {
 
         if (refreshToken) {
             try {
-                const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+                const baseURL = import.meta.env.VITE_API_URL ?? (import.meta.env.DEV ? 'http://localhost:8000' : '')
                 const response = await axios.post<TokenResponse>(`${baseURL}/api/v1/refresh`, {
                     refresh_token: refreshToken
                 })
@@ -64,7 +64,7 @@ api.interceptors.response.use((response: AxiosResponse) => {
         const detail = error.response.data?.detail
 
         if (status != 401) {
-            let errorMessage= "An unexpected error occured"
+            let errorMessage = "An unexpected error occured"
 
             if (detail) {
                 if (Array.isArray(detail)) {
