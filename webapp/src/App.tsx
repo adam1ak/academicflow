@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AxiosError } from 'axios'
 import api from './api/client'
 
@@ -61,7 +61,7 @@ function App() {
   }
 
   return (
-    <HashRouter>
+    <BrowserRouter>
       <ToastContainer />
 
       <Routes>
@@ -75,7 +75,7 @@ function App() {
         <Route path="*" element={<Navigate to={isLogged ? "/dashboard" : "/login"} />} />
       </Routes>
 
-    </HashRouter>
+    </BrowserRouter>
   )
 }
 
