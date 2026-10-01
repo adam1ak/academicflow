@@ -15,6 +15,7 @@ from routers.auth import router as auth_router
 from routers.plans import router as plans_router
 from routers.subjects import router as subjects_router
 from routers.deadlines import router as deadlines_router
+from routers.advisor import router as advisor_router
 
 setup_logging()
 
@@ -53,6 +54,7 @@ app.include_router(auth_router)
 app.include_router(plans_router)
 app.include_router(subjects_router)
 app.include_router(deadlines_router)
+app.include_router(advisor_router)
 
 @app.get("/")
 def health_check():
