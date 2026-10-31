@@ -36,7 +36,7 @@ export async function streamAdvisorChat({
             throw new Error(`Server returned ${response.status}`)
         }
         if (!response.body){
-            throw new Error("No response body recived from server")
+            throw new Error("No response body received from server")
         }
         const reader = response.body.getReader()
         const decoder = new TextDecoder("utf-8")
@@ -61,8 +61,13 @@ export async function streamAdvisorChat({
 
                     try {
                         const parsed = JSON.parse(rawData)
-                        if (parsed.text) {
-                            onChunk(parsed.text)
+                        if (parsed.error) {
+                            if (onError) onError(parsed.error)
+                            break
+                        }
+                        const chunkText = parsed.token ?? parsed.text
+                        if (chunkText) {
+                            onChunk(chunkText)
                         }
                     } catch {
                         if (rawData) onChunk(rawData)
@@ -73,7 +78,7 @@ export async function streamAdvisorChat({
 
         if (onDone) onDone()
     } catch (err: unknown) {
-        const errorMessage = err instanceof Error ? err.message : "Unknown steraming error"
+        const errorMessage = err instanceof Error ? err.message : "Unknown streaming error"
 
         if (onError) {
             onError(errorMessage)

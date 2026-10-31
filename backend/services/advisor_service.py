@@ -80,6 +80,7 @@ def get_advisor_system_prompt(academic_context: str) -> str:
     3. If the student asks what to do this week, analyze thier upcoming deadlines and active bottlenecks to recommend a clear study strategy.
     4. Reply in the same language as the user query (if user speaks Polish, respond in Polish; if English, respond in English)
     5. Never invent or hallucinate exams or courses that are not listed in the context
+    6. STRICTLY NO EMOJIS. Never use emojis, icons, or smileys under any circumstances.
     """
 
 async def stream_gemini_response(
@@ -102,6 +103,7 @@ async def stream_gemini_response(
         return
 
     url = "https://generativelanguage.googleapis.com/v1beta/models/gemma-4-26b-a4b-it:streamGenerateContent?alt=sse"
+
     headers = {
         "x-goog-api-key": key,
         "Content-Type": "application/json"
@@ -119,31 +121,43 @@ async def stream_gemini_response(
         ],
         "generationConfig": {
             "temperature": 0.4,
-            "maxOutputTokens": 1000
+            "maxOutputTokens": 2048,
+            "thinkingConfig": {
+                "thinkingLevel": "minimal" 
+            }
         }
     }
 
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        async with client.stream("POST", url, headers=headers, json=payload) as response:
-            if response.status_code != 200:
-                yield f"data: {json.dumps({'error': f'AI Error ({response.status_code})'})}\n\n"
+    print(f"\n\n[user ai prompt] >>> '{message}'\n\n")
+
+    try:
+        timeout = httpx.Timeout(30.0, connect=10.0, read=30.0)
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            async with client.stream("POST", url, headers=headers, json=payload) as response:
+                if response.status_code != 200:
+                    yield f"data: {json.dumps({'error': f'AI Error ({response.status_code})'})}\n\n"
+                    yield "data: [DONE]\n\n"
+                    return
+
+                async for line in response.aiter_lines():
+                    if line.startswith("data: "):
+                        raw_data = line[6:].strip()
+                        try:
+                            parsed = json.loads(raw_data)
+                            candidates = parsed.get("candidates", [])
+                            if candidates:
+                                parts = candidates[0].get("content", {}).get("parts", [])
+                                for part in parts:
+                                    if not part.get("thought", False):
+                                        text_part = part.get("text", "")
+                                        if text_part:
+                                            print(text_part, end="", flush=True)
+                                            yield f"data: {json.dumps({'token': text_part})}\n\n"
+                        except json.JSONDecodeError:
+                            continue
+
+                print("\n[ai advisor] << finish.\n")
                 yield "data: [DONE]\n\n"
-                return
-
-            async for line in response.aiter_lines():
-                if line.startswith("data: "):
-                    raw_data = line[6:].strip()
-                    try:
-                        parsed = json.loads(raw_data)
-                        candidates = parsed.get("candidates", [])
-                        if candidates:
-                            parts = candidates[0].get("content", {}).get("parts", [])
-                            for part in parts:
-                                if not part.get("thought", False):
-                                    text_part = part.get("text", "")
-                                    if text_part:
-                                        yield f"data: {json.dumps({'token': text_part})}\n\n"
-                    except json.JSONDecodeError:
-                        continue
-
-            yield "data: [DONE]\n\n"
+    except Exception as e:
+        yield f"data: {json.dumps({'error': f'AI error: {str(e)}'})}\n\n"
+        yield "data: [DONE]\n\n"
