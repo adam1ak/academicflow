@@ -7,6 +7,10 @@ export function AdvisorPanel() {
     const [desktopWidth, setDesktopWidth] = useState<number>(340)
     const isDraggingRef = useRef<boolean>(false)
 
+    const [mobileHeight, setMobileHeight] = useState<number>(75)
+    const touchStartYRef = useRef<number>(0)
+    const touchStartHeightRef = useRef<number>(75)
+
     const handleMouseDown = (e: React.MouseEvent) => {
         e.preventDefault()
         isDraggingRef.current = true
@@ -31,6 +35,34 @@ export function AdvisorPanel() {
         window.addEventListener("mouseup", onMouseUp)
     }
 
+    const handleTouchStart = (e: React.TouchEvent) => {
+        touchStartYRef.current = e.touches[0].clientY
+        touchStartHeightRef.current = mobileHeight
+
+        const onTouchMove = (moveEvent: TouchEvent) => {
+            const deltaY = touchStartYRef.current - moveEvent.touches[0].clientY
+            const deltaVh = (deltaY / window.innerHeight) * 100
+            const newHeight = touchStartHeightRef.current + deltaVh
+
+            if (newHeight >= 35 && newHeight <= 92) {
+                setMobileHeight(newHeight)
+            }
+        }
+
+        const onTouchEnd = (endEvent: TouchEvent) => {
+            const finalDeltaY = endEvent.changedTouches[0].clientY - touchStartYRef.current
+            if (finalDeltaY > 150) {
+                closeAdvisor()
+                setMobileHeight(75)
+            }
+            window.removeEventListener("touchmove", onTouchMove)
+            window.removeEventListener("touchend", onTouchEnd)
+        }
+
+        window.addEventListener("touchmove", onTouchMove)
+        window.addEventListener("touchend", onTouchEnd)
+    }
+
     if (!isOpen) return null
 
     return (
@@ -41,8 +73,16 @@ export function AdvisorPanel() {
                 aria-hidden="true"
             />
 
-            <aside className="fixed inset-x-0 bottom-0 z-50 h-[80vh] bg-surface-hi border-t border-dim rounded-t-2xl flex flex-col p-4 shadow-2xl lg:hidden">
-                <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-3 shrink-0" />
+            <aside 
+                style={{ height: `${mobileHeight}vh` }}
+                className="fixed inset-x-0 bottom-0 z-50 bg-surface-hi border-t border-dim rounded-t-2xl flex flex-col p-4 shadow-2xl lg:hidden"
+            >
+                <div
+                    onTouchStart={handleTouchStart}
+                    className="w-full py-2 -mt-2 mb-2 flex items-center justify-center cursor-grab active:cursor-grabbing touch-none select-none"
+                >
+                    <div className="w-8 h-[3px] bg-white/20 rounded-full" />
+                </div>
                 <div className="flex justify-between items-center pb-2 border-b border-dim">
                     <h2 className="text-xs font-mono font-medium text-pri">Academic Advisor</h2>
                     <button
@@ -74,7 +114,7 @@ export function AdvisorPanel() {
                         <svg className="w-2 h-3 text-sec group-hover:text-pri transition-colors" viewBox="0 0 6 10" fill="currentColor">
                             <circle cx="1.5" cy="2" r="1" />
                             <circle cx="4.5" cy="2" r="1" />
-                            <circle cx="1.5" cy="2" r="1" />
+                            <circle cx="1.5" cy="5" r="1" />
                             <circle cx="4.5" cy="5" r="1" />
                             <circle cx="1.5" cy="8" r="1" />
                             <circle cx="4.5" cy="8" r="1" />

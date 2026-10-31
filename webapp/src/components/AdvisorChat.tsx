@@ -22,6 +22,12 @@ function formatMarkdown(text: string) {
     })
 }
 
+const SUGGESTIONS = [
+    "What should I focus on this week?",
+    "Which course is my biggest bottleneck",
+    "Upcoming exams summary"
+]
+
 export function AdvisorChat() {
     const { messages, sendMessage, isStreaming } = useAdvisor()
     const [input, setInput] = useState<string>("")
@@ -41,34 +47,53 @@ export function AdvisorChat() {
     return (
         <div className="flex flex-col h-full min-h-0">
             <div className="flex-1 py-4 text-xs font-mono text-sec overflow-y-auto space-y-3 pr-1">
-                {messages.map((msg) => (
-                    <div
-                        key={msg.id}
-                        className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
-                    >
-                        <div
-                            className={
-                                msg.sender === "user"
-                                    ? "bg-surface border border-dim rounded-lg px-3.5 py-2 text-pri max-w-[85%] whitespace-pre-wrap"
-                                    : msg.text.startsWith("Error:")
-                                        ? "text-accent-red/90 border border-accent-red/20 bg-accent-red/5 rounded-lg px-3 py-2 max-w-[95%] text-[11px]"
-                                        : "text-pri leading-relaxed max-w-[95%] whitespace-pre-wrap"
-                            }
-                        >
-                            {msg.text ? (
-                                formatMarkdown(msg.text)
-                            ) : isStreaming ? (
-                                <span className="inline-flex items-center gap-1 py-1">
-                                    <span className="w-1 h-1 rounded-full bg-sec animate-bounce [animation-delay:-0.3s]" />
-                                    <span className="w-1 h-1 rounded-full bg-sec animate-bounce [animation-delay:-0.15s]" />
-                                    <span className="w-1 h-1 rounded-full bg-sec animate-bounce" />
-                                </span>
-                            ) : (
-                                <span className="text-sec/60 italic text-[11px]">No response received</span>
-                            )}
+                {messages.length === 0 ? (
+                    <div className="h-full flex flex-col jusitfy-center items-center text-center p-3 gap-2">
+                        <p className="text-xs text-sec/70 mb-2">Ask anything or select a topic:</p>
+                        <div className="flex flex-col gap-1.5 w-full">
+                            {SUGGESTIONS.map((suggestion) => (
+                                <button
+                                    key={suggestion}
+                                    type="button"
+                                    disabled={isStreaming}
+                                    onClick={() => sendMessage(suggestion)}
+                                    className="text-left text-xs text-pri/80 bg-surface border border-dim rounded-lg px-3 py-2 hover:border-sec/40 hover:text-pri cursor-pointer transition-colors"
+                                >
+                                    {suggestion}
+                                </button>
+                            ))}
                         </div>
                     </div>
-                ))}
+                ) : (
+                    messages.map((msg) => (
+                        <div
+                            key={msg.id}
+                            className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
+                        >
+                            <div
+                                className={
+                                    msg.sender === "user"
+                                        ? "bg-surface border border-dim rounded-lg px-3.5 py-2 text-pri max-w-[85%] whitespace-pre-wrap"
+                                        : msg.text.startsWith("Error:")
+                                            ? "text-accent-red/90 border border-accent-red/20 bg-accent-red/5 rounded-lg px-3 py-2 max-w-[95%] text-[11px]"
+                                            : "text-pri leading-relaxed max-w-[95%] whitespace-pre-wrap"
+                                }
+                            >
+                                {msg.text ? (
+                                    formatMarkdown(msg.text)
+                                ) : isStreaming ? (
+                                    <span className="inline-flex items-center gap-1 py-1">
+                                        <span className="w-1 h-1 rounded-full bg-sec animate-bounce [animation-delay:-0.3s]" />
+                                        <span className="w-1 h-1 rounded-full bg-sec animate-bounce [animation-delay:-0.15s]" />
+                                        <span className="w-1 h-1 rounded-full bg-sec animate-bounce" />
+                                    </span>
+                                ) : (
+                                    <span className="text-sec/60 italic text-[11px]">No response received</span>
+                                )}
+                            </div>
+                        </div>
+                    ))
+                )}
                 <div ref={messagesEndRef} />
             </div>
 
