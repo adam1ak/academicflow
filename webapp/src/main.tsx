@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from './context/AuthContext.tsx'
 import { ErrorContextProvider } from './context/ErrorContext.js'
 import { PlanProvider } from './context/PlanContext.tsx'
+import { AdvisorProvider } from './context/AdvisorContext.tsx'
 import ErrorBoundary from './components/ui/ErrorBoundary.tsx'
 
 
@@ -28,7 +29,9 @@ createRoot(document.getElementById('root')!).render(
         <ErrorContextProvider>
           <AuthProvider>
             <PlanProvider>
-              <App />
+              <AdvisorProvider>
+                <App />
+              </AdvisorProvider>
             </PlanProvider>
           </AuthProvider>
         </ErrorContextProvider>

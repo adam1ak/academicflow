@@ -14,6 +14,7 @@ import EditPlanModal from "../plan/EditPlanModal";
 import { useDeletePlanMutation } from "../../hooks/queries/useDeletePlanMutation";
 
 import ConfirmDeleteModal from "../ui/ConfirmDeleteModal";
+import { useAdvisor } from "../../context/AdvisorContext";
 
 function AppNavbar() {
 
@@ -21,6 +22,7 @@ function AppNavbar() {
 
   const { activePlan, setActivePlanId, refreshPlans } = usePlan()
   const deletePlanMutation = useDeletePlanMutation()
+  const { isOpen, toggleAdvisor } = useAdvisor()
 
   const [openMenu, setOpenMenu] = useState(false)
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
@@ -216,6 +218,17 @@ function AppNavbar() {
 
               <span className="hidden xl:block bg-surface-hi font-mono text-xs text-sec border border-dim px-3 py-1 mr-3 rounded-md">Fall 2024 · Week 3/12</span>
             </div>
+
+            <button
+              type="button"
+              onClick={toggleAdvisor}
+              className={`text-xs lg:text-sm text-sec px-2.5 py-1 rounded-sm hover:bg-white/5 cursor-pointer mr-3 transition-colors ${
+                isOpen ? "nav-active font-medium" : ""
+              }`}
+              aria-label="Toggle AI Academic Advisor"
+            >
+              Advisor
+            </button>
 
             <button
               type="button"

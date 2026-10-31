@@ -4,6 +4,7 @@ import models
 from security import get_password_hash
 
 def seed_database():
+    models.Base.metadata.create_all(bind=engine)
     db = SessionLocal()
 
     try:
