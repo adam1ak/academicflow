@@ -228,8 +228,12 @@ function AppNavbar() {
               className="flex items-center gap-2 lg:hover:bg-white/5 lg:px-1.5 lg:py-1 lg:rounded-lg"
             >
               <div className="hidden lg:flex flex-col items-end font-sf">
-                <span className="text-xs font-medium text-slate-200">{user?.name || "John Doe"}</span>
-                <span className="text-[9px] font-mono text-mut">{user?.email || "email@email.com"}</span>
+                <span className="text-xs font-medium text-slate-200">{user?.name || user?.email || ""}</span>
+                {user?.name && (
+                  <span className="text-[9px] font-mono text-mut">
+                    {user.email}
+                  </span>
+                )}
               </div>
 
               <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-avatar cursor-pointer">

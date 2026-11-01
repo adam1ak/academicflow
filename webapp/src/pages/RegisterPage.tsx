@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { register as registerUserApi, login } from "../api/auth"
 
 import { useAuth } from "../context/AuthContext"
+import { useError } from "../context/ErrorContext"
 import Header from "../components/layout/Header"
 import InputField from "../components/ui/InputField"
 import Button from "../components/ui/Button"
@@ -27,6 +28,7 @@ type RegisterFormData = z.infer<typeof registerSchema>
 function RegisterPage() {
     const navigate = useNavigate()
     const { setIsLogged, refreshUser } = useAuth()
+    const { showError } = useError()
 
     const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormData>({
         resolver: zodResolver(registerSchema)
@@ -41,10 +43,15 @@ function RegisterPage() {
             await refreshUser()
             setIsLogged(true)
 
-            console.log("Account created successfully.")
             navigate('/dashboard')
-        } catch (error) {
-            console.log("Registration error: ", error)
+        } catch (error: any) {
+            const errorMsg = error?.response?.data?.detail
+
+            if (Array.isArray(errorMsg)) {
+                showError(errorMsg[0]?.msg || "Registration failed")
+            } else {
+                showError(errorMsg || "Registration failed")
+            }
         }
     }
 
