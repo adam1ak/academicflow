@@ -52,7 +52,7 @@ class SubjectResponse(BaseModel):
 class DeadlineCreate(BaseModel):
     title: str = Field(min_length=1, max_length=100, description="Title of deadline")
     type: Literal["exam", "assignment", "project", "task"]
-    due_date: Optional[datetime] = Field(default=None, description="Optional deadline due time")
+    due_date: datetime = Field(description="Deadline due time")
     classroom: Optional[str] = Field(default=None, description="Optional classroom number")
     plan_id: Optional[int] = Field(default=None, description="Optional relationship with plan")
 
