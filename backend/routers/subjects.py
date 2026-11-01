@@ -185,6 +185,8 @@ def update_subject(
     try:
         db.commit()
         db.refresh(existing_subject)
+
+        invalidate_plan_cache(plan_id)
     except IntegrityError:
         db.rollback()
         raise HTTPException(status_code=400, detail="Database integrity error")
@@ -241,6 +243,8 @@ def toggle_subject_completion(
     try:
         db.commit()
         db.refresh(db_subject)
+
+        invalidate_plan_cache(plan_id)
     except IntegrityError:
         db.rollback()
         raise HTTPException(status_code=400, detail="Database integrity error during completion toggle")
