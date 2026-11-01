@@ -1,6 +1,6 @@
 import logging
 from datetime import date
-from typing import List, Optional
+from typing import List, Optional, Any
 
 from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.orm import Session, joinedload
@@ -43,7 +43,7 @@ class PlanWithScheduleResponse(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def build_schedule_from_orm(cls, data: any) -> any:
+    def build_schedule_from_orm(cls, data: Any) -> Any:
         if hasattr(data, "id"):
             try:
                 calculated_schedule = reconstruct_and_calculate_plan(data)

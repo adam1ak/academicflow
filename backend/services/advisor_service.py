@@ -1,4 +1,5 @@
 import datetime
+import logging
 from collections import deque
 from typing import Optional, List, Dict, Any, AsyncGenerator
 from sqlalchemy.orm import Session
@@ -6,6 +7,8 @@ from config import settings
 import models
 import json
 import httpx
+
+logger = logging.getLogger("academicflow.advisor")
 
 def build_academic_context(db: Session, user_id: int, plan_id: Optional[int] = None) -> str:
     plan_query = db.query(models.Plan).filter(models.Plan.owner_id == user_id)
@@ -75,9 +78,9 @@ def get_advisor_system_prompt(academic_context: str) -> str:
     CURRENT STUDENT CONTEXT:
     {academic_context}
     RULES:
-    1. Always prioritize imminent deadlines (especially exams within 7 days) and critical DAG bottlenecks that block future semester.
-    2. Provide concise, structred, and actionable advice with bullet points and bold text (Markdown)
-    3. If the student asks what to do this week, analyze thier upcoming deadlines and active bottlenecks to recommend a clear study strategy.
+    1. Always prioritize imminent deadlines (especially exams within 7 days) and critical DAG bottlenecks that block future semesters.
+    2. Provide concise, structured, and actionable advice with bullet points and bold text (Markdown)
+    3. If the student asks what to do this week, analyze their upcoming deadlines and active bottlenecks to recommend a clear study strategy.
     4. Reply in the same language as the user query (if user speaks Polish, respond in Polish; if English, respond in English)
     5. Never invent or hallucinate exams or courses that are not listed in the context
     6. STRICTLY NO EMOJIS. Never use emojis, icons, or smileys under any circumstances.
@@ -123,12 +126,12 @@ async def stream_gemini_response(
             "temperature": 0.4,
             "maxOutputTokens": 2048,
             "thinkingConfig": {
-                "thinkingLevel": "minimal" 
+                "thinkingLevel": "minimal"
             }
         }
     }
 
-    print(f"\n\n[user ai prompt] >>> '{message}'\n\n")
+    logger.info(f"Advisor streaming initiated for message: '{message[:80]}...'")
 
     try:
         timeout = httpx.Timeout(30.0, connect=10.0, read=30.0)
@@ -151,13 +154,13 @@ async def stream_gemini_response(
                                     if not part.get("thought", False):
                                         text_part = part.get("text", "")
                                         if text_part:
-                                            print(text_part, end="", flush=True)
                                             yield f"data: {json.dumps({'token': text_part})}\n\n"
                         except json.JSONDecodeError:
                             continue
 
-                print("\n[ai advisor] << finish.\n")
+                logger.info("Advisor streaming finished successfully")
                 yield "data: [DONE]\n\n"
     except Exception as e:
+        logger.error(f"Advisor streaming error: {str(e)}")
         yield f"data: {json.dumps({'error': f'AI error: {str(e)}'})}\n\n"
         yield "data: [DONE]\n\n"
