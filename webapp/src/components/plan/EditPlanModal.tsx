@@ -42,16 +42,21 @@ function EditPlanModal({ plan, onClose }: EditPlanModalProps) {
     const semesterOptions = useMemo(() => {
         const options: { value: string; label: string }[] = []
         const now = new Date()
-        let targetYear = now.getFullYear()
+        const currentYear = now.getFullYear()
         let isFall = now.getMonth() >= 8
+        let targetYear = currentYear
 
-        for (let i = 0; i < 8; i++) {
+        for (let i = 0; i < 4; i++) {
             const shortYear = String(targetYear).slice(-2)
             const value = isFall ? `fall${shortYear}` : `spr${shortYear}`
             const label = isFall ? `Fall ${targetYear}` : `Spring ${targetYear}`
             options.push({ value, label })
-            if (isFall) isFall = false
-            else { isFall = true; targetYear-- }
+            if (isFall) {
+                isFall = false
+                targetYear++
+            } else {
+                isFall = true
+            }
         }
 
         if (plan.semester && !options.find(o => o.value === plan.semester)) {
@@ -101,10 +106,11 @@ function EditPlanModal({ plan, onClose }: EditPlanModalProps) {
 
     const dateBounds = useMemo(() => {
         const currentYear = new Date().getFullYear()
-        const oldestOption = semesterOptions[semesterOptions.length - 1]
-        const minYear = oldestOption ? 2000 + parseInt(oldestOption.value.slice(-2)) : currentYear - 3
-        return { min: `${minYear}-01-01`, max: `${currentYear + 1}-12-31` }
-    }, [semesterOptions])
+        return {
+            min: `${currentYear}-01-01`,
+            max: `${currentYear + 2}-12-31`
+        }
+    }, [])
 
     const handleDateAutofix = (e: React.FocusEvent<HTMLInputElement>) => {
         const value = e.target.value
