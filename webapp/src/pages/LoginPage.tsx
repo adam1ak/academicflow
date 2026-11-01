@@ -22,7 +22,7 @@ type LoginFormData = z.infer<typeof loginSchema>
 function LoginPage() {
     const navigate = useNavigate()
 
-    const { setIsLogged } = useAuth()
+    const { setIsLogged, refreshUser } = useAuth()
     const { showError } = useError()
 
     const { register, handleSubmit, formState: {errors} } = useForm<LoginFormData>({
@@ -34,6 +34,7 @@ function LoginPage() {
 
         try {
             await login(email, password)
+            await refreshUser()
             setIsLogged(true)
 
             navigate('/dashboard')

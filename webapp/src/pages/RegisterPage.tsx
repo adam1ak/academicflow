@@ -26,7 +26,7 @@ type RegisterFormData = z.infer<typeof registerSchema>
 
 function RegisterPage() {
     const navigate = useNavigate()
-    const { setIsLogged } = useAuth()
+    const { setIsLogged, refreshUser } = useAuth()
 
     const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormData>({
         resolver: zodResolver(registerSchema)
@@ -38,6 +38,7 @@ function RegisterPage() {
         try {
             await registerUserApi(email, password, name)
             await login(email, password)
+            await refreshUser()
             setIsLogged(true)
 
             console.log("Account created successfully.")
