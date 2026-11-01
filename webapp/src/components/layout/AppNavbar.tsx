@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import { useLocation } from "react-router-dom";
 import LogoutModal from "../ui/LogoutModal";
 import { useAuth } from "../../context/AuthContext";
 import { tokenStorage } from "../../services/tokenStorage";
+import { useQueryClient } from "@tanstack/react-query";
 
 import api from "../../api/client"
 
@@ -16,9 +16,18 @@ import { useDeletePlanMutation } from "../../hooks/queries/useDeletePlanMutation
 import ConfirmDeleteModal from "../ui/ConfirmDeleteModal";
 import { useAdvisor } from "../../context/AdvisorContext";
 
+function formatSemester(slug?: string) {
+  if (!slug) return "";
+  const match = slug.match(/^([a-z]+)(\d{2})$/i);
+  if (!match) return slug;
+  const name = match[1].toLowerCase() === "fall" ? "Fall" : "Spring";
+  return `${name} 20${match[2]}`;
+}
+
 function AppNavbar() {
 
-  const { setIsLogged, user } = useAuth()
+  const queryClient = useQueryClient()
+  const { user, logoutState } = useAuth()
 
   const { activePlan, setActivePlanId, refreshPlans } = usePlan()
   const deletePlanMutation = useDeletePlanMutation()
@@ -26,7 +35,6 @@ function AppNavbar() {
 
   const [openMenu, setOpenMenu] = useState(false)
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
-  const location = useLocation()
 
   const [isSelectorOpen, setIsSelectorOpen] = useState(false)
   const [selectorPos, setSelectorPos] = useState({ top: 0, right: 0 })
@@ -45,21 +53,9 @@ function AppNavbar() {
     }
   }
 
-  const navItems = [
-    { label: "Dashboard", path: "/dashboard" },
-    { label: "Courses", path: "/courses" },
-    { label: "Schedule", path: "/schedule" },
-    { label: "Analytics", path: "/analytics" },
-    { label: "Explore", path: "/explore" },
-  ];
-
   const userInitials = user?.name
     ? user.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()
     : user?.email?.slice(0, 2).toUpperCase() || "??";
-
-  useEffect(() => {
-    setOpenMenu(false)
-  }, [location.pathname])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -100,7 +96,8 @@ function AppNavbar() {
       console.error("Backend token revocation failed: ", error)
     } finally {
       tokenStorage.clear()
-      setIsLogged(false)
+      queryClient.clear()
+      logoutState()
       setIsLoginModalOpen(false)
     }
   }
@@ -166,28 +163,19 @@ function AppNavbar() {
             <div aria-hidden="true" className="hidden md:block w-px h-4 bg-white/10 rounded-sm" />
 
             <nav aria-label="Desktop navigation">
-              <ul className="hidden md:flex gap-4">
-                {navItems.map((item) => {
-                  const isActive = location.pathname === item.path;
-
-                  return (
-                    <li key={item.label}>
-                      <button
-                        type="button"
-                        aria-current={isActive ? "page" : undefined}
-                        className={`text-xs lg:text-sm text-sec px-2.5 py-1 rounded-sm ${isActive ? "nav-active font-medium" : ""
-                          } hover:bg-white/5`}
-                      >
-                        {item.label}
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
+              <div className="hidden md:flex">
+                <button
+                  type="button"
+                  aria-current="page"
+                  className="text-xs lg:text-sm text-sec px-2.5 py-1 rounded-sm nav-active font-medium"
+                >
+                  Dashboard
+                </button>
+              </div>
             </nav>
           </div>
 
-          <div className="flex  items-center gap-4">
+          <div className="flex items-center gap-4">
             <div className="flex">
               <div
                 ref={triggerRef}
@@ -206,7 +194,7 @@ function AppNavbar() {
                     <p className="font-mono text-xs sm:hidden">
                       {activePlan.name.length > 6 ? `${activePlan.name.slice(0, 2)}...` : activePlan.name}
                     </p>
-                    <p className="font-mono text-xs hidden sm:block max-w-[160px] md:max-w-none truncate">
+                    <p className="font-mono text-xs hidden sm:block max-w-40 md:max-w-none truncate">
                       {activePlan.name}
                     </p>
                   </>
@@ -216,15 +204,18 @@ function AppNavbar() {
                 <div className="text-[9px]">▾</div>
               </div>
 
-              <span className="hidden xl:block bg-surface-hi font-mono text-xs text-sec border border-dim px-3 py-1 mr-3 rounded-md">Fall 2024 · Week 3/12</span>
+              {activePlan?.semester && (
+                <span className="hidden md:block bg-surface-hi font-mono text-xs text-sec border border-dim px-3 py-1 mr-3 rounded-md">
+                  {formatSemester(activePlan.semester)}
+                </span>
+              )}
             </div>
 
             <button
               type="button"
               onClick={toggleAdvisor}
-              className={`text-xs lg:text-sm text-sec px-2.5 py-1 rounded-sm hover:bg-white/5 cursor-pointer mr-3 transition-colors ${
-                isOpen ? "nav-active font-medium" : ""
-              }`}
+              className={`text-xs lg:text-sm text-sec px-2.5 py-1 rounded-sm hover:bg-white/5 cursor-pointer mr-3 transition-colors ${isOpen ? "nav-active font-medium" : ""
+                }`}
               aria-label="Toggle AI Academic Advisor"
             >
               Advisor
@@ -271,25 +262,16 @@ function AppNavbar() {
           id="mobile-nav-menu"
           aria-label="Mobile navigation"
           className={`px-3 border-t border-dim ${openMenu ? "block" : "hidden"}`}>
-          <ul>
-            {navItems.map((item) => {
-              const isActive = location.pathname === item.path;
-
-              return (
-                <li key={item.label}>
-                  <button
-                    type="button"
-                    onClick={() => setOpenMenu(false)}
-                    aria-current={isActive ? "page" : undefined}
-                    className={`w-full text-left text-sm text-sec px-3 py-2.5 rounded-sm ${isActive ? "nav-active font-medium" : ""
-                      } hover:bg-white/5`}
-                  >
-                    {item.label}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+          <div className="py-2">
+            <button
+              type="button"
+              onClick={() => setOpenMenu(false)}
+              aria-current="page"
+              className="w-full text-left text-sm text-sec px-3 py-2 rounded-sm nav-active font-medium"
+            >
+              Dashboard
+            </button>
+          </div>
         </nav>
       </header>
     </>

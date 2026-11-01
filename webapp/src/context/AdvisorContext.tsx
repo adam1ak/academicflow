@@ -29,7 +29,7 @@ const AdvisorContext = createContext<AdvisorContextType | undefined>(undefined)
 export const useAdvisor = () => {
     const context = useContext(AdvisorContext)
     if (!context) {
-        throw new Error("useADvisor must be used within an AdvisorProvider")
+        throw new Error("useAdvisor must be used within an AdvisorProvider")
     }
     return context
 }
