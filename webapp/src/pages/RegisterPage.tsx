@@ -96,11 +96,11 @@ function RegisterPage() {
                         <OAuthButton
                             provider="github"
                             login={false}
-                            onClick={() => console.log('github')} />
+                            onClick={() => showError("OAuth sign-up is not configured yet")} />
                         <OAuthButton
                             provider="google"
                             login={false}
-                            onClick={() => console.log('google')} />
+                            onClick={() => showError("OAuth sign-up is not configured yet")} />
                     </div>
 
                     <div className="flex items-center gap-3 mb-6" aria-hidden="true">

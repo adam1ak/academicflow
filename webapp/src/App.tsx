@@ -31,13 +31,18 @@ function App() {
             error.response.data.text().then(text => {
               try {
                 const parsed = JSON.parse(text)
-                showError(parsed.detail || "Error from server")
+                const rawDetail = parsed.detail
+                const msg = Array.isArray(rawDetail) ? rawDetail[0]?.msg : rawDetail
+                showError(msg || "Error from server")
               } catch {
                 showError("Error from server")
               }
             })
           } else {
-            const errorMessage = error.response.data?.detail || "Error from server"
+            const rawDetail = error.response.data?.detail
+            const errorMessage = Array.isArray(rawDetail)
+              ? rawDetail[0]?.msg || "Validation error"
+              : rawDetail || "Error from server"
             showError(errorMessage)
           }
         } else if (!error.response) {
@@ -54,8 +59,9 @@ function App() {
 
   if (isChecking) {
     return (
-      <div style={{ padding: '50px', textAlign: 'center', fontFamily: 'sans-serif' }}>
-        <h2>Session verification...</h2>
+      <div className="h-screen w-screen bg-bg flex flex-col items-center justify-center gap-3">
+        <div className="w-6 h-6 border-2 border-accent-blue/30 border-t-accent-blue rounded-full animate-spin" />
+        <span className="font-mono text-xs text-sec tracking-wide">Verifying session...</span>
       </div>
     )
   }

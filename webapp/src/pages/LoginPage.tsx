@@ -39,8 +39,8 @@ function LoginPage() {
 
             navigate('/dashboard')
         } catch (e: any) {
-            console.log("Login error: ", e)
-            showError(e.response?.data?.detail || "Invalid credentials")
+            const errorMsg = e.response?.data?.detail
+            showError(Array.isArray(errorMsg) ? errorMsg[0]?.msg : errorMsg || "Invalid credentials")
         }
     }
 
@@ -86,11 +86,11 @@ function LoginPage() {
                         <OAuthButton
                             provider="github"
                             login={true}
-                            onClick={() => console.log('github')} />
+                            onClick={() => showError("OAuth login is not configured yet")} />
                         <OAuthButton
                             provider="google"
                             login={true}
-                            onClick={() => console.log('google')} />
+                            onClick={() => showError("OAuth login is not configured yet")} />
                     </div>
 
                     <div className="flex items-center gap-3 mb-6" aria-hidden="true">
