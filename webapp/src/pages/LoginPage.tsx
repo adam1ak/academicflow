@@ -13,7 +13,7 @@ import { z } from "zod"
 import { zodResolver } from '@hookform/resolvers/zod'
 
 const loginSchema = z.object({
-    email: z.string().email("Invalid email adress"),
+    email: z.string().email("Invalid email address"),
     password: z.string().min(8, "Password must be at least 8 characters long")
 })
 
@@ -101,7 +101,7 @@ function LoginPage() {
 
                     <form onSubmit={handleSubmit(handleLogin)} className="flex flex-col">
                         <InputField
-                            id="register-email"
+                            id="login-email"
                             label="Email Address"
                             type="email"
                             placeholder="a.turing@flow.edu"
@@ -110,7 +110,7 @@ function LoginPage() {
                         {errors.email && <span className="text-red-500 text-xs mb-3 -mt-1 font-mono">{errors.email.message}</span>}
 
                         <InputField
-                            id="register-password"
+                            id="login-password"
                             label="Password"
                             type="password"
                             placeholder="* * * * * * *"
@@ -145,7 +145,7 @@ function LoginPage() {
                         <Link
                             to="/register"
                             className="ml-1 text-text-primary font-semibold hover:text-link transition-colors"
-                            aria-label="Sign up to existing account">
+                            aria-label="Sign up for a new account">
                             Sign up
                         </Link>
                     </div>

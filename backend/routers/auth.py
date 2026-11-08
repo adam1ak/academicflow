@@ -30,7 +30,7 @@ def register_user(user: UserCreate, request: Request, db: Session = Depends(get_
     new_user = models.User(
         email=user.email,
         hashed_password=hashed_password,
-        name=user.name or ""
+        name=user.name if user.name else None
     )
 
 
@@ -101,7 +101,7 @@ def read_users_me(current_user: models.User = Depends(get_current_user)):
     return current_user
 
 @router.post("/refresh", response_model=Token)
-def refresh_acces_token(request: RefreshTokenRequest, db: Session = Depends(get_db)):
+def refresh_access_token(request: RefreshTokenRequest, db: Session = Depends(get_db)):
     try:
         jwt_decode = jwt.decode(request.refresh_token, SECRET_KEY, [ALGORITHM])
         jwt_email = jwt_decode.get("sub")
