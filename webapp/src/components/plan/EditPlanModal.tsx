@@ -6,6 +6,7 @@ import api from "../../api/client"
 import InputField from "../ui/InputField"
 import { PlanData } from "../../types/plan"
 import { usePlan } from "../../context/PlanContext"
+import { formatSemester } from "../../utils/formatters"
 
 interface EditPlanModalProps {
     plan: PlanData
@@ -60,10 +61,7 @@ function EditPlanModal({ plan, onClose }: EditPlanModalProps) {
         }
 
         if (plan.semester && !options.find(o => o.value === plan.semester)) {
-            const s = plan.semester
-            const yearNum = 2000 + parseInt(s.slice(-2))
-            const label = s.startsWith("fall") ? `Fall ${yearNum}` : `Spring ${yearNum}`
-            options.unshift({ value: s, label })
+            options.unshift({ value: plan.semester, label: formatSemester(plan.semester) })
         }
 
         return options

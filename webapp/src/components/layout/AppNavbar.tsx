@@ -15,14 +15,9 @@ import { useDeletePlanMutation } from "../../hooks/queries/useDeletePlanMutation
 
 import ConfirmDeleteModal from "../ui/ConfirmDeleteModal";
 import { useAdvisor } from "../../context/AdvisorContext";
+import { formatSemester } from "../../utils/formatters";
 
-function formatSemester(slug?: string) {
-  if (!slug) return "";
-  const match = slug.match(/^([a-z]+)(\d{2})$/i);
-  if (!match) return slug;
-  const name = match[1].toLowerCase() === "fall" ? "Fall" : "Spring";
-  return `${name} 20${match[2]}`;
-}
+
 
 function AppNavbar() {
 

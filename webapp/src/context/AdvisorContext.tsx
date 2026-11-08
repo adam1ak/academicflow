@@ -2,8 +2,6 @@ import { createContext, useContext, useState, ReactNode } from "react"
 import { streamAdvisorChat } from "../services/advisorService"
 import { usePlan } from "./PlanContext"
 
-export type AdvisorMode = "docked" | "floating"
-
 export interface AdvisorMessage {
     id: string
     sender: "user" | "advisor"
@@ -13,13 +11,11 @@ export interface AdvisorMessage {
 
 export interface AdvisorContextType {
     isOpen: boolean
-    mode: AdvisorMode
     messages: AdvisorMessage[]
     isStreaming: boolean
     openAdvisor: () => void
     closeAdvisor: () => void
     toggleAdvisor: () => void
-    setMode: (mode: AdvisorMode) => void
     sendMessage: (text: string) => Promise<void>
     clearChat: () => void
 }
@@ -38,7 +34,6 @@ export function AdvisorProvider({ children }: { children: ReactNode }) {
     const { activePlanId } = usePlan()
 
     const [isOpen, setIsOpen] = useState<boolean>(false)
-    const [mode, setMode] = useState<AdvisorMode>("docked")
     const [messages, setMessages] = useState<AdvisorMessage[]>([])
     const [isStreaming, setIsStreaming] = useState<boolean>(false)
 
@@ -100,13 +95,11 @@ export function AdvisorProvider({ children }: { children: ReactNode }) {
         <AdvisorContext.Provider
             value={{
                 isOpen,
-                mode,
                 messages,
                 isStreaming,
                 openAdvisor,
                 closeAdvisor,
                 toggleAdvisor,
-                setMode,
                 sendMessage,
                 clearChat
             }}
