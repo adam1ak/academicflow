@@ -13,7 +13,7 @@ import { z } from "zod"
 import { zodResolver } from '@hookform/resolvers/zod'
 
 const loginSchema = z.object({
-    email: z.string().email("Invalid email adress"),
+    email: z.string().email("Invalid email address"),
     password: z.string().min(8, "Password must be at least 8 characters long")
 })
 
@@ -22,7 +22,7 @@ type LoginFormData = z.infer<typeof loginSchema>
 function LoginPage() {
     const navigate = useNavigate()
 
-    const { setIsLogged } = useAuth()
+    const { setIsLogged, refreshUser } = useAuth()
     const { showError } = useError()
 
     const { register, handleSubmit, formState: {errors} } = useForm<LoginFormData>({
@@ -34,96 +34,73 @@ function LoginPage() {
 
         try {
             await login(email, password)
+            await refreshUser()
             setIsLogged(true)
 
             navigate('/dashboard')
         } catch (e: any) {
-            console.log("Login error: ", e)
-            showError(e.response?.data?.detail || "Invalid credentials")
+            const errorMsg = e.response?.data?.detail
+            showError(Array.isArray(errorMsg) ? errorMsg[0]?.msg : errorMsg || "Invalid credentials")
         }
     }
 
-
     return (
-        <div
-            className="
-                h-screen flex flex-col
-                bg-card-bg md:bg-bg transition-colors overflow-hidden
-            "
-        >
-
-            <div className="p-4 md:px-8 md:py-6 border-b border-card-border md:border-none">
+        <div className="min-h-screen flex flex-col bg-bg transition-colors">
+            <div className="shrink-0 px-4 py-2 sm:px-8 sm:py-3 border-b border-card-border/50">
                 <Header />
             </div>
 
-            <main
-                className="
-                    flex-1 min-h-0 overflow-y-auto flex flex-col justify-center items-center
-                    w-full py-6 md:py-8
-                "
-            >
-                <div
-                    className="
-                        w-full max-w-sm md:px-8 md:py-8
-                        md:bg-card-bg md:border md:border-card-border md:rounded-xl md:shadow-lg
-                    "
-                >
-                    <div className="mb-6">
-                        <h1
-                            className="
-                                text-xl md:text-2xl font-semibold tracking-tight text-text-primary mb-1
-                            "
-                        >
+            <main className="flex-1 flex flex-col items-center justify-center w-full px-4 py-2 sm:px-6">
+                <div className="w-full max-w-sm px-6 py-5 sm:px-8 sm:py-6 bg-card-bg border border-card-border rounded-xl shadow-lg">
+                    <div className="mb-4">
+                        <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-text-primary mb-1">
                             Sign in To your account
                         </h1>
-                        <p className="text-text-secondary text-sm leading-relaxed">
+                        <p className="text-text-secondary text-xs sm:text-sm leading-relaxed">
                             Precision learning systems for modern engineering
                         </p>
                     </div>
 
-                    <div className="flex flex-col gap-4 mb-6">
+                    <div className="flex flex-col gap-2.5 mb-4">
                         <OAuthButton
                             provider="github"
                             login={true}
-                            onClick={() => console.log('github')} />
+                            onClick={() => showError("OAuth login is not configured yet")} />
                         <OAuthButton
                             provider="google"
                             login={true}
-                            onClick={() => console.log('google')} />
+                            onClick={() => showError("OAuth login is not configured yet")} />
                     </div>
 
-                    <div className="flex items-center gap-3 mb-6" aria-hidden="true">
+                    <div className="flex items-center gap-3 mb-4" aria-hidden="true">
                         <div className="flex-1 h-px bg-card-border"></div>
-                        <span className="font-mono text-sm tracking-widest text-text-muted uppercase">OR</span>
+                        <span className="font-mono text-xs tracking-widest text-text-muted uppercase">OR</span>
                         <div className="flex-1 h-px bg-card-border"></div>
                     </div>
 
                     <form onSubmit={handleSubmit(handleLogin)} className="flex flex-col">
                         <InputField
-                            id="register-email"
+                            id="login-email"
                             label="Email Address"
                             type="email"
                             placeholder="a.turing@flow.edu"
                             {...register("email")}
                         />
-                        {errors.email && <span className="text-red-500 text-xs mb-3 -mt-1 font-mono">{errors.email.message}</span>}
+                        {errors.email && <span className="text-red-500 text-xs mb-2 -mt-1 font-mono">{errors.email.message}</span>}
 
                         <InputField
-                            id="register-password"
+                            id="login-password"
                             label="Password"
                             type="password"
                             placeholder="* * * * * * *"
                             {...register("password")}
                         />
-                        {errors.password && <span className="text-red-500 text-xs mb-3 -mt-1 font-mono">{errors.password.message}</span>}
+                        {errors.password && <span className="text-red-500 text-xs mb-2 -mt-1 font-mono">{errors.password.message}</span>}
 
-                        <div className="flex justify-end mb-6 -mt-2">
+                        <div className="flex justify-end mb-4 -mt-1">
                             <a
                                 href="#"
-                                className="
-                                    font-mono text-xs text-link 
-                                    hover:text-white transition-colors tracking-wide
-                                "
+                                className="font-mono text-xs text-link hover:text-white transition-colors tracking-wide"
                                 aria-label="Recover forgotten password"
                             >
                                 Forgot password?
@@ -135,29 +112,19 @@ function LoginPage() {
                         </Button>
                     </form>
 
-                    <div
-                        className="
-                            mt-8 text-center text-sm text-text-secondary
-                        "
-                    >
+                    <div className="mt-4 text-center text-xs sm:text-sm text-text-secondary">
                         Don't have an account?{' '}
                         <Link
                             to="/register"
                             className="ml-1 text-text-primary font-semibold hover:text-link transition-colors"
-                            aria-label="Sign up to existing account">
+                            aria-label="Sign up for a new account">
                             Sign up
                         </Link>
                     </div>
                 </div>
             </main>
 
-            <footer
-                className="
-                    w-full px-4 py-6 md:px-8 md:py-6 
-                    text-xs text-text-muted text-center
-                    border-t border-card-border font-mono
-                "
-            >
+            <footer className="shrink-0 w-full px-4 py-2.5 text-xs text-text-muted text-center border-t border-card-border/50 font-mono">
                 <p>© 2026 AcademicFlow. Precision learning System.</p>
             </footer>
         </div>

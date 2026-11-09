@@ -11,7 +11,6 @@ interface CreatePlanModalProps {
     onSuccess: (planId: number) => void
 }
 
-
 const ACCENT_COLORS = [
     { id: "purple", color: "var(--color-accent-purple)", glow: "var(--color-accent-purple-glow)" },
     { id: "green", color: "var(--color-accent-green)", glow: "var(--color-accent-green-glow)" },
@@ -29,18 +28,10 @@ const createPlanSchema = z.object({
     max_concurrent: z.number().min(1, "Min 1 subject").max(10, "Max 10 subjects"),
     start_date: z.string().min(1, "Start date is required").refine((val) => {
         const inputYear = new Date(val).getFullYear()
-        const now = new Date()
-        const currentYear = now.getFullYear()
+        const currentYear = new Date().getFullYear()
 
-        let targetYear = currentYear
-        let isFall = now.getMonth() >= 8
-        for (let i = 0; i < 5; i++) {
-            if (isFall) isFall = false
-            else { isFall = true; targetYear-- }
-        }
-
-        return inputYear >= targetYear && inputYear <= currentYear
-    }, { message: "Year out of academic scope" }),
+        return inputYear >= currentYear && inputYear <= currentYear + 2
+    }, { message: "Year must be current or within next 2 years" }),
     accent_color: z.string().min(1, "Required")
 })
 
@@ -66,11 +57,11 @@ function CreatePlanModal({ onClose, onSuccess }: CreatePlanModalProps) {
     const semesterOptions = useMemo(() => {
         const options = []
         const now = new Date()
-        let targetYear = now.getFullYear()
-
+        const currentYear = now.getFullYear()
         let isFall = now.getMonth() >= 8
+        let targetYear = currentYear
 
-        for (let i = 0; i < 6; i++) {
+        for (let i = 0; i < 4; i++) {
             const shortYear = String(targetYear).slice(-2)
             const value = isFall ? `fall${shortYear}` : `spr${shortYear}`
             const label = isFall ? `Fall ${targetYear}` : `Spring ${targetYear}`
@@ -79,9 +70,9 @@ function CreatePlanModal({ onClose, onSuccess }: CreatePlanModalProps) {
 
             if (isFall) {
                 isFall = false
+                targetYear++
             } else {
                 isFall = true
-                targetYear--
             }
         }
         return options
@@ -119,19 +110,13 @@ function CreatePlanModal({ onClose, onSuccess }: CreatePlanModalProps) {
     }
 
     const dateBounds = useMemo(() => {
-        const now = new Date()
-        const currentYear = now.getFullYear()
-
-        const oldestOption = semesterOptions[semesterOptions.length - 1]
-        const minYear = oldestOption
-            ? 2000 + parseInt(oldestOption.value.slice(-2))
-            : currentYear - 3
+        const currentYear = new Date().getFullYear()
 
         return {
-            min: `${minYear}-01-01`,
-            max: `${currentYear}-12-31`
+            min: `${currentYear}-01-01`,
+            max: `${currentYear + 2}-12-31`
         }
-    }, [semesterOptions])
+    }, [])
 
     const handleDateAutofix = (e: React.FocusEvent<HTMLInputElement>) => {
         const value = e.target.value

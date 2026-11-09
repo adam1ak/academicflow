@@ -9,7 +9,7 @@ interface DashboardShellProps {
 }
 
 export function DashboardShell({ navbar, mainContent, sidebarContent }: DashboardShellProps) {
-  const { isOpen } = useAdvisor()
+  const { isOpen } = useAdvisor();
 
   return (
     <div id="app" className="h-screen flex flex-col overflow-hidden">
@@ -19,7 +19,7 @@ export function DashboardShell({ navbar, mainContent, sidebarContent }: Dashboar
             isOpen
               ? "flex-col 2xl:flex-row"
               : "flex-col lg:flex-row"
-          }`}>
+        }`}>
           {mainContent}
           {sidebarContent}
         </div>

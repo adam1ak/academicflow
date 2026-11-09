@@ -50,8 +50,8 @@ def test_advisor_stream_success(client, db_session, monkeypatch):
     app.dependency_overrides[get_current_user] = lambda: test_user
 
     async def mock_stream(message, context):
-        yield "data: {\"text\": \"Focus on \"}\n\n"
-        yield "data: {\"text\": \"Algebra1!\"}\n\n"
+        yield "data: {\"token\": \"Focus on \"}\n\n"
+        yield "data: {\"token\": \"Algebra1!\"}\n\n"
 
     monkeypatch.setattr("routers.advisor.stream_gemini_response", mock_stream)
 

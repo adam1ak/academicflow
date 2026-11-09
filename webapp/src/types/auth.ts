@@ -5,9 +5,9 @@ export interface TokenResponse {
 }
 
 export interface UserMeResponse {
-    message: string
-    user: string
-    github_id: string | null
+    id: number
+    email: string
+    is_active: boolean
     name: string | null
 }
 

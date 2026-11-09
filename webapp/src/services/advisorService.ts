@@ -10,6 +10,31 @@ export interface StreamAdvisorParams {
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? (import.meta.env.DEV ? "http://localhost:8000" : "")
 
+async function refreshAccessToken(): Promise<string | null> {
+    const refreshToken = tokenStorage.getRefreshToken()
+    if (!refreshToken) return null
+
+    try {
+        const response = await fetch(`${BASE_URL}/api/v1/refresh`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ refresh_token: refreshToken })
+        })
+        if (!response.ok) {
+            tokenStorage.clear()
+            return null
+        }
+        const data = await response.json()
+        if (data.access_token) {
+            tokenStorage.setAccessToken(data.access_token)
+            return data.access_token
+        }
+        return null
+    } catch {
+        return null
+    }
+}
+
 export async function streamAdvisorChat({
     message,
     planId,
@@ -17,10 +42,10 @@ export async function streamAdvisorChat({
     onError,
     onDone
 }: StreamAdvisorParams): Promise<void> {
-    const token = tokenStorage.getAccessToken()
+    let token = tokenStorage.getAccessToken()
 
     try {
-        const response = await fetch(`${BASE_URL}/api/v1/ai/advisor/stream`, {
+        let response = await fetch(`${BASE_URL}/api/v1/ai/advisor/stream`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -31,6 +56,24 @@ export async function streamAdvisorChat({
                 plan_id: planId ?? null
             })
         })
+
+        if (response.status === 401) {
+            const newToken = await refreshAccessToken()
+            if (newToken) {
+                token = newToken
+                response = await fetch(`${BASE_URL}/api/v1/ai/advisor/stream`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        message,
+                        plan_id: planId ?? null
+                    })
+                })
+            }
+        }
 
         if (!response.ok) {
             throw new Error(`Server returned ${response.status}`)
@@ -56,14 +99,15 @@ export async function streamAdvisorChat({
                 if (trimmed.startsWith("data:")) {
                     const rawData = trimmed.replace(/^data:\s*/, "")
                     if (rawData === "[DONE]") {
-                        break
+                        if (onDone) onDone()
+                        return
                     }
 
                     try {
                         const parsed = JSON.parse(rawData)
                         if (parsed.error) {
                             if (onError) onError(parsed.error)
-                            break
+                            return
                         }
                         const chunkText = parsed.token ?? parsed.text
                         if (chunkText) {

@@ -1,6 +1,6 @@
 import logging
 from datetime import date
-from typing import List, Optional
+from typing import List, Optional, Any
 
 from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.orm import Session, joinedload
@@ -43,7 +43,7 @@ class PlanWithScheduleResponse(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def build_schedule_from_orm(cls, data: any) -> any:
+    def build_schedule_from_orm(cls, data: Any) -> Any:
         if hasattr(data, "id"):
             try:
                 calculated_schedule = reconstruct_and_calculate_plan(data)
@@ -241,6 +241,7 @@ def update_plan(
         raise HTTPException(status_code=400, detail="Database integrity error during patch")
 
     try:
+        safe_delete(f"plan:{db_plan.id}:calculated")
         reconstruct_and_calculate_plan(db_plan)
     except ValueError as exception:
         raise HTTPException(
@@ -274,6 +275,8 @@ def delete_plan(plan_id: int, db: Session = Depends(get_db),
     db.delete(plan)
     db.commit()
 
+    safe_delete(f"plan:{plan_id}:calculated")
+    
 def generate_ics_for_plan(plan: models.Plan, schedule: list, deadlines: list) -> bytes:
     cal = Calendar()
     cal.add('prodid', '-//AcademicFlow//EN')

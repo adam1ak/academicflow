@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { register as registerUserApi, login } from "../api/auth"
 
 import { useAuth } from "../context/AuthContext"
+import { useError } from "../context/ErrorContext"
 import Header from "../components/layout/Header"
 import InputField from "../components/ui/InputField"
 import Button from "../components/ui/Button"
@@ -26,7 +27,8 @@ type RegisterFormData = z.infer<typeof registerSchema>
 
 function RegisterPage() {
     const navigate = useNavigate()
-    const { setIsLogged } = useAuth()
+    const { setIsLogged, refreshUser } = useAuth()
+    const { showError } = useError()
 
     const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormData>({
         resolver: zodResolver(registerSchema)
@@ -38,66 +40,52 @@ function RegisterPage() {
         try {
             await registerUserApi(email, password, name)
             await login(email, password)
+            await refreshUser()
             setIsLogged(true)
 
-            console.log("Account created successfully.")
             navigate('/dashboard')
-        } catch (error) {
-            console.log("Registration error: ", error)
+        } catch (error: any) {
+            const errorMsg = error?.response?.data?.detail
+
+            if (Array.isArray(errorMsg)) {
+                showError(errorMsg[0]?.msg || "Registration failed")
+            } else {
+                showError(errorMsg || "Registration failed")
+            }
         }
     }
 
     return (
-        <div
-            className="
-                h-screen flex flex-col
-                bg-card-bg md:bg-bg transition-colors overflow-hidden
-            "
-        >
-
-            <div className="p-4 md:px-8 md:py-6 border-b border-card-border md:border-none">
+        <div className="min-h-screen flex flex-col bg-bg transition-colors">
+            <div className="shrink-0 px-4 py-2 sm:px-8 sm:py-3 border-b border-card-border/50">
                 <Header />
             </div>
 
-            <main
-                className="
-                    flex-1 min-h-0 overflow-y-auto flex flex-col justify-center items-center
-                    w-full py-4 md:py-6
-                "
-            >
-                <div
-                    className="
-                        w-full max-w-sm md:px-8 md:py-8
-                        md:bg-card-bg md:border md:border-card-border md:rounded-xl md:shadow-lg
-                    "
-                >
-                    <div className="mb-5">
-                        <h1
-                            className="
-                                text-xl md:text-2xl font-semibold tracking-tight text-text-primary mb-1
-                            "
-                        >
+            <main className="flex-1 flex flex-col items-center justify-center w-full px-4 py-2 sm:px-6">
+                <div className="w-full max-w-sm px-6 py-4 sm:px-8 sm:py-5 bg-card-bg border border-card-border rounded-xl shadow-lg">
+                    <div className="mb-3">
+                        <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-text-primary mb-1">
                             Create your account
                         </h1>
-                        <p className="text-text-secondary text-sm leading-relaxed">
+                        <p className="text-text-secondary text-xs sm:text-sm leading-relaxed">
                             Precision learning systems for modern engineering
                         </p>
                     </div>
 
-                    <div className="flex flex-col gap-4 mb-6">
+                    <div className="flex flex-col gap-2 mb-3">
                         <OAuthButton
                             provider="github"
                             login={false}
-                            onClick={() => console.log('github')} />
+                            onClick={() => showError("OAuth sign-up is not configured yet")} />
                         <OAuthButton
                             provider="google"
                             login={false}
-                            onClick={() => console.log('google')} />
+                            onClick={() => showError("OAuth sign-up is not configured yet")} />
                     </div>
 
-                    <div className="flex items-center gap-3 mb-6" aria-hidden="true">
+                    <div className="flex items-center gap-3 mb-3" aria-hidden="true">
                         <div className="flex-1 h-px bg-card-border"></div>
-                        <span className="font-mono text-sm tracking-widest text-text-muted uppercase">OR</span>
+                        <span className="font-mono text-xs tracking-widest text-text-muted uppercase">OR</span>
                         <div className="flex-1 h-px bg-card-border"></div>
                     </div>
 
@@ -109,7 +97,7 @@ function RegisterPage() {
                             placeholder="a.turing@flow.edu"
                             {...register("email")}
                         />
-                        {errors.email && <span className="text-red-500 text-xs mb-3 -mt-1 font-mono">{errors.email.message}</span>}
+                        {errors.email && <span className="text-red-500 text-xs mb-2 -mt-1 font-mono">{errors.email.message}</span>}
 
                         <InputField
                             id="register-name"
@@ -118,8 +106,7 @@ function RegisterPage() {
                             placeholder="Alan turing"
                             {...register("name")}
                         />
-                        {errors.name && <span className="text-red-500 text-xs mb-3 -mt-1 font-mono">{errors.name.message}</span>}
-
+                        {errors.name && <span className="text-red-500 text-xs mb-2 -mt-1 font-mono">{errors.name.message}</span>}
 
                         <InputField
                             id="register-password"
@@ -128,20 +115,16 @@ function RegisterPage() {
                             placeholder="* * * * * * *"
                             {...register("password")}
                         />
-                        {errors.password && <span className="text-red-500 text-xs mb-3 -mt-1 font-mono">{errors.password.message}</span>}
+                        {errors.password && <span className="text-red-500 text-xs mb-2 -mt-1 font-mono">{errors.password.message}</span>}
 
-                        <div className="mt-2">
+                        <div className="mt-1">
                             <Button type="submit">
                                 Create Account
                             </Button>
                         </div>
                     </form>
 
-                    <div
-                        className="
-                            mt-8 text-center text-sm text-text-secondary
-                        "
-                    >
+                    <div className="mt-3.5 text-center text-xs sm:text-sm text-text-secondary">
                         Already have an account?{' '}
                         <Link
                             to="/login"
@@ -153,13 +136,7 @@ function RegisterPage() {
                 </div>
             </main>
 
-            <footer
-                className="
-                    w-full px-4 py-6 md:px-8 md:py-6 
-                    text-xs text-text-muted text-center
-                    border-t border-card-border font-mono
-                "
-            >
+            <footer className="shrink-0 w-full px-4 py-2.5 text-xs text-text-muted text-center border-t border-card-border/50 font-mono">
                 <p>© 2026 AcademicFlow. Precision learning System.</p>
             </footer>
         </div>

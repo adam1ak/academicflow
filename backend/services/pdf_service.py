@@ -162,7 +162,9 @@ def generate_plan_pdf(plan, schedule: list, subjects: list) -> bytes:
 
     total_subjects = len(subjects)
     total_ects = total_subjects * 3
-    unlocked = sum(1 for s in subjects if getattr(s, "unlocked", False))
+    completed = sum(1 for s in subjects if getattr(s, "is_completed", False))
+    completion_pct = f"{round((completed / total_subjects) * 100)}%" if total_subjects > 0 else "0%"
+    unlocked = sum(1 for s in subjects if getattr(s, "computed_status", "") != "blocked")
     locked = total_subjects - unlocked
 
     card_width = (content_width - 3 * 10) / 4
@@ -171,8 +173,8 @@ def generate_plan_pdf(plan, schedule: list, subjects: list) -> bytes:
         _metric_card("Active Courses", str(total_subjects),
                      f"{unlocked} unlocked - {locked} locked",
                      COLOR_ACCENT_PURPLE, styles, card_width),
-        _metric_card("Completion", "0%",
-                     f"0 of {total_subjects} topics done",
+        _metric_card("Completion", completion_pct,
+                     f"{completed} of {total_subjects} topics done",
                      COLOR_ACCENT_BLUE, styles, card_width),
         _metric_card("Credit Load", f"{total_ects} ECTS",
                      "Estimated Workload",

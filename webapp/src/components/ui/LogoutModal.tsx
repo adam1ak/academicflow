@@ -76,8 +76,11 @@ function LogoutModal({ isOpen, onClose, onConfirm }: LogoutModalProps) {
                     </div>
 
                     <div>
-                        <p className="text-sm font-semibold text-pri">{user?.name || "John Doe"}</p>
-                        <p className="text-xs font-mono text-sec">{user?.email || "email@email.com"}</p>
+                        <p className="text-sm font-semibold text-pri">{user?.name || user?.email || ""}</p>
+                        {user?.name && (
+                            <p className="text-xs font-mono text-sec">  {user.email}
+                            </p>
+                        )}
                     </div>
                 </div>
 

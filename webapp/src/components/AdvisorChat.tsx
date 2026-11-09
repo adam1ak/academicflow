@@ -24,7 +24,7 @@ function formatMarkdown(text: string) {
 
 const SUGGESTIONS = [
     "What should I focus on this week?",
-    "Which course is my biggest bottleneck",
+    "Which course is my biggest bottleneck?",
     "Upcoming exams summary"
 ]
 
@@ -48,7 +48,7 @@ export function AdvisorChat() {
         <div className="flex flex-col h-full min-h-0">
             <div className="flex-1 py-4 text-xs font-mono text-sec overflow-y-auto space-y-3 pr-1">
                 {messages.length === 0 ? (
-                    <div className="h-full flex flex-col jusitfy-center items-center text-center p-3 gap-2">
+                    <div className="h-full flex flex-col justify-center items-center text-center p-3 gap-2">
                         <p className="text-xs text-sec/70 mb-2">Ask anything or select a topic:</p>
                         <div className="flex flex-col gap-1.5 w-full">
                             {SUGGESTIONS.map((suggestion) => (

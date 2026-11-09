@@ -16,8 +16,9 @@ function Deadlines() {
         <button
           type="button"
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-1.5 border border-accent-amber/45 bg-accent-amber/10 text-accent-amber-light hover:bg-accent-amber/15 font-mono rounded-md px-2.5 py-1 text-[11px] font-medium leading-none">
-          <span className="text-sm leading-1">
+          className="flex items-center gap-1.5 border border-accent-amber/45 bg-accent-amber/10 text-accent-amber-light hover:bg-accent-amber/15 font-mono rounded-md px-2.5 py-1 text-[11px] font-medium leading-none shrink-0 whitespace-nowrap cursor-pointer transition-colors"
+        >
+          <span className="text-xs leading-none font-bold">
             +
           </span>
           Add Deadline
