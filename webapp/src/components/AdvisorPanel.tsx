@@ -14,25 +14,45 @@ export function AdvisorPanel() {
     const handleMouseDown = (e: React.MouseEvent) => {
         e.preventDefault()
         isDraggingRef.current = true
+        document.body.style.cursor = "col-resize"
+        document.body.style.userSelect = "none"
 
         const onMouseMove = (moveEvent: MouseEvent) => {
             if (!isDraggingRef.current) return
 
             const newWidth = window.innerWidth - moveEvent.clientX
-
-            if (newWidth >= 280 && newWidth <= 600) {
-                setDesktopWidth(newWidth)
-            }
+            const clamped = Math.max(280, Math.min(600, newWidth))
+            setDesktopWidth(clamped)
         }
 
         const onMouseUp = () => {
             isDraggingRef.current = false
+            document.body.style.cursor = ""
+            document.body.style.userSelect = ""
             window.removeEventListener("mousemove", onMouseMove)
             window.removeEventListener("mouseup", onMouseUp)
         }
 
         window.addEventListener("mousemove", onMouseMove)
         window.addEventListener("mouseup", onMouseUp)
+    }
+
+    const handleDesktopTouchStart = () => {
+        const onTouchMove = (moveEvent: TouchEvent) => {
+            const touch = moveEvent.touches[0]
+            if (!touch) return
+            const newWidth = window.innerWidth - touch.clientX
+            const clamped = Math.max(280, Math.min(600, newWidth))
+            setDesktopWidth(clamped)
+        }
+
+        const onTouchEnd = () => {
+            window.removeEventListener("touchmove", onTouchMove)
+            window.removeEventListener("touchend", onTouchEnd)
+        }
+
+        window.addEventListener("touchmove", onTouchMove)
+        window.addEventListener("touchend", onTouchEnd)
     }
 
     const handleTouchStart = (e: React.TouchEvent) => {
@@ -107,7 +127,8 @@ export function AdvisorPanel() {
             >
                 <div
                     onMouseDown={handleMouseDown}
-                    className="group absolute -left-1.5 top-0 bottom-0 w-3 cursor-col-resize flex items-center justify-center hover:bg-white/5 transition-colors"
+                    onTouchStart={handleDesktopTouchStart}
+                    className="group absolute -left-2.5 top-0 bottom-0 w-5 cursor-col-resize flex items-center justify-center z-20 select-none hover:bg-white/5 transition-colors"
                     title="Drag to resize"
                 >
                     <div className="w-3.5 h-7 bg-surface-hi border border-dim rounded-full flex items-center justify-center shadow-sm group-hover:border-sec transition-colors pointer-events-none">

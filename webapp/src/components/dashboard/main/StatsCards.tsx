@@ -1,17 +1,23 @@
 import StatisticCard from "./StatisticCard"
 import { usePlanStats } from "../../../hooks/usePlanStats"
 import { usePlan } from "../../../context/PlanContext"
+import { useAdvisor } from "../../../context/AdvisorContext"
 import Skeleton from "../../ui/Skeleton"
 
 export function StatsCards() {
   const { isLoadingDetails } = usePlan()
   const { activeCourses, completion, creditLoad, scheduleHealth } = usePlanStats()
+  const { isOpen } = useAdvisor()
+
+  const gridClass = isOpen
+    ? "grid grid-cols-2 2xl:grid-cols-4 gap-3.5"
+    : "grid grid-cols-2 md:grid-cols-4 gap-3.5"
 
   if (isLoadingDetails) {
     return (
       <section
         aria-label="Dashboard statistics loading"
-        className="grid grid-cols-2 md:grid-cols-4 gap-3.5"
+        className={gridClass}
       >
         {Array.from({ length: 4}).map((_, index) => (
           <Skeleton key={index} className="h-[92px] w-full" />
@@ -23,7 +29,7 @@ export function StatsCards() {
   return (
     <section
       aria-label="Dashboard statistics"
-      className="grid grid-cols-2 md:grid-cols-4 gap-3.5"
+      className={gridClass}
     >
       <StatisticCard
         title="Active Courses"
